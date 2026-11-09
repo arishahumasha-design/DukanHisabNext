@@ -142,7 +142,11 @@ costPriceSnapshot?, lineTotal.
 
 **LedgerEntry**: id, customerId, type (OPENING_DUE, SALE_DUE, MANUAL_DUE,
 PAYMENT_RECEIVED, CORRECTION_PLUS, CORRECTION_MINUS), amount (always
-positive), paymentMethod? (for PAYMENT_RECEIVED), saleId?, note?, createdAt.
+positive), paymentMethod? (for PAYMENT_RECEIVED), saleId?, note?, entryDate,
+createdAt.
+- `entryDate` is the date the user picks for the entry (default: now).
+  `createdAt` is the real time the row was saved. History lists and reports
+  use `entryDate`.
 - Customer balance = sum(OPENING_DUE + SALE_DUE + MANUAL_DUE + CORRECTION_PLUS)
   - sum(PAYMENT_RECEIVED + CORRECTION_MINUS).
 - Ledger entries are never edited or deleted. Mistakes are fixed with a
@@ -150,8 +154,11 @@ positive), paymentMethod? (for PAYMENT_RECEIVED), saleId?, note?, createdAt.
 
 **ExpenseCategory**: id, name.
 
-**Expense**: id, expenseCategoryId, amount, reason?, isDeleted (soft delete),
-createdAt, updatedAt.
+**Expense**: id, expenseCategoryId, amount, reason?, expenseDate, isDeleted
+(soft delete), createdAt, updatedAt.
+- `expenseDate` is the date the user picks for the expense. `createdAt` is
+  the real time the row was saved. Lists, filters and reports use
+  `expenseDate`.
 
 ### Indexes and integrity
 
