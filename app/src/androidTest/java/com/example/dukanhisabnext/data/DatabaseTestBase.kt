@@ -63,6 +63,13 @@ abstract class DatabaseTestBase {
         createdAt = createdAt
     )
 
+    /** How many rows a table has, read straight from SQLite (for "nothing was saved" checks). */
+    protected fun countRows(table: String): Int =
+        db.openHelper.readableDatabase.query("SELECT COUNT(*) FROM $table").use { cursor ->
+            cursor.moveToFirst()
+            cursor.getInt(0)
+        }
+
     /** Passes only if [block] is rejected by the database (foreign key, unique index...). */
     protected suspend fun assertConstraintFails(block: suspend () -> Unit) {
         try {

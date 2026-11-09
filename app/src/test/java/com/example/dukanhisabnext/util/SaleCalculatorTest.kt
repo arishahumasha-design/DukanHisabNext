@@ -96,6 +96,17 @@ class SaleCalculatorTest {
         assertEquals(0L, a.dueAmount)
     }
 
+    @Test
+    fun changeRuleTotal200Received500() {
+        // Total ৳200, the customer hands over ৳500: give back ৳300, record ৳200 as paid, no due.
+        val a = valid(listOf(CartLine(1_000, 20_000)), received = 50_000)
+        assertEquals(20_000L, a.total)
+        assertEquals(30_000L, a.change)
+        assertEquals(20_000L, a.paidAmount)
+        assertEquals(0L, a.dueAmount)
+        assertTrue(a.isConsistent())
+    }
+
     // ---- dues ----
 
     @Test

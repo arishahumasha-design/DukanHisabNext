@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.ProductRepository
+import com.example.dukanhisabnext.data.SaleRepository
 
 /**
  * Created once when the app starts. It owns the database and the repositories,
@@ -15,4 +16,8 @@ class DokanHisabApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val productRepository: ProductRepository by lazy { ProductRepository(database) }
     val customerRepository: CustomerRepository by lazy { CustomerRepository(database) }
+
+    // One shared SaleRepository for the whole app: its lock and double-tap memory only
+    // work if every screen uses the same one.
+    val saleRepository: SaleRepository by lazy { SaleRepository(database) }
 }

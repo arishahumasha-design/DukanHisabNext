@@ -43,6 +43,10 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE id = :id")
     suspend fun getProduct(id: Long): Product?
 
+    /** Several products at once (archived ones included; the caller decides what to do with them). */
+    @Query("SELECT * FROM products WHERE id IN (:ids)")
+    suspend fun getProducts(ids: List<Long>): List<Product>
+
     /** Archive (false) or un-archive (true). Old sales keep pointing at the product. */
     @Query("UPDATE products SET isActive = :isActive, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setActive(id: Long, isActive: Boolean, updatedAt: Long)
