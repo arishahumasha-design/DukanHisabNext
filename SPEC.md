@@ -229,3 +229,21 @@ Finish and test each milestone on a real phone, then commit to Git.
 - Do not add libraries, change the architecture, or add features outside this
   spec without asking first.
 - If an error appears, explain the cause in simple words before fixing it.
+
+## 10. After the MVP (ideas, not now)
+
+These are NOT part of the MVP. Do not build them unless the owner asks.
+
+- **Product photo**: one photo per product, optional.
+  - Add a nullable `imagePath` column to Product (needs a Room migration;
+    never use `fallbackToDestructiveMigration`).
+  - Take the photo with the camera or pick it from the gallery.
+  - Shrink it (about 400 px, JPEG) and save it in the app's private storage.
+  - Show small thumbnails in the product list and the product picker on the
+    sell screen.
+  - Backup and restore must include the photos.
+  - Do it after M4 (sales).
+- **Bluetooth receipt printing.**
+- **bKash / Nagad QR code** on the payment screen.
+- **Automatic backup.**
+- **Cloud sync.**
