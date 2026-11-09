@@ -8,9 +8,88 @@
     <string name="tab_khata">খাতা</string>
     <string name="tab_more">আরও</string>
 
-    <!-- Screen titles (empty screens in M0) -->
+    <!-- Screen titles -->
     <string name="title_home">হোম</string>
     <string name="title_sell">নতুন বিক্রি</string>
     <string name="title_khata">বাকি খাতা</string>
     <string name="title_more">আরও</string>
+
+    <!-- More screen -->
+    <string name="more_products">পণ্য</string>
+
+    <!-- Common -->
+    <string name="back">পেছনে যান</string>
+    <string name="btn_save">সংরক্ষণ করুন</string>
+    <string name="btn_cancel">বাতিল</string>
+    <string name="btn_add">যোগ করুন</string>
+
+    <!-- Units -->
+    <string name="unit_piece">পিস</string>
+    <string name="unit_kg">কেজি</string>
+    <string name="unit_litre">লিটার</string>
+    <string name="unit_packet">প্যাকেট</string>
+    <string name="unit_dozen">ডজন</string>
+
+    <!-- Form errors (shown under a box) -->
+    <string name="error_required">এই ঘরটি পূরণ করুন</string>
+    <string name="error_invalid_number">সঠিক সংখ্যা লিখুন</string>
+    <string name="error_must_be_positive">০-এর চেয়ে বেশি হতে হবে</string>
+    <string name="error_duplicate">এই নামে আগে থেকেই আছে</string>
+    <string name="error_no_change">স্টকে কোনো পরিবর্তন নেই</string>
+
+    <!-- Product list -->
+    <string name="title_products">পণ্য</string>
+    <string name="search_products">পণ্য খুঁজুন</string>
+    <string name="clear_search">খোঁজা মুছুন</string>
+    <string name="chip_all">সব</string>
+    <string name="show_archived">আর্কাইভ করা পণ্য দেখান</string>
+    <string name="empty_products">কোনো পণ্য নেই। নতুন পণ্য যোগ করুন।</string>
+    <string name="empty_archived">আর্কাইভ করা কোনো পণ্য নেই।</string>
+    <string name="empty_search">কোনো পণ্য পাওয়া যায়নি।</string>
+    <string name="add_product">নতুন পণ্য</string>
+    <string name="btn_stock">স্টক</string>
+    <string name="btn_restore">ফিরিয়ে আনুন</string>
+    <string name="price_format">৳ %1$s</string>
+    <string name="stock_label">স্টক: %1$s %2$s</string>
+    <string name="tag_low_stock">স্টক কম</string>
+    <string name="tag_negative_stock">স্টক মাইনাস</string>
+
+    <!-- Product add / edit -->
+    <string name="title_product_new">নতুন পণ্য</string>
+    <string name="title_product_edit">পণ্য সম্পাদনা</string>
+    <string name="field_name">পণ্যের নাম</string>
+    <string name="field_category">ক্যাটেগরি</string>
+    <string name="category_none">ক্যাটেগরি নেই</string>
+    <string name="category_new">+ নতুন ক্যাটেগরি</string>
+    <string name="dialog_category_title">নতুন ক্যাটেগরি</string>
+    <string name="field_category_name">ক্যাটেগরির নাম</string>
+    <string name="field_unit">একক</string>
+    <string name="unit_locked_hint">পণ্য তৈরির পর একক বদলানো যায় না</string>
+    <string name="field_sell_price">বিক্রয়মূল্য (৳)</string>
+    <string name="field_cost_price">ক্রয়মূল্য (৳) — ঐচ্ছিক</string>
+    <string name="field_opening_stock">শুরুর স্টক — ঐচ্ছিক</string>
+    <string name="field_low_stock">কম স্টকের সীমা — ঐচ্ছিক</string>
+    <string name="name_duplicate_warning">এই নামে আরও একটি পণ্য আছে</string>
+    <string name="btn_archive">আর্কাইভ করুন</string>
+    <string name="archive_confirm_title">পণ্য আর্কাইভ করবেন?</string>
+    <string name="archive_confirm_text">আর্কাইভ করা পণ্য বিক্রির তালিকায় আসবে না। পুরনো বিক্রি ঠিক থাকবে।</string>
+
+    <!-- Stock screen -->
+    <string name="title_stock">স্টক পরিবর্তন</string>
+    <string name="stock_current">এখন স্টক: %1$s %2$s</string>
+    <string name="mode_purchase">স্টক যোগ (কেনা)</string>
+    <string name="mode_correction">স্টক সংশোধন</string>
+    <string name="field_quantity">কত যোগ হলো</string>
+    <string name="field_unit_cost">কেনা দাম, প্রতি একক (৳) — ঐচ্ছিক</string>
+    <string name="checkbox_update_cost">পণ্যের ক্রয়মূল্যও আপডেট করুন</string>
+    <string name="field_counted_stock">আসলে কত স্টক আছে (গুনে দেখুন)</string>
+    <string name="correction_preview">এখন %1$s → নতুন %2$s (পার্থক্য %3$s)</string>
+    <string name="field_note">নোট — ঐচ্ছিক</string>
+    <string name="history_title">স্টকের ইতিহাস</string>
+    <string name="history_empty">এখনও কোনো স্টক পরিবর্তন নেই</string>
+    <string name="movement_opening">শুরুর স্টক</string>
+    <string name="movement_purchase">কেনা</string>
+    <string name="movement_sale">বিক্রি</string>
+    <string name="movement_adjustment">সংশোধন</string>
+    <string name="movement_line">%1$s · %2$s</string>
 </resources>

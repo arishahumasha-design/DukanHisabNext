@@ -30,6 +30,3 @@ fun SellScreen(modifier: Modifier = Modifier) = EmptyScreen(R.string.title_sell,
 
 @Composable
 fun KhataScreen(modifier: Modifier = Modifier) = EmptyScreen(R.string.title_khata, modifier)
-
-@Composable
-fun MoreScreen(modifier: Modifier = Modifier) = EmptyScreen(R.string.title_more, modifier)

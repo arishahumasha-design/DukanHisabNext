@@ -20,6 +20,10 @@ interface StockMovementDao {
     @Query("SELECT COALESCE(SUM(quantity), 0) FROM stock_movements WHERE productId = :productId")
     suspend fun getStock(productId: Long): Long
 
+    /** Live version of [getStock]: re-emits whenever a movement is added. */
+    @Query("SELECT COALESCE(SUM(quantity), 0) FROM stock_movements WHERE productId = :productId")
+    fun observeStock(productId: Long): Flow<Long>
+
     @Query("SELECT * FROM stock_movements WHERE productId = :productId ORDER BY createdAt DESC, id DESC")
     fun observeForProduct(productId: Long): Flow<List<StockMovement>>
 }

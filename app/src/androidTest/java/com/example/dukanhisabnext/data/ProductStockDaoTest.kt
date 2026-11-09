@@ -45,7 +45,7 @@ class ProductStockDaoTest : DatabaseTestBase() {
         db.stockMovementDao().insert(movement(rice, StockMovementType.OPENING, 7_000))
         db.productDao().setActive(oil, isActive = false, updatedAt = now)
 
-        val list = db.productDao().observeActiveProducts(query = "", categoryId = null).first()
+        val list = db.productDao().observeProducts(isActive = true, query = "", categoryId = null).first()
 
         assertEquals(1, list.size)
         assertEquals("চাল", list[0].product.name)
@@ -60,10 +60,10 @@ class ProductStockDaoTest : DatabaseTestBase() {
         addProduct("চালের গুঁড়া")          // no category
         addProduct("ডাল", grocery)
 
-        val search = db.productDao().observeActiveProducts(query = "চাল", categoryId = null).first()
+        val search = db.productDao().observeProducts(isActive = true, query = "চাল", categoryId = null).first()
         assertEquals(3, search.size)
 
-        val searchInCategory = db.productDao().observeActiveProducts(query = "চাল", categoryId = grocery).first()
+        val searchInCategory = db.productDao().observeProducts(isActive = true, query = "চাল", categoryId = grocery).first()
         assertEquals(2, searchInCategory.size)
     }
 

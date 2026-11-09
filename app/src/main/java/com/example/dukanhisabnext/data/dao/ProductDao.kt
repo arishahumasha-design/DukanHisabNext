@@ -25,6 +25,10 @@ interface ProductDao {
     @Update
     suspend fun updateCategory(category: Category)
 
+    /** How many categories have this name (ignoring upper/lower case). Used to block duplicates. */
+    @Query("SELECT COUNT(*) FROM categories WHERE name = :name COLLATE NOCASE")
+    suspend fun countCategoriesNamed(name: String): Int
+
     @Query("SELECT * FROM categories ORDER BY name")
     fun observeCategories(): Flow<List<Category>>
 
@@ -43,8 +47,20 @@ interface ProductDao {
     @Query("UPDATE products SET isActive = :isActive, updatedAt = :updatedAt WHERE id = :id")
     suspend fun setActive(id: Long, isActive: Boolean, updatedAt: Long)
 
+    /** Only changes the cost price (used when a purchase also updates the cost price). */
+    @Query("UPDATE products SET costPrice = :costPrice, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun setCostPrice(id: Long, costPrice: Long, updatedAt: Long)
+
     /**
-     * Active products with current stock, for the product list and the sell screen.
+     * How many ACTIVE products share this name (ignoring case), not counting [excludeId].
+     * Used for a gentle "same name exists" warning.
+     */
+    @Query("SELECT COUNT(*) FROM products WHERE name = :name COLLATE NOCASE AND isActive = 1 AND id != :excludeId")
+    suspend fun countActiveProductsNamed(name: String, excludeId: Long): Int
+
+    /**
+     * Products with current stock, for the product list and the sell screen.
+     * [isActive] = true gives normal products, false gives archived ones.
      * [query] = "" means no search. [categoryId] = null means all categories.
      */
     @Query(
@@ -53,11 +69,11 @@ interface ProductDao {
                COALESCE((SELECT SUM(m.quantity) FROM stock_movements m WHERE m.productId = p.id), 0)
                    AS stock
         FROM products p
-        WHERE p.isActive = 1
+        WHERE p.isActive = :isActive
           AND p.name LIKE '%' || :query || '%'
           AND (:categoryId IS NULL OR p.categoryId = :categoryId)
         ORDER BY p.name
         """
     )
-    fun observeActiveProducts(query: String, categoryId: Long?): Flow<List<ProductWithStock>>
+    fun observeProducts(isActive: Boolean, query: String, categoryId: Long?): Flow<List<ProductWithStock>>
 }

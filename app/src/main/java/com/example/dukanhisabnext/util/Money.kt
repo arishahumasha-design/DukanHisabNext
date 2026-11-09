@@ -33,6 +33,21 @@ fun formatTaka(paisa: Long): String {
 fun parseTakaToPaisa(input: String): Long? = parseFixedPoint(input, decimals = 2)
 
 /**
+ * Paisa -> text with normal (Latin) digits, no commas, no sign, trailing zeros dropped.
+ * Used to fill an edit box (the screen shows it with Bengali digits). Paisa must not be negative.
+ *   150000 -> "1500", 150050 -> "1500.5", 5 -> "0.05"
+ */
+fun formatTakaPlain(paisa: Long): String {
+    val taka = paisa / PAISA_PER_TAKA
+    val restPaisa = paisa % PAISA_PER_TAKA
+    return if (restPaisa == 0L) {
+        taka.toString()
+    } else {
+        "$taka." + restPaisa.toString().padStart(2, '0').trimEnd('0')
+    }
+}
+
+/**
  * Bangladesh groups numbers as 12,34,56,789: the last 3 digits together,
  * then groups of 2 going left.
  */

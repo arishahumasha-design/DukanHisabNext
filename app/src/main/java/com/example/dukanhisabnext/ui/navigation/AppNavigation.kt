@@ -13,10 +13,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.dukanhisabnext.ui.products.ProductEditScreen
+import com.example.dukanhisabnext.ui.products.ProductListScreen
+import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.KhataScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
@@ -34,23 +40,28 @@ fun AppNavigation() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
-                Screen.entries.forEach { screen ->
-                    NavigationBarItem(
-                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                // Going "back" from any tab returns to Home, not through every tab.
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            // Form screens (edit product, stock) hide the bar to leave room for the keyboard.
+            if (!Routes.hidesBottomBar(currentDestination?.route)) {
+                NavigationBar {
+                    Screen.entries.forEach { screen ->
+                        NavigationBarItem(
+                            // hierarchy = this screen and its parents. A screen inside the
+                            // More group still "belongs to" the More tab, so it stays highlighted.
+                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    // Going "back" from any tab returns to Home, not through every tab.
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true // do not stack the same tab twice
+                                    restoreState = true
                                 }
-                                launchSingleTop = true // do not stack the same tab twice
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(screen.icon, contentDescription = null) },
-                        label = { Text(stringResource(screen.labelRes)) }
-                    )
+                            },
+                            icon = { Icon(screen.icon, contentDescription = null) },
+                            label = { Text(stringResource(screen.labelRes)) }
+                        )
+                    }
                 }
             }
         }
@@ -63,7 +74,37 @@ fun AppNavigation() {
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Sell.route) { SellScreen() }
             composable(Screen.Khata.route) { KhataScreen() }
-            composable(Screen.More.route) { MoreScreen() }
+
+            // The More tab is a small group ("graph") of screens that start at the More list.
+            navigation(route = Screen.More.route, startDestination = Routes.MORE) {
+                composable(Routes.MORE) {
+                    MoreScreen(onOpenProducts = { navController.navigate(Routes.PRODUCTS) })
+                }
+                composable(Routes.PRODUCTS) {
+                    ProductListScreen(
+                        onBack = { navController.popBackStack() },
+                        onAddProduct = { navController.navigate(Routes.productEdit(null)) },
+                        onEditProduct = { id -> navController.navigate(Routes.productEdit(id)) },
+                        onAdjustStock = { id -> navController.navigate(Routes.stockAdjust(id)) }
+                    )
+                }
+                composable(
+                    route = Routes.PRODUCT_EDIT,
+                    // -1 means "no product given" = add a new one.
+                    arguments = listOf(navArgument("productId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    })
+                ) {
+                    ProductEditScreen(onBack = { navController.popBackStack() })
+                }
+                composable(
+                    route = Routes.STOCK_ADJUST,
+                    arguments = listOf(navArgument("productId") { type = NavType.LongType })
+                ) {
+                    StockAdjustScreen(onBack = { navController.popBackStack() })
+                }
+            }
         }
     }
 }
