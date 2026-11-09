@@ -92,4 +92,27 @@
     <string name="movement_sale">বিক্রি</string>
     <string name="movement_adjustment">সংশোধন</string>
     <string name="movement_line">%1$s · %2$s</string>
+
+    <!-- Khata (customers) -->
+    <string name="total_receivable">মোট পাবো</string>
+    <string name="search_customers">কাস্টমার খুঁজুন</string>
+    <string name="add_customer">নতুন কাস্টমার</string>
+    <string name="empty_customers">কোনো কাস্টমার নেই। নতুন কাস্টমার যোগ করুন।</string>
+    <string name="empty_customer_search">কোনো কাস্টমার পাওয়া যায়নি।</string>
+    <string name="balance_clear">বাকি নেই</string>
+    <string name="balance_advance">অগ্রিম ৳ %1$s</string>
+    <string name="title_customer_new">নতুন কাস্টমার</string>
+    <string name="title_customer_edit">কাস্টমার সম্পাদনা</string>
+    <string name="title_customer_detail">কাস্টমার</string>
+    <string name="field_customer_name">নাম</string>
+    <string name="field_phone">মোবাইল নম্বর — ঐচ্ছিক</string>
+    <string name="field_address">ঠিকানা — ঐচ্ছিক</string>
+    <string name="phone_duplicate_warning">এই নম্বরে আরও একজন কাস্টমার আছে</string>
+    <string name="error_invalid_phone">সঠিক মোবাইল নম্বর লিখুন (১১ সংখ্যা, ০১ দিয়ে শুরু)</string>
+    <string name="label_balance">বর্তমান বাকি</string>
+    <string name="label_phone">মোবাইল</string>
+    <string name="label_address">ঠিকানা</string>
+    <string name="label_note">নোট</string>
+    <string name="btn_edit">সম্পাদনা</string>
+    <string name="tap_to_call">ট্যাপ করে কল করুন</string>
 </resources>

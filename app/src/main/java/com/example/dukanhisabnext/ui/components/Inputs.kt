@@ -38,6 +38,13 @@ fun sanitizeNumberInput(text: String): String =
     toLatinDigits(text).filter { it in '0'..'9' || it == '.' }
 
 /**
+ * Keeps only what a mobile number box may contain (digits, +, space, dash). Bengali digits
+ * are converted to normal digits.
+ */
+fun sanitizePhoneInput(text: String): String =
+    toLatinDigits(text).filter { it in '0'..'9' || it == '+' || it == ' ' || it == '-' }
+
+/**
  * Shows normal digits as Bengali digits while typing. Every character maps to exactly
  * one character, so the cursor position needs no adjustment (OffsetMapping.Identity).
  * The text itself is not changed, only how it is drawn.
@@ -51,6 +58,7 @@ object BengaliDigitsTransformation : VisualTransformation {
 fun FormError.messageRes(): Int = when (this) {
     FormError.REQUIRED -> R.string.error_required
     FormError.INVALID_NUMBER -> R.string.error_invalid_number
+    FormError.INVALID_PHONE -> R.string.error_invalid_phone
     FormError.MUST_BE_POSITIVE -> R.string.error_must_be_positive
     FormError.DUPLICATE -> R.string.error_duplicate
     FormError.NO_CHANGE -> R.string.error_no_change

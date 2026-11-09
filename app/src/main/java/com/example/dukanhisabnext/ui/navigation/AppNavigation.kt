@@ -20,11 +20,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.dukanhisabnext.ui.customers.CustomerDetailScreen
+import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
+import com.example.dukanhisabnext.ui.customers.CustomerListScreen
 import com.example.dukanhisabnext.ui.products.ProductEditScreen
 import com.example.dukanhisabnext.ui.products.ProductListScreen
 import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
-import com.example.dukanhisabnext.ui.screens.KhataScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
 import com.example.dukanhisabnext.ui.screens.SellScreen
 
@@ -73,7 +75,35 @@ fun AppNavigation() {
         ) {
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Sell.route) { SellScreen() }
-            composable(Screen.Khata.route) { KhataScreen() }
+
+            // The Khata tab is a small group of screens that start at the customer list.
+            navigation(route = Screen.Khata.route, startDestination = Routes.KHATA) {
+                composable(Routes.KHATA) {
+                    CustomerListScreen(
+                        onAddCustomer = { navController.navigate(Routes.customerEdit(null)) },
+                        onOpenCustomer = { id -> navController.navigate(Routes.customerDetail(id)) }
+                    )
+                }
+                composable(
+                    route = Routes.CUSTOMER_DETAIL,
+                    arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+                ) {
+                    CustomerDetailScreen(
+                        onBack = { navController.popBackStack() },
+                        onEdit = { id -> navController.navigate(Routes.customerEdit(id)) }
+                    )
+                }
+                composable(
+                    route = Routes.CUSTOMER_EDIT,
+                    // -1 means "no customer given" = add a new one.
+                    arguments = listOf(navArgument("customerId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    })
+                ) {
+                    CustomerEditScreen(onBack = { navController.popBackStack() })
+                }
+            }
 
             // The More tab is a small group ("graph") of screens that start at the More list.
             navigation(route = Screen.More.route, startDestination = Routes.MORE) {

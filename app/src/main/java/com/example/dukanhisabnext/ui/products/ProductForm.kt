@@ -6,7 +6,7 @@ import com.example.dukanhisabnext.util.parseTakaToPaisa
 // Form checking is plain Kotlin (no Android), so it can be unit-tested on the PC.
 // It never shows text itself: it returns an error CODE and the screen maps it to Bengali.
 
-enum class FormError { REQUIRED, INVALID_NUMBER, MUST_BE_POSITIVE, DUPLICATE, NO_CHANGE }
+enum class FormError { REQUIRED, INVALID_NUMBER, INVALID_PHONE, MUST_BE_POSITIVE, DUPLICATE, NO_CHANGE }
 
 /** What the user typed. All numbers are still text here. */
 data class ProductFormInput(

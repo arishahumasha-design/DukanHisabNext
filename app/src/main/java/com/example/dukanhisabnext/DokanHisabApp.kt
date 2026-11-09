@@ -2,6 +2,7 @@ package com.example.dukanhisabnext
 
 import android.app.Application
 import com.example.dukanhisabnext.data.AppDatabase
+import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.ProductRepository
 
 /**
@@ -13,4 +14,5 @@ import com.example.dukanhisabnext.data.ProductRepository
 class DokanHisabApp : Application() {
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
     val productRepository: ProductRepository by lazy { ProductRepository(database) }
+    val customerRepository: CustomerRepository by lazy { CustomerRepository(database) }
 }

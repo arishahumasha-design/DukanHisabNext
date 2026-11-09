@@ -25,7 +25,19 @@ interface CustomerDao {
     @Query("SELECT * FROM customers WHERE id = :id")
     suspend fun getById(id: Long): Customer?
 
-    /** Customer list with balances. Searches name and mobile. [query] = "" means all. */
+    /** Live version of [getById]: the detail screen updates itself after an edit. */
+    @Query("SELECT * FROM customers WHERE id = :id")
+    fun observeById(id: Long): Flow<Customer?>
+
+    /** How many customers have this mobile number, not counting [excludeId]. For a gentle warning. */
+    @Query("SELECT COUNT(*) FROM customers WHERE phone = :phone AND id != :excludeId")
+    suspend fun countWithPhone(phone: String, excludeId: Long): Int
+
+    /**
+     * Customer list with balances. Searches name and mobile. [query] = "" means all.
+     * Order: the biggest due first, then by name A to Z. (Customers who owe nothing come
+     * after those who owe; customers who are ahead on payments come last.)
+     */
     @Query(
         """
         SELECT c.*,
@@ -33,7 +45,7 @@ interface CustomerDao {
         FROM customers c
         WHERE c.name LIKE '%' || :query || '%'
            OR c.phone LIKE '%' || :query || '%'
-        ORDER BY c.name
+        ORDER BY balance DESC, c.name
         """
     )
     fun observeWithBalance(query: String): Flow<List<CustomerWithBalance>>

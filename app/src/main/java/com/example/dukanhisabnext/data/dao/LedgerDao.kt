@@ -33,6 +33,10 @@ interface LedgerDao {
     @Query("SELECT $BALANCE_SUM_SQL FROM ledger_entries WHERE customerId = :customerId")
     suspend fun getBalance(customerId: Long): Long
 
+    /** Live version of [getBalance]: re-emits whenever a ledger entry is added. */
+    @Query("SELECT $BALANCE_SUM_SQL FROM ledger_entries WHERE customerId = :customerId")
+    fun observeBalance(customerId: Long): Flow<Long>
+
     /**
      * Total receivable (pabo): the sum of every customer's balance, counting only
      * customers who owe money. A customer with an advance does not reduce it.
