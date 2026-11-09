@@ -1,3 +1,16 @@
 <resources>
-    <string name="app_name">DukanHisabNext</string>
+    <!-- App name shown under the launcher icon -->
+    <string name="app_name">দোকান হিসাব</string>
+
+    <!-- Bottom navigation tab names -->
+    <string name="tab_home">হোম</string>
+    <string name="tab_sell">বিক্রি</string>
+    <string name="tab_khata">খাতা</string>
+    <string name="tab_more">আরও</string>
+
+    <!-- Screen titles (empty screens in M0) -->
+    <string name="title_home">হোম</string>
+    <string name="title_sell">নতুন বিক্রি</string>
+    <string name="title_khata">বাকি খাতা</string>
+    <string name="title_more">আরও</string>
 </resources>
