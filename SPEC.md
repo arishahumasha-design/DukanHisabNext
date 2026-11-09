@@ -53,7 +53,8 @@ before guessing.
 
 ### 3.2 Sales (point of sale)
 - Search/select products and add them to a cart.
-- In the cart, edit quantity and unit price per line.
+- In the cart, edit quantity and unit price per line. A price edited in the
+  cart affects only that sale; the product's own price never changes.
 - Optional discount (fixed taka amount) and optional delivery charge.
 - Payment screen: amount received and payment method. The MVP screen shows
   Cash, bKash and Nagad (the database already supports Bank and Other).
@@ -64,8 +65,11 @@ before guessing.
 - On completion: save the sale, reduce stock, add ledger entry if there is a
   due, show the receipt.
 - Receipt screen: shop name, receipt number, date, customer, items, subtotal,
-  discount, delivery, total, paid, due. Share as text/image. (Bluetooth
-  printing is NOT in the MVP.)
+  discount, delivery, total, paid, due. Share as text. (Sharing as an image
+  and Bluetooth printing are NOT in the MVP.)
+- Sales list (বিক্রির তালিকা) under More: newest first, showing receipt
+  number, date, customer, total and due. Tapping a sale opens the same
+  receipt screen, built from the saved data (read-only). No edit or delete.
 
 ### 3.3 Customers and due ledger (baki khata)
 - Add / edit customers: name, mobile, address, note.
@@ -135,6 +139,9 @@ dueAmount, note?, createdAt.
 - Invariant: `total = subtotal - discount + deliveryCharge` and
   `dueAmount = total - paidAmount` (never negative; `paidAmount` never
   exceeds `total`).
+- `paymentMethod` only has meaning when `paidAmount > 0`. When nothing was
+  paid it is still saved (the column cannot be empty), but reports must
+  ignore it.
 
 **SaleItem**: id, saleId, productId, productNameSnapshot, quantity, unitPrice,
 costPriceSnapshot?, lineTotal.
@@ -179,6 +186,9 @@ createdAt.
   later, so history stays correct.
 - Archiving a product hides it from selling but keeps old sales intact.
 - Receipt numbers: short, unique, human-readable (for example date + counter).
+  Format `YYMMDD-NNN`: the Asia/Dhaka date plus a daily counter (at least 3
+  digits, may grow past 999). The next counter is the highest counter used
+  that day + 1, computed as a number (never by sorting text).
 - Sale validation: quantity must be greater than 0; discount cannot exceed the
   subtotal; paid amount cannot exceed the total.
 - A completed sale is never changed. Its old data must not be edited.
@@ -191,7 +201,8 @@ Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell (product picker + cart), Payment, Receipt, Customer list, Customer detail,
-Add due / receive payment, Expense list, Add expense, Reports, Settings.
+Add due / receive payment, Sales list, Expense list, Add expense, Reports,
+Settings.
 
 ## 7. Out of scope for the MVP
 
@@ -244,6 +255,7 @@ These are NOT part of the MVP. Do not build them unless the owner asks.
   - Backup and restore must include the photos.
   - Do it after M4 (sales).
 - **Bluetooth receipt printing.**
+- **Receipt shared as an image** (the MVP shares the receipt as text only).
 - **bKash / Nagad QR code** on the payment screen.
 - **Automatic backup.**
 - **Cloud sync.**
