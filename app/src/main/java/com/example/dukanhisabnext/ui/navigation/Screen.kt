@@ -19,7 +19,7 @@ enum class Screen(
     val icon: ImageVector
 ) {
     Home("home", R.string.tab_home, Icons.Filled.Home),
-    Sell("sell", R.string.tab_sell, Icons.Filled.ShoppingCart),
+    Sell("sell_graph", R.string.tab_sell, Icons.Filled.ShoppingCart),
     Khata("khata_graph", R.string.tab_khata, Icons.Filled.Person),
     More("more_graph", R.string.tab_more, Icons.Filled.Menu)
 }

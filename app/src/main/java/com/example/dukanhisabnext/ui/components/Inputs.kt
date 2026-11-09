@@ -67,6 +67,7 @@ fun FormError.messageRes(): Int = when (this) {
     FormError.NO_CHANGE -> R.string.error_no_change
     FormError.TOO_LARGE -> R.string.error_too_large
     FormError.DISCOUNT_TOO_LARGE -> R.string.error_discount_too_large
+    FormError.PERCENT_OUT_OF_RANGE -> R.string.error_percent_range
 }
 
 /** True while the on-screen keyboard is showing. (Compose marks this API as experimental.) */

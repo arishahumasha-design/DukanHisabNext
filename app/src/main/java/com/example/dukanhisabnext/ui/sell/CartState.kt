@@ -21,9 +21,19 @@ data class CartLineInput(
                                // it, and then it changes THIS sale only, never the product.
 )
 
+/** How the discount box is read: a fixed taka amount, or a percentage of the subtotal. */
+enum class DiscountUnit { TAKA, PERCENT }
+
+/**
+ * The discount and the delivery charge each have a switch. While a switch is OFF its value
+ * is 0, but what was typed is kept, so switching it on again brings it back.
+ */
 data class CartState(
     val lines: List<CartLineInput> = emptyList(),
+    val discountOn: Boolean = false,
+    val discountUnit: DiscountUnit = DiscountUnit.TAKA,
     val discountText: String = "",
+    val deliveryOn: Boolean = false,
     val deliveryText: String = ""
 )
 
@@ -66,7 +76,13 @@ fun CartState.withUnitPriceText(productId: Long, text: String): CartState =
 fun CartState.withoutLine(productId: Long): CartState =
     copy(lines = lines.filterNot { it.productId == productId })
 
+fun CartState.withDiscountOn(on: Boolean): CartState = copy(discountOn = on)
+
+fun CartState.withDiscountUnit(unit: DiscountUnit): CartState = copy(discountUnit = unit)
+
 fun CartState.withDiscountText(text: String): CartState = copy(discountText = text)
+
+fun CartState.withDeliveryOn(on: Boolean): CartState = copy(deliveryOn = on)
 
 fun CartState.withDeliveryText(text: String): CartState = copy(deliveryText = text)
 

@@ -110,6 +110,44 @@ class CartStateTest {
         assertEquals("20", cart.deliveryText)
     }
 
+    @Test
+    fun switchesAndUnitAreStoredAndTheTextIsKeptWhileOff() {
+        val cart = CartState()
+            .withDiscountOn(true).withDiscountUnit(DiscountUnit.PERCENT).withDiscountText("10")
+            .withDeliveryOn(true).withDeliveryText("20")
+        assertTrue(cart.discountOn)
+        assertEquals(DiscountUnit.PERCENT, cart.discountUnit)
+        assertTrue(cart.deliveryOn)
+
+        // Switching off keeps what was typed, so switching on again brings it back.
+        val off = cart.withDiscountOn(false).withDeliveryOn(false)
+        assertEquals("10", off.discountText)
+        assertEquals("20", off.deliveryText)
+        assertEquals("10", off.withDiscountOn(true).discountText)
+    }
+
+    @Test
+    fun aNewCartStartsWithBothSwitchesOffAndTakaSelected() {
+        val cart = CartState()
+        assertEquals(false, cart.discountOn)
+        assertEquals(false, cart.deliveryOn)
+        assertEquals(DiscountUnit.TAKA, cart.discountUnit)
+    }
+
+    @Test
+    fun storeKeepsTheSwitchesAndTheyAreClearedWithTheCart() {
+        val store = CartStore()
+        store.setDiscountOn(true)
+        store.setDiscountUnit(DiscountUnit.PERCENT)
+        store.setDiscountText("5")
+        store.setDeliveryOn(true)
+        store.setDeliveryText("30")
+        assertEquals(CartState(emptyList(), true, DiscountUnit.PERCENT, "5", true, "30"), store.state.value)
+
+        store.clear()
+        assertEquals(CartState(), store.state.value)
+    }
+
     // ---- The shared cart store ----
 
     @Test

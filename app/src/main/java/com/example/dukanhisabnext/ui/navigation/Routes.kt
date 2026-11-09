@@ -12,6 +12,10 @@ object Routes {
     const val PRODUCT_EDIT = "product_edit?productId={productId}"
     const val STOCK_ADJUST = "stock_adjust/{productId}"
 
+    // ---- Sell tab: screen A (picker) and screen B (cart) ----
+    const val SELL = "sell"
+    const val CART = "cart"
+
     // ---- Khata tab ----
     const val KHATA = "khata"
     const val CUSTOMER_EDIT = "customer_edit?customerId={customerId}"
@@ -29,7 +33,10 @@ object Routes {
 
     fun customerDetail(customerId: Long): String = "customer_detail/$customerId"
 
-    /** The form screens hide the bottom bar, to leave room for the keyboard. */
+    /**
+     * The form screens hide the bottom bar, to leave room for the keyboard. The cart screen
+     * hides it too: it has its own bottom bar with the total and the continue button.
+     */
     fun hidesBottomBar(route: String?): Boolean =
-        route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT
+        route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT || route == CART
 }

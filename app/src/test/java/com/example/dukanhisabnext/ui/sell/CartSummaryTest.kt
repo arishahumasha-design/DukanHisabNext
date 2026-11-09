@@ -13,8 +13,16 @@ class CartSummaryTest {
     private fun line(id: Long, quantity: String, price: String) =
         CartLineInput(id, "পণ্য $id", ProductUnit.KG, quantity, price)
 
+    // The cart now has on/off switches. These tests were written when the boxes were always
+    // there, so a box with text in it counts as "switched on" (the discount is in taka).
     private fun cart(vararg lines: CartLineInput, discount: String = "", delivery: String = "") =
-        CartState(lines.toList(), discount, delivery)
+        CartState(
+            lines = lines.toList(),
+            discountOn = discount.isNotEmpty(),
+            discountText = discount,
+            deliveryOn = delivery.isNotEmpty(),
+            deliveryText = delivery
+        )
 
     // ---- Totals ----
 
@@ -145,6 +153,163 @@ class CartSummaryTest {
         val s = summarize(cart(line(1, "1", "50"), delivery = "12.5"))
         assertEquals(5_000L, s.subtotal)
         assertEquals(6_250L, s.total)
+    }
+
+    // ---- Switches (new in step 3b) ----
+
+    private val oneLineOf33333 = listOf(line(1, "1", "333.33")) // subtotal ৳333.33 = 33333 paisa
+
+    private fun withDiscount(
+        unit: DiscountUnit,
+        text: String,
+        on: Boolean = true,
+        lines: List<CartLineInput> = oneLineOf33333
+    ) = CartState(lines = lines, discountOn = on, discountUnit = unit, discountText = text)
+
+    @Test
+    fun discountSwitchOffMeansZeroEvenWithTextInTheBox() {
+        val s = summarize(withDiscount(DiscountUnit.TAKA, "50", on = false))
+        assertEquals(0L, s.discount)
+        assertEquals(33_333L, s.total)
+        assertNull(s.discountError)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun deliverySwitchOffMeansZeroEvenWithTextInTheBox() {
+        val s = summarize(CartState(oneLineOf33333, deliveryOn = false, deliveryText = "20"))
+        assertEquals(0L, s.delivery)
+        assertEquals(33_333L, s.total)
+    }
+
+    @Test
+    fun deliverySwitchOnAddsTheCharge() {
+        val s = summarize(CartState(oneLineOf33333, deliveryOn = true, deliveryText = "20"))
+        assertEquals(2_000L, s.delivery)
+        assertEquals(35_333L, s.total)
+    }
+
+    @Test
+    fun switchesOnWithEmptyBoxesMeanZero() {
+        val s = summarize(CartState(oneLineOf33333, discountOn = true, deliveryOn = true))
+        assertEquals(0L, s.discount)
+        assertEquals(0L, s.delivery)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun badDeliveryTextIsOnlyAnErrorWhileTheSwitchIsOn() {
+        assertEquals(
+            FormError.INVALID_NUMBER,
+            summarize(CartState(oneLineOf33333, deliveryOn = true, deliveryText = "x")).deliveryError
+        )
+        assertNull(summarize(CartState(oneLineOf33333, deliveryOn = false, deliveryText = "x")).deliveryError)
+    }
+
+    // ---- Percentage discount ----
+
+    @Test
+    fun tenPercentOf33333Paisa() {
+        // 10% of ৳333.33 = ৳33.333 -> ৳33.33 (3333 paisa), rounded once to the paisa.
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "10"))
+        assertEquals(33_333L, s.subtotal)
+        assertEquals(3_333L, s.discount)
+        assertEquals(30_000L, s.total) // exactly ৳300.00
+        assertNull(s.discountError)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun zeroPercentIsAllowedAndTakesNothingOff() {
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "0"))
+        assertEquals(0L, s.discount)
+        assertEquals(33_333L, s.total)
+        assertNull(s.discountError)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun hundredPercentTakesEverythingOff() {
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "100"))
+        assertEquals(33_333L, s.discount)
+        assertEquals(0L, s.total)
+        assertNull(s.discountError)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun hundredPercentWithDeliveryLeavesTheDelivery() {
+        val s = summarize(CartState(oneLineOf33333, true, DiscountUnit.PERCENT, "100", true, "20"))
+        assertEquals(2_000L, s.total)
+    }
+
+    @Test
+    fun moreThanHundredPercentIsRefused() {
+        for (text in listOf("100.01", "101", "150", "1000")) {
+            val s = summarize(withDiscount(DiscountUnit.PERCENT, text))
+            assertEquals("for $text%", FormError.PERCENT_OUT_OF_RANGE, s.discountError)
+            assertEquals(0L, s.discount)
+            assertEquals(33_333L, s.total) // a bad discount counts as 0
+            assertFalse(s.canContinue)
+        }
+    }
+
+    @Test
+    fun decimalPercentsWork() {
+        // 12.5% of 10000 paisa = 1250 paisa
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "12.5", lines = listOf(line(1, "1", "100"))))
+        assertEquals(1_250L, s.discount)
+    }
+
+    @Test
+    fun percentIsTakenFromTheSubtotalOfTheRoundedLines() {
+        // Lines round to 3330 + 3330 + 3340 = 10000, so 10% is exactly 1000 (not 10% of the unrounded sum).
+        val lines = listOf(line(1, "0.333", "100.01"), line(2, "0.333", "100.01"), line(3, "0.334", "100.01"))
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "10", lines = lines))
+        assertEquals(10_000L, s.subtotal)
+        assertEquals(1_000L, s.discount)
+    }
+
+    @Test
+    fun percentIsTakenFromTheSubtotalNotFromTheDelivery() {
+        val s = summarize(CartState(oneLineOf33333, true, DiscountUnit.PERCENT, "10", true, "100"))
+        assertEquals(3_333L, s.discount)             // 10% of the subtotal only
+        assertEquals(33_333L - 3_333L + 10_000L, s.total)
+    }
+
+    @Test
+    fun badPercentTextIsReported() {
+        assertEquals(FormError.INVALID_NUMBER, summarize(withDiscount(DiscountUnit.PERCENT, "abc")).discountError)
+        assertEquals(FormError.INVALID_NUMBER, summarize(withDiscount(DiscountUnit.PERCENT, "1.234")).discountError)
+        assertEquals(FormError.INVALID_NUMBER, summarize(withDiscount(DiscountUnit.PERCENT, ".")).discountError)
+    }
+
+    @Test
+    fun emptyPercentBoxMeansZero() {
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, ""))
+        assertEquals(0L, s.discount)
+        assertTrue(s.canContinue)
+    }
+
+    @Test
+    fun theSameTextMeansDifferentThingsInTakaAndInPercent() {
+        assertEquals(1_000L, summarize(withDiscount(DiscountUnit.TAKA, "10")).discount)    // ৳10
+        assertEquals(3_333L, summarize(withDiscount(DiscountUnit.PERCENT, "10")).discount) // 10%
+    }
+
+    @Test
+    fun percentFollowsTheSubtotalLive() {
+        val one = summarize(withDiscount(DiscountUnit.PERCENT, "10", lines = listOf(line(1, "1", "100"))))
+        val two = summarize(withDiscount(DiscountUnit.PERCENT, "10", lines = listOf(line(1, "2", "100"))))
+        assertEquals(1_000L, one.discount)
+        assertEquals(2_000L, two.discount)
+    }
+
+    @Test
+    fun percentOfAnEmptyCartIsZeroAndCannotContinue() {
+        val s = summarize(withDiscount(DiscountUnit.PERCENT, "10", lines = emptyList()))
+        assertEquals(0L, s.discount)
+        assertFalse(s.canContinue)
     }
 
     // ---- Stock warning ----

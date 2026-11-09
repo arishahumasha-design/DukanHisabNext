@@ -26,7 +26,13 @@ class CartStore {
 
     fun removeLine(productId: Long) = _state.update { it.withoutLine(productId) }
 
+    fun setDiscountOn(on: Boolean) = _state.update { it.withDiscountOn(on) }
+
+    fun setDiscountUnit(unit: DiscountUnit) = _state.update { it.withDiscountUnit(unit) }
+
     fun setDiscountText(text: String) = _state.update { it.withDiscountText(text) }
+
+    fun setDeliveryOn(on: Boolean) = _state.update { it.withDeliveryOn(on) }
 
     fun setDeliveryText(text: String) = _state.update { it.withDeliveryText(text) }
 

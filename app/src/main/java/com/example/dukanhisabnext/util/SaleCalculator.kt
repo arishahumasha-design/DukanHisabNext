@@ -74,6 +74,20 @@ object SaleCalculator {
     }
 
     /**
+     * The taka amount (paisa) of a percentage discount: [percentHundredths] of [subtotal],
+     * rounded half-up ONCE to the paisa. [percentHundredths] must be 0 to 10,000 (0% to 100%).
+     *   10% (1000) of ৳333.33 (33333 paisa) = 3333.3 -> 3333 paisa (৳33.33)
+     *   50% (5000) of 3 paisa               = 1.5    -> 2 paisa (half goes up)
+     * The result is never more than the subtotal. Throws ArithmeticException on overflow.
+     */
+    fun percentDiscount(subtotal: Long, percentHundredths: Long): Long {
+        require(subtotal >= 0) { "subtotal must not be negative" }
+        require(percentHundredths in 0..MAX_PERCENT_HUNDREDTHS) { "percent must be between 0 and 100" }
+        val scaled = Math.multiplyExact(subtotal, percentHundredths)
+        return Math.addExact(scaled, MAX_PERCENT_HUNDREDTHS / 2) / MAX_PERCENT_HUNDREDTHS
+    }
+
+    /**
      * Checks a sale and works out every amount.
      * [received] = null means "not on the payment screen yet": treat it as paid in full,
      * so the cart screen can show totals without asking about money or a customer.

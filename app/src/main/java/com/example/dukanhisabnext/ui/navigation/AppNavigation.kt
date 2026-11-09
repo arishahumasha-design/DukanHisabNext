@@ -29,6 +29,7 @@ import com.example.dukanhisabnext.ui.products.ProductListScreen
 import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
+import com.example.dukanhisabnext.ui.sell.CartScreen
 import com.example.dukanhisabnext.ui.sell.SellScreen
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
@@ -77,7 +78,20 @@ fun AppNavigation() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) { HomeScreen() }
-            composable(Screen.Sell.route) { SellScreen() }
+
+            // The বিক্রি tab is a group of two screens: the product picker, then the cart.
+            // The cart itself lives in the app-wide CartStore, so going back loses nothing.
+            navigation(route = Screen.Sell.route, startDestination = Routes.SELL) {
+                composable(Routes.SELL) {
+                    SellScreen(onOpenCart = { navController.navigate(Routes.CART) })
+                }
+                composable(Routes.CART) {
+                    CartScreen(
+                        onBack = { navController.popBackStack() },
+                        onContinue = { /* step 4: the payment screen */ }
+                    )
+                }
+            }
 
             // The Khata tab is a small group of screens that start at the customer list.
             navigation(route = Screen.Khata.route, startDestination = Routes.KHATA) {

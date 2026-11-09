@@ -2,15 +2,17 @@ package com.example.dukanhisabnext.ui.sell
 
 import com.example.dukanhisabnext.ui.products.FormError
 import com.example.dukanhisabnext.util.CartLine
+import com.example.dukanhisabnext.util.MAX_PERCENT_HUNDREDTHS
 import com.example.dukanhisabnext.util.SaleCalculator
 import com.example.dukanhisabnext.util.SaleCheck
+import com.example.dukanhisabnext.util.parsePercent
 import com.example.dukanhisabnext.util.parseQuantity
 import com.example.dukanhisabnext.util.parseTakaToPaisa
 
 // Reads what is typed in the cart and works out the live numbers: line totals, subtotal,
-// total, and whether the cart may continue. Money is Long paisa, quantity is Long
-// thousandths. The line math is the SAME SaleCalculator that saving a sale uses later,
-// so what the cart shows is what will be saved.
+// discount, delivery, total, and whether the cart may continue. Money is Long paisa,
+// quantity is Long thousandths. The math is the SAME SaleCalculator that saving a sale uses
+// later, so what the cart shows is what will be saved.
 
 /** One cart line after reading its typed text. */
 data class CartLineView(
@@ -28,7 +30,14 @@ data class CartSummary(
     val discountError: FormError?,
     val deliveryError: FormError?,
     val subtotal: Long,            // sum of the valid, rounded line totals
-    val total: Long,               // subtotal - discount + delivery (a bad box counts as 0)
+    /**
+     * The taka amount taken off, in paisa. For a percentage this is the rounded amount.
+     * 0 when the switch is off, the box is empty, or the box has an error.
+     */
+    val discount: Long,
+    /** The delivery charge in paisa. 0 when the switch is off, the box is empty or wrong. */
+    val delivery: Long,
+    val total: Long,               // subtotal - discount + delivery
     /** True only when the cart is not empty and every number is fine. */
     val canContinue: Boolean
 )
@@ -49,7 +58,7 @@ private fun readPrice(text: String): Read {
     return Read(value, null)
 }
 
-/** Discount and delivery boxes: empty means 0. */
+/** Taka boxes for discount and delivery: empty means 0. */
 private fun readAmount(text: String): Read {
     if (text.isBlank()) return Read(0L, null)
     val value = parseTakaToPaisa(text) ?: return Read(null, FormError.INVALID_NUMBER)
@@ -73,6 +82,37 @@ private fun viewOf(line: CartLineInput): CartLineView {
     return CartLineView(line, quantity.value, price.value, quantityError, price.error, lineTotal)
 }
 
+/** What the discount box means in paisa, or an error. [subtotal] is needed for % and for "too large". */
+private class DiscountResult(val paisa: Long, val error: FormError?)
+
+private fun readDiscount(cart: CartState, subtotal: Long, subtotalComplete: Boolean): DiscountResult {
+    if (!cart.discountOn || cart.discountText.isBlank()) return DiscountResult(0L, null)
+
+    return when (cart.discountUnit) {
+        DiscountUnit.TAKA -> {
+            val read = readAmount(cart.discountText)
+            when {
+                read.error != null -> DiscountResult(0L, read.error)
+                // Only judged when every line is fine: otherwise the subtotal is still incomplete.
+                subtotalComplete && read.value!! > subtotal -> DiscountResult(0L, FormError.DISCOUNT_TOO_LARGE)
+                else -> DiscountResult(read.value!!, null)
+            }
+        }
+
+        DiscountUnit.PERCENT -> {
+            val hundredths = parsePercent(cart.discountText)
+                ?: return DiscountResult(0L, FormError.INVALID_NUMBER)
+            if (hundredths > MAX_PERCENT_HUNDREDTHS) return DiscountResult(0L, FormError.PERCENT_OUT_OF_RANGE)
+            try {
+                // Taken from the subtotal, rounded half-up once to the paisa.
+                DiscountResult(SaleCalculator.percentDiscount(subtotal, hundredths), null)
+            } catch (e: ArithmeticException) {
+                DiscountResult(0L, FormError.TOO_LARGE)
+            }
+        }
+    }
+}
+
 fun summarize(cart: CartState): CartSummary {
     val views = cart.lines.map(::viewOf)
     val linesOk = views.all { it.quantityError == null && it.priceError == null }
@@ -90,19 +130,15 @@ fun summarize(cart: CartState): CartSummary {
     }
     if (overflow) subtotal = 0L
 
-    val discount = readAmount(cart.discountText)
-    val delivery = readAmount(cart.deliveryText)
+    val discount = readDiscount(cart, subtotal, subtotalComplete = linesOk && !overflow)
 
-    // A discount bigger than the subtotal is only reported when every line is fine,
-    // otherwise the subtotal is still incomplete.
-    val discountError = discount.error
-        ?: if (linesOk && !overflow && (discount.value ?: 0L) > subtotal) FormError.DISCOUNT_TOO_LARGE else null
-    val deliveryError = delivery.error
+    // Delivery: a switch and a taka box. Off or empty means 0.
+    val deliveryRead = if (cart.deliveryOn) readAmount(cart.deliveryText) else Read(0L, null)
+    val deliveryError = deliveryRead.error
+    val delivery = if (deliveryError == null) deliveryRead.value ?: 0L else 0L
 
-    val effectiveDiscount = if (discountError == null) discount.value ?: 0L else 0L
-    val effectiveDelivery = if (deliveryError == null) delivery.value ?: 0L else 0L
     val total = try {
-        Math.addExact(subtotal - effectiveDiscount, effectiveDelivery)
+        Math.addExact(subtotal - discount.paisa, delivery)
     } catch (e: ArithmeticException) {
         overflow = true
         0L
@@ -110,16 +146,16 @@ fun summarize(cart: CartState): CartSummary {
 
     // May the shopkeeper continue? Everything must be fine, and the SAME final check that
     // saving uses must agree (the customer and the money received come on the next screen).
-    val allFine = views.isNotEmpty() && linesOk && !overflow && discountError == null && deliveryError == null
+    val allFine = views.isNotEmpty() && linesOk && !overflow && discount.error == null && deliveryError == null
     val canContinue = allFine && SaleCalculator.check(
         lines = views.map { CartLine(it.quantity!!, it.unitPrice!!) },
-        discount = effectiveDiscount,
-        deliveryCharge = effectiveDelivery,
+        discount = discount.paisa,
+        deliveryCharge = delivery,
         received = null,
         hasCustomer = false
     ) is SaleCheck.Valid
 
-    return CartSummary(views, discountError, deliveryError, subtotal, total, canContinue)
+    return CartSummary(views, discount.error, deliveryError, subtotal, discount.paisa, delivery, total, canContinue)
 }
 
 /**

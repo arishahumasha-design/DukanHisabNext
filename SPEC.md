@@ -55,7 +55,14 @@ before guessing.
 - Search/select products and add them to a cart.
 - In the cart, edit quantity and unit price per line. A price edited in the
   cart affects only that sale; the product's own price never changes.
-- Optional discount (fixed taka amount) and optional delivery charge.
+- Optional discount and optional delivery charge. Each has an on/off switch;
+  when a switch is off its value is 0.
+  - The discount is either a fixed taka amount or a percentage (%). A
+    percentage must be between 0 and 100 (decimals allowed, for example
+    12.5). It is taken from the subtotal (the sum of the rounded line
+    totals), rounded half-up once to the paisa, and that taka amount is
+    saved as the discount (in paisa, as before). A percentage above 100 is
+    refused.
 - Payment screen: amount received and payment method. The MVP screen shows
   Cash, bKash and Nagad (the database already supports Bank and Other).
 - If received < total, the rest becomes a due on a customer (customer
