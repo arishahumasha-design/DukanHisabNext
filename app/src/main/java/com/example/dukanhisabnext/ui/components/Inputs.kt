@@ -4,7 +4,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -62,9 +65,19 @@ fun FormError.messageRes(): Int = when (this) {
     FormError.MUST_BE_POSITIVE -> R.string.error_must_be_positive
     FormError.DUPLICATE -> R.string.error_duplicate
     FormError.NO_CHANGE -> R.string.error_no_change
+    FormError.TOO_LARGE -> R.string.error_too_large
+    FormError.DISCOUNT_TOO_LARGE -> R.string.error_discount_too_large
 }
 
-/** A text box for money or quantity: number keypad, Bengali digits, error text below. */
+/** True while the on-screen keyboard is showing. (Compose marks this API as experimental.) */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun rememberImeVisible(): Boolean = WindowInsets.isImeVisible
+
+/**
+ * A text box for money or quantity: number keypad, Bengali digits, error text below.
+ * [prefix] (for example "৳") and [suffix] (for example "কেজি") are drawn inside the box.
+ */
 @Composable
 fun NumberField(
     label: String,
@@ -72,7 +85,9 @@ fun NumberField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     error: FormError? = null,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    prefix: String? = null,
+    suffix: String? = null
 ) {
     OutlinedTextField(
         value = value,
@@ -81,6 +96,8 @@ fun NumberField(
         label = { Text(label) },
         enabled = enabled,
         singleLine = true,
+        prefix = prefix?.let { { Text(it) } },
+        suffix = suffix?.let { { Text(it) } },
         isError = error != null,
         supportingText = error?.let { { Text(stringResource(it.messageRes())) } },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),

@@ -20,6 +20,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.dukanhisabnext.ui.components.rememberImeVisible
 import com.example.dukanhisabnext.ui.customers.CustomerDetailScreen
 import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
 import com.example.dukanhisabnext.ui.customers.CustomerListScreen
@@ -28,7 +29,7 @@ import com.example.dukanhisabnext.ui.products.ProductListScreen
 import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
-import com.example.dukanhisabnext.ui.screens.SellScreen
+import com.example.dukanhisabnext.ui.sell.SellScreen
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
 // that shows whichever screen is selected).
@@ -38,12 +39,14 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
+    val imeVisible = rememberImeVisible()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            // Form screens (edit product, stock) hide the bar to leave room for the keyboard.
-            if (!Routes.hidesBottomBar(currentDestination?.route)) {
+            // Form screens hide the bar, and so does an open keyboard (the bar would only sit
+            // behind it and leave a gap).
+            if (!Routes.hidesBottomBar(currentDestination?.route) && !imeVisible) {
                 NavigationBar {
                     Screen.entries.forEach { screen ->
                         NavigationBarItem(

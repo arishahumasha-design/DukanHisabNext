@@ -24,6 +24,3 @@ private fun EmptyScreen(@StringRes titleRes: Int, modifier: Modifier = Modifier)
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) = EmptyScreen(R.string.title_home, modifier)
-
-@Composable
-fun SellScreen(modifier: Modifier = Modifier) = EmptyScreen(R.string.title_sell, modifier)

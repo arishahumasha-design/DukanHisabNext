@@ -68,6 +68,32 @@ class ProductStockDaoTest : DatabaseTestBase() {
     }
 
     @Test
+    fun allStocksAreSummedPerProduct() = runBlocking {
+        val rice = addProduct("চাল")
+        val oil = addProduct("তেল")
+        addProduct("সাবান") // no movements at all: no row
+        val stock = db.stockMovementDao()
+        stock.insert(movement(rice, StockMovementType.OPENING, 10_000))
+        stock.insert(movement(rice, StockMovementType.SALE, -2_500))
+        stock.insert(movement(oil, StockMovementType.SALE, -1_000)) // negative stock
+
+        val rows = stock.observeAllStocks().first().associate { it.productId to it.stock }
+
+        assertEquals(mapOf(rice to 7_500L, oil to -1_000L), rows)
+    }
+
+    @Test
+    fun repositoryStockMapMatchesTheMovements() = runBlocking {
+        val rice = addProduct("চাল")
+        db.stockMovementDao().insert(movement(rice, StockMovementType.OPENING, 4_000))
+
+        val map = com.example.dukanhisabnext.data.ProductRepository(db) { now }.observeStocks().first()
+
+        assertEquals(4_000L, map[rice])
+        assertEquals(null, map[999L]) // unknown product: not in the map (the screen treats it as 0)
+    }
+
+    @Test
     fun movementForUnknownProductIsRejected() = runBlocking {
         assertConstraintFails {
             db.stockMovementDao().insert(movement(productId = 999, StockMovementType.PURCHASE, 1_000))

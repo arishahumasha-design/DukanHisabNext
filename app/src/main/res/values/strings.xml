@@ -93,6 +93,23 @@
     <string name="movement_adjustment">সংশোধন</string>
     <string name="movement_line">%1$s · %2$s</string>
 
+    <!-- Sell screen -->
+    <string name="in_cart">কার্টে: %1$s</string>
+    <string name="cart_title">কার্ট</string>
+    <string name="cart_empty">কার্ট খালি। উপরের তালিকা থেকে পণ্য ট্যাপ করুন।</string>
+    <string name="field_line_quantity">পরিমাণ</string>
+    <string name="field_line_price">দাম</string>
+    <string name="label_line_total">মোট</string>
+    <string name="btn_remove_line">কার্ট থেকে সরান</string>
+    <string name="stock_warning_line">স্টকে আছে %1$s %2$s — তবুও বিক্রি হবে</string>
+    <string name="field_discount">ছাড়</string>
+    <string name="field_delivery">ডেলিভারি চার্জ</string>
+    <string name="label_subtotal">সাব-টোটাল</string>
+    <string name="label_total">মোট</string>
+    <string name="btn_continue">এগিয়ে যান</string>
+    <string name="error_too_large">সংখ্যাটি অনেক বড়</string>
+    <string name="error_discount_too_large">ছাড় সাব-টোটালের চেয়ে বেশি হতে পারে না</string>
+
     <!-- Khata (customers) -->
     <string name="total_receivable">মোট পাবো</string>
     <string name="search_customers">কাস্টমার খুঁজুন</string>

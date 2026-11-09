@@ -8,6 +8,7 @@ import com.example.dukanhisabnext.data.entity.StockMovement
 import com.example.dukanhisabnext.data.entity.StockMovementType
 import com.example.dukanhisabnext.util.StockMath
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /**
  * The one place that changes products and stock. Anything that writes to more
@@ -31,6 +32,10 @@ class ProductRepository(
     fun observeCategories(): Flow<List<Category>> = productDao.observeCategories()
 
     fun observeStock(productId: Long): Flow<Long> = stockDao.observeStock(productId)
+
+    /** Current stock per product id (thousandths). A product missing from the map has stock 0. */
+    fun observeStocks(): Flow<Map<Long, Long>> =
+        stockDao.observeAllStocks().map { rows -> rows.associate { it.productId to it.stock } }
 
     fun observeMovements(productId: Long): Flow<List<StockMovement>> = stockDao.observeForProduct(productId)
 

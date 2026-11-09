@@ -5,6 +5,7 @@ import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.ProductRepository
 import com.example.dukanhisabnext.data.SaleRepository
+import com.example.dukanhisabnext.ui.sell.CartStore
 
 /**
  * Created once when the app starts. It owns the database and the repositories,
@@ -20,4 +21,7 @@ class DokanHisabApp : Application() {
     // One shared SaleRepository for the whole app: its lock and double-tap memory only
     // work if every screen uses the same one.
     val saleRepository: SaleRepository by lazy { SaleRepository(database) }
+
+    // The cart of the sale in progress. Held here so it survives rotation and tab switching.
+    val cartStore: CartStore = CartStore()
 }
