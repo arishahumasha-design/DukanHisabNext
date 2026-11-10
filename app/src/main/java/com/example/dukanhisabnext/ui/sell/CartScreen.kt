@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +61,8 @@ fun CartScreen(
     val cart by viewModel.cartState.collectAsStateWithLifecycle()
     val summary by viewModel.summary.collectAsStateWithLifecycle()
     val stocks by viewModel.stocks.collectAsStateWithLifecycle()
+    val unavailable by viewModel.unavailable.collectAsStateWithLifecycle()
+    val canContinue by viewModel.canContinue.collectAsStateWithLifecycle()
 
     SubScreenScaffold(title = stringResource(R.string.cart_title), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().imePadding()) {
@@ -82,6 +85,7 @@ fun CartScreen(
                         CartLineCard(
                             line = line,
                             stock = stocks[line.input.productId] ?: 0L, // no movements yet = stock 0
+                            unavailable = line.input.productId in unavailable,
                             viewModel = viewModel
                         )
                     }
@@ -163,7 +167,7 @@ fun CartScreen(
             }
 
             // ---- Fixed bottom bar: সর্বমোট and the big continue button ----
-            GrandTotalBar(total = summary.total, canContinue = summary.canContinue, onContinue = onContinue)
+            GrandTotalBar(total = summary.total, canContinue = canContinue, onContinue = onContinue)
         }
     }
 }
@@ -221,12 +225,29 @@ private fun DiscountUnitToggle(selected: DiscountUnit, onSelect: (DiscountUnit) 
 
 /** One cart line: name, remove, quantity, price, line total (computed, read-only), stock warning. */
 @Composable
-private fun CartLineCard(line: CartLineView, stock: Long, viewModel: CartViewModel) {
+private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, viewModel: CartViewModel) {
     val input = line.input
     val unitText = stringResource(input.unit.labelRes())
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        // A line the sale could not accept (archived product) is drawn in red until it is removed.
+        colors = if (unavailable) {
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        } else {
+            CardDefaults.cardColors()
+        }
+    ) {
         Column(modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 12.dp)) {
+            if (unavailable) {
+                Text(
+                    text = stringResource(R.string.line_unavailable),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(top = 8.dp, end = 8.dp)
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = input.name,

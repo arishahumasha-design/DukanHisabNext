@@ -30,6 +30,9 @@ import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
 import com.example.dukanhisabnext.ui.sell.CartScreen
+import com.example.dukanhisabnext.ui.sell.PaymentScreen
+import com.example.dukanhisabnext.ui.sell.PickCustomerScreen
+import com.example.dukanhisabnext.ui.sell.ReceiptPlaceholderScreen
 import com.example.dukanhisabnext.ui.sell.SellScreen
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
@@ -88,8 +91,37 @@ fun AppNavigation() {
                 composable(Routes.CART) {
                     CartScreen(
                         onBack = { navController.popBackStack() },
-                        onContinue = { /* step 4: the payment screen */ }
+                        onContinue = { navController.navigate(Routes.PAYMENT) }
                     )
+                }
+                composable(Routes.PAYMENT) {
+                    PaymentScreen(
+                        onBack = { navController.popBackStack() },
+                        onPickCustomer = { navController.navigate(Routes.PICK_CUSTOMER) },
+                        onSaved = { saleId, change ->
+                            // Go to the receipt and remove the cart AND payment screens from the
+                            // back stack: Back can never return to a finished sale.
+                            navController.navigate(Routes.receipt(saleId, change)) {
+                                popUpTo(Routes.SELL) { inclusive = false }
+                            }
+                        }
+                    )
+                }
+                composable(Routes.PICK_CUSTOMER) {
+                    PickCustomerScreen(onBack = { navController.popBackStack() })
+                }
+                composable(
+                    route = Routes.RECEIPT,
+                    arguments = listOf(
+                        navArgument("saleId") { type = NavType.LongType },
+                        navArgument("change") {
+                            type = NavType.LongType
+                            defaultValue = 0L
+                        }
+                    )
+                ) {
+                    // Back (or "নতুন বিক্রি") returns to the product picker.
+                    ReceiptPlaceholderScreen(onNewSale = { navController.popBackStack(Routes.SELL, inclusive = false) })
                 }
             }
 

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.data.ProductRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -29,6 +30,14 @@ class CartViewModel(
     val summary: StateFlow<CartSummary> = cart.state
         .map(::summarize)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), summarize(cart.state.value))
+
+    /** Lines whose product could not be sold when saving (archived or missing): marked in red. */
+    val unavailable: StateFlow<Set<Long>> = cart.unavailableProductIds
+
+    /** The continue button: the cart must be fine AND have no marked (unsellable) line. */
+    val canContinue: StateFlow<Boolean> = combine(summary, cart.unavailableProductIds) { s, marked ->
+        s.canContinue && s.lines.none { it.input.productId in marked }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     fun onQuantityChange(productId: Long, text: String) = cart.setQuantityText(productId, text)
 

@@ -15,6 +15,9 @@ object Routes {
     // ---- Sell tab: screen A (picker) and screen B (cart) ----
     const val SELL = "sell"
     const val CART = "cart"
+    const val PAYMENT = "payment"
+    const val PICK_CUSTOMER = "pick_customer"
+    const val RECEIPT = "receipt/{saleId}?change={change}"
 
     // ---- Khata tab ----
     const val KHATA = "khata"
@@ -33,10 +36,14 @@ object Routes {
 
     fun customerDetail(customerId: Long): String = "customer_detail/$customerId"
 
+    /** [change] is the ফেরত given back (paisa). It is not stored in the database, so it travels here. */
+    fun receipt(saleId: Long, change: Long = 0L): String = "receipt/$saleId?change=$change"
+
     /**
      * The form screens hide the bottom bar, to leave room for the keyboard. The cart screen
      * hides it too: it has its own bottom bar with the total and the continue button.
      */
     fun hidesBottomBar(route: String?): Boolean =
-        route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT || route == CART
+        route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
+            route == CART || route == PAYMENT || route == PICK_CUSTOMER
 }

@@ -86,6 +86,9 @@ class SaleRepository(
             size > 100
     }
 
+    /** A saved sale, for showing it again (the receipt). */
+    suspend fun getSale(id: Long): Sale? = saleDao.getSale(id)
+
     suspend fun completeSale(draft: SaleDraft): SaleResult = saveLock.withLock {
         // Double tap: this cart was already saved -> give back the same result, save nothing.
         savedDrafts[draft.draftId]?.let { return@withLock it }
