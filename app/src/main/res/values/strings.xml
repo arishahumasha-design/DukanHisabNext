@@ -120,24 +120,33 @@
     <!-- Cart: a line that could not be sold -->
     <string name="line_unavailable">এই পণ্য আর বিক্রির জন্য নেই (আর্কাইভ করা হয়েছে)। কার্ট থেকে সরিয়ে দিন।</string>
 
-    <!-- Payment screen -->
-    <string name="title_payment">পেমেন্ট</string>
-    <string name="field_received">প্রাপ্ত টাকা</string>
-    <string name="btn_full_amount">পুরো টাকা</string>
-    <string name="label_payment_method">পেমেন্টের মাধ্যম</string>
-    <string name="method_cash">ক্যাশ</string>
+    <!-- Payment screen "পেমেন্ট কনফার্ম করুন" -->
+    <string name="title_payment">পেমেন্ট কনফার্ম করুন</string>
+    <string name="field_received">পেয়েছি</string>
+    <string name="change_line">ফেরত দিবেন ৳ %1$s</string>
+    <string name="due_preview_line">বাকি থাকবে ৳ %1$s — কাস্টমার লাগবে</string>
+    <string name="btn_pay_cash">নগদ টাকা</string>
+    <string name="btn_pay_due">বাকি</string>
+    <string name="btn_pay_mobile">বিকাশ / নগদ (মোবাইল)</string>
+    <string name="dialog_mobile_title">কোন মাধ্যমে পেয়েছেন?</string>
     <string name="method_bkash">বিকাশ</string>
-    <string name="method_nagad">নগদ</string>
-    <string name="result_change">ফেরত দিন: ৳ %1$s</string>
-    <string name="result_due">বাকি: ৳ %1$s</string>
-    <string name="result_exact">ঠিক আছে — কোনো বাকি বা ফেরত নেই</string>
-    <string name="label_customer">কাস্টমার</string>
-    <string name="btn_pick_customer">কাস্টমার বেছে নিন</string>
-    <string name="btn_change_customer">বদলান</string>
-    <string name="btn_remove_customer">সরান</string>
-    <string name="customer_needed">বাকি থাকলে কাস্টমার বেছে নিতে হবে</string>
-    <string name="btn_save_sale">বিক্রি সম্পূর্ণ করুন</string>
+    <string name="method_nagad_full">নগদ (Nagad)</string>
+    <string name="field_sale_note">মন্তব্য</string>
+    <string name="switch_customer_info">কাস্টমার তথ্য</string>
+    <string name="phone_country_prefix">+88 </string>
+    <string name="btn_add_customer_now">নতুন কাস্টমার হিসেবে যোগ করুন</string>
+    <string name="btn_clear_customer">অন্য কাস্টমার</string>
+    <string name="customer_in_khata">খাতায় আছে · বর্তমান বাকি:</string>
+    <string name="customer_needed_for_due">বাকি থাকবে ৳ %1$s। তাই কাস্টমারের নাম দিন, না হলে বিক্রি সংরক্ষণ হবে না।</string>
     <string name="saving_sale">সংরক্ষণ হচ্ছে…</string>
+
+    <!-- "নতুন বাকি" screen -->
+    <string name="title_due">নতুন বাকি</string>
+    <string name="field_due_amount">বাকির পরিমাণ</string>
+    <string name="paid_line">পরিশোধ: ৳ %1$s</string>
+    <string name="label_customer_required">কাস্টমার (আবশ্যক)</string>
+    <string name="btn_confirm_due">বাকি নিশ্চিত করুন</string>
+    <string name="error_due_more_than_total">বাকি সর্বমোটের চেয়ে বেশি হতে পারে না</string>
     <string name="payment_cart_invalid">কার্ট খালি বা ভুল আছে। পেছনে গিয়ে ঠিক করুন।</string>
     <string name="btn_back_to_cart">কার্টে ফিরে যান</string>
     <string name="error_save_failed">সংরক্ষণ করা যায়নি। কিছুই সংরক্ষিত হয়নি, আবার চেষ্টা করুন।</string>
@@ -145,11 +154,6 @@
     <string name="error_customer_not_found">কাস্টমার পাওয়া যায়নি। আবার বেছে নিন।</string>
     <string name="error_customer_required">বাকি থাকলে কাস্টমার বেছে নিতে হবে।</string>
     <string name="error_sale_invalid">বিক্রির হিসাবে সমস্যা আছে। কার্টে ফিরে গিয়ে ঠিক করুন।</string>
-
-    <!-- Customer picker (inside a sale) -->
-    <string name="title_pick_customer">কাস্টমার বেছে নিন</string>
-    <string name="btn_new_customer_quick">+ নতুন কাস্টমার</string>
-    <string name="dialog_quick_customer_title">নতুন কাস্টমার</string>
 
     <!-- Receipt placeholder (the real receipt comes in the next step) -->
     <string name="title_receipt">রসিদ</string>

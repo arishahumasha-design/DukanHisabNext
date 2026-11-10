@@ -16,7 +16,7 @@ object Routes {
     const val SELL = "sell"
     const val CART = "cart"
     const val PAYMENT = "payment"
-    const val PICK_CUSTOMER = "pick_customer"
+    const val DUE = "due"
     const val RECEIPT = "receipt/{saleId}?change={change}"
 
     // ---- Khata tab ----
@@ -45,5 +45,5 @@ object Routes {
      */
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
-            route == CART || route == PAYMENT || route == PICK_CUSTOMER
+            route == CART || route == PAYMENT || route == DUE
 }

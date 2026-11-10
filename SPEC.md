@@ -63,11 +63,40 @@ before guessing.
     totals), rounded half-up once to the paisa, and that taka amount is
     saved as the discount (in paisa, as before). A percentage above 100 is
     refused.
-- Payment screen: amount received and payment method. The MVP screen shows
-  Cash, bKash and Nagad (the database already supports Bank and Other).
-- If received < total, the rest becomes a due on a customer (customer
-  required in that case). If received > total, show the change to give back
-  (ফেরত); the saved paidAmount is never more than the total.
+- Payment screen "পেমেন্ট কনফার্ম করুন":
+  - A bar at the top with "সর্বমোট ৳ X".
+  - A box "পেয়েছি" (amount received), prefilled with the total. When received
+    is more than the total, a live line "ফেরত দিবেন ৳ Y" shows the change.
+    The saved paidAmount is never more than the total.
+  - Three big buttons (at least 64dp):
+    1. "নগদ টাকা": saves at once with paymentMethod CASH,
+       paid = min(received, total).
+    2. "বাকি": opens the "নতুন বাকি" screen (below).
+    3. "বিকাশ / নগদ (মোবাইল)": a small choice "বিকাশ" or "নগদ (Nagad)", then
+       saves at once with that method. No QR code in the MVP.
+  - If received is less than the total when saving, the rest is a due, so a
+    customer is required. Without one nothing is saved: the customer section
+    opens with a clear message.
+  - A "মন্তব্য" box, saved as Sale.note.
+  - A switch "কাস্টমার তথ্য". When on: name (type to search existing
+    customers; a small add icon adds the typed name as a new customer),
+    mobile (shown with +88, same rules as the customer form) and address.
+    Picking an existing customer fills the other boxes. A new name creates a
+    customer with the customer-form rules; its id is remembered for this
+    cart, so a retry never creates a second customer.
+  - The database supports Bank and Other too, but the screen does not offer
+    them in the MVP.
+- "নতুন বাকি" screen (from the বাকি button):
+  - "বাকির পরিমাণ" box. Default: total − received when received is less than
+    the total, otherwise the full total. It must be more than 0 and not more
+    than the total. Paid = total − due.
+  - A customer is required (same search and add as above), plus a note box.
+  - A confirm button saves the sale with that due (paymentMethod CASH; it
+    only has meaning when paid > 0).
+  - Customers only: no supplier or employee options, no photo.
+- While a save is running, all save buttons are disabled. The cart has ONE
+  draft id (made when the cart is created, replaced when it is cleared), so a
+  double tap or a retry never saves twice.
 - Optional customer on any sale.
 - On completion: save the sale, reduce stock, add ledger entry if there is a
   due, show the receipt.
@@ -207,7 +236,8 @@ Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
 **More** (products, expenses, reports, settings).
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
-Sell (product picker + cart), Payment, Receipt, Customer list, Customer detail,
+Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
+("নতুন বাকি"), Receipt; Customer list, Customer detail,
 Add due / receive payment, Sales list, Expense list, Add expense, Reports,
 Settings.
 

@@ -29,9 +29,13 @@ import com.example.dukanhisabnext.ui.products.ProductListScreen
 import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
+import androidx.compose.runtime.remember
+import androidx.navigation.NavController
+import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.sell.CartScreen
+import com.example.dukanhisabnext.ui.sell.CheckoutViewModel
+import com.example.dukanhisabnext.ui.sell.DueScreen
 import com.example.dukanhisabnext.ui.sell.PaymentScreen
-import com.example.dukanhisabnext.ui.sell.PickCustomerScreen
 import com.example.dukanhisabnext.ui.sell.ReceiptPlaceholderScreen
 import com.example.dukanhisabnext.ui.sell.SellScreen
 
@@ -94,21 +98,28 @@ fun AppNavigation() {
                         onContinue = { navController.navigate(Routes.PAYMENT) }
                     )
                 }
-                composable(Routes.PAYMENT) {
+                composable(Routes.PAYMENT) { entry ->
                     PaymentScreen(
                         onBack = { navController.popBackStack() },
-                        onPickCustomer = { navController.navigate(Routes.PICK_CUSTOMER) },
-                        onSaved = { saleId, change ->
-                            // Go to the receipt and remove the cart AND payment screens from the
-                            // back stack: Back can never return to a finished sale.
-                            navController.navigate(Routes.receipt(saleId, change)) {
-                                popUpTo(Routes.SELL) { inclusive = false }
-                            }
+                        onOpenDue = { navController.navigate(Routes.DUE) },
+                        onSaved = { saleId, change -> navController.openReceiptAfterSale(saleId, change) },
+                        viewModel = appViewModel(owner = entry) { app, _ ->
+                            CheckoutViewModel(app.saleRepository, app.customerRepository, app.cartStore)
                         }
                     )
                 }
-                composable(Routes.PICK_CUSTOMER) {
-                    PickCustomerScreen(onBack = { navController.popBackStack() })
+                composable(Routes.DUE) { entry ->
+                    // The নতুন বাকি screen borrows the payment screen's ViewModel, so the customer
+                    // boxes, the note and the save state are shared. remember() looks the payment
+                    // screen up once, so this keeps working while the screens change.
+                    val paymentEntry = remember(entry) { navController.getBackStackEntry(Routes.PAYMENT) }
+                    DueScreen(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { saleId, change -> navController.openReceiptAfterSale(saleId, change) },
+                        viewModel = appViewModel(owner = paymentEntry) { app, _ ->
+                            CheckoutViewModel(app.saleRepository, app.customerRepository, app.cartStore)
+                        }
+                    )
                 }
                 composable(
                     route = Routes.RECEIPT,
@@ -185,5 +196,16 @@ fun AppNavigation() {
                 }
             }
         }
+    }
+}
+
+/**
+ * After a successful sale: open the receipt and remove the cart, payment and নতুন বাকি screens
+ * from the back stack (everything above the product picker), so Back can never return to a
+ * finished sale.
+ */
+private fun NavController.openReceiptAfterSale(saleId: Long, change: Long) {
+    navigate(Routes.receipt(saleId, change)) {
+        popUpTo(Routes.SELL) { inclusive = false }
     }
 }

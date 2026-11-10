@@ -4,6 +4,11 @@ import com.example.dukanhisabnext.data.SaleDraft
 import com.example.dukanhisabnext.data.SaleDraftLine
 import com.example.dukanhisabnext.data.SaleResult
 import com.example.dukanhisabnext.data.entity.PaymentMethod
+import com.example.dukanhisabnext.ui.customers.CustomerFormErrors
+import com.example.dukanhisabnext.ui.customers.CustomerFormInput
+import com.example.dukanhisabnext.ui.customers.CustomerFormResult
+import com.example.dukanhisabnext.ui.customers.ValidatedCustomer
+import com.example.dukanhisabnext.ui.customers.validateCustomerForm
 import com.example.dukanhisabnext.ui.products.FormError
 import com.example.dukanhisabnext.util.CartLine
 import com.example.dukanhisabnext.util.SaleCalculator
@@ -82,7 +87,8 @@ fun buildDraft(
     received: Long,
     method: PaymentMethod,
     customerId: Long?,
-    draftId: String
+    draftId: String,
+    note: String? = null
 ): SaleDraft = SaleDraft(
     draftId = draftId,
     lines = summary.lines.map { SaleDraftLine(it.input.productId, it.quantity!!, it.unitPrice!!) },
@@ -90,8 +96,78 @@ fun buildDraft(
     deliveryCharge = summary.delivery,
     received = received,
     paymentMethod = method,
-    customerId = customerId
+    customerId = customerId,
+    note = note
 )
+
+// ---- The "নতুন বাকি" screen ----
+
+/** The due typed on the "নতুন বাকি" screen, checked. Paid = total - due. */
+data class DueView(val due: Long?, val paid: Long?, val error: FormError?)
+
+/** The due must be filled in, more than 0, and not more than the total. */
+fun dueView(total: Long, dueText: String): DueView {
+    if (dueText.isBlank()) return DueView(null, null, FormError.REQUIRED)
+    val due = parseTakaToPaisa(dueText) ?: return DueView(null, null, FormError.INVALID_NUMBER)
+    return when {
+        due <= 0L -> DueView(null, null, FormError.MUST_BE_POSITIVE)
+        due > total -> DueView(null, null, FormError.DUE_MORE_THAN_TOTAL)
+        else -> DueView(due, total - due, null)
+    }
+}
+
+/**
+ * The due the "নতুন বাকি" screen starts with: what is missing when "পেয়েছি" is less than the
+ * total, otherwise the whole total (nothing paid).
+ */
+fun defaultDuePaisa(total: Long, receivedText: String): Long {
+    val received = parseTakaToPaisa(receivedText)
+    return if (received != null && received < total) total - received else total
+}
+
+// ---- Which customer goes on the sale ----
+
+/** What to do about the customer when saving. */
+sealed interface CustomerDecision {
+    /** A customer from the khata was picked (or created earlier for this cart). */
+    data class UseExisting(val id: Long) : CustomerDecision
+
+    /** A new name was typed: create this customer first (customer-form rules already checked). */
+    data class CreateNew(val customer: ValidatedCustomer) : CustomerDecision
+
+    /** No customer on this sale (allowed when there is no due). */
+    data object NoCustomer : CustomerDecision
+
+    /** Stop: a customer is needed or the typed details are wrong. [errors] go under the boxes. */
+    data class Missing(val errors: CustomerFormErrors) : CustomerDecision
+}
+
+/**
+ * Decides the customer for a save.
+ * [sectionOn]: the "কাস্টমার তথ্য" switch (always true on the "নতুন বাকি" screen).
+ * [selectedId]: an existing customer already chosen for this cart, or null.
+ * [required]: true when the sale leaves a due.
+ */
+fun customerDecision(
+    sectionOn: Boolean,
+    selectedId: Long?,
+    name: String,
+    phone: String,
+    address: String,
+    required: Boolean
+): CustomerDecision {
+    val nameNeeded = CustomerDecision.Missing(CustomerFormErrors(name = FormError.REQUIRED))
+
+    if (!sectionOn) return if (required) nameNeeded else CustomerDecision.NoCustomer
+    if (selectedId != null) return CustomerDecision.UseExisting(selectedId)
+    if (name.isBlank()) return if (required) nameNeeded else CustomerDecision.NoCustomer
+
+    // A new name: the same rules as the customer form in the Khata tab (M3).
+    return when (val result = validateCustomerForm(CustomerFormInput(name, phone, address, note = ""))) {
+        is CustomerFormResult.Invalid -> CustomerDecision.Missing(result.errors)
+        is CustomerFormResult.Valid -> CustomerDecision.CreateNew(result.customer)
+    }
+}
 
 /** Why a save did not happen. The screen turns each one into a Bengali message. */
 sealed interface PaymentError {

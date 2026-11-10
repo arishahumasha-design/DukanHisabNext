@@ -10,7 +10,8 @@ enum class FormError {
     REQUIRED, INVALID_NUMBER, INVALID_PHONE, MUST_BE_POSITIVE, DUPLICATE, NO_CHANGE,
     TOO_LARGE,          // a number so big the sum would overflow (a typo)
     DISCOUNT_TOO_LARGE, // discount more than the subtotal
-    PERCENT_OUT_OF_RANGE // a percentage below 0 or above 100
+    PERCENT_OUT_OF_RANGE, // a percentage below 0 or above 100
+    DUE_MORE_THAN_TOTAL   // a due bigger than the sale total
 }
 
 /** What the user typed. All numbers are still text here. */
