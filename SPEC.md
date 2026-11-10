@@ -75,15 +75,36 @@ before guessing.
     3. "বিকাশ / নগদ (মোবাইল)": a small choice "বিকাশ" or "নগদ (Nagad)", then
        saves at once with that method. No QR code in the MVP.
   - If received is less than the total when saving, the rest is a due, so a
-    customer is required. Without one nothing is saved: the customer section
-    opens with a clear message.
+    customer is required. Without one nothing is saved and a clear message is
+    shown. If the "কাস্টমার তথ্য" switch is off, the message offers a button to
+    switch it on again. Switching it off means no customer for this sale.
   - A "মন্তব্য" box, saved as Sale.note.
-  - A switch "কাস্টমার তথ্য". When on: name (type to search existing
-    customers; a small add icon adds the typed name as a new customer),
-    mobile (shown with +88, same rules as the customer form) and address.
-    Picking an existing customer fills the other boxes. A new name creates a
-    customer with the customer-form rules; its id is remembered for this
-    cart, so a retry never creates a second customer.
+  - A switch "কাস্টমার তথ্য". When on, the customer picker (ONE component,
+    also used on the "নতুন বাকি" screen):
+    - Name box: type to search existing customers (name or mobile, Bengali or
+      Latin digits, the same search as the customer list). Tapping a
+      suggestion selects that customer. A small "person +" icon at the end
+      of the box opens the "কাস্টমার তালিকা" dialog.
+    - The dialog has a search box and the customers as rows (name and
+      mobile) sorted by name A to Z. Tapping a row selects it and closes the
+      dialog. Buttons at the bottom: "বন্ধ করুন" and "কাস্টমার যুক্ত করুন".
+    - "কাস্টমার যুক্ত করুন" opens the normal add-customer form (same
+      validation). At its top a button "ফোনবুক থেকে আনুন" lets the user pick
+      one phone number from the phonebook (a system picker; the app needs no
+      contacts permission). It fills name and mobile; the number is
+      normalized with the customer-form rules (+88, spaces, dashes). A number
+      that is not a valid Bangladeshi mobile is left as it is and the normal
+      error is shown. After saving, the app returns to the payment or বাকি
+      screen with the new customer selected and everything already typed
+      (received amount, due amount, note, switches) kept.
+    - Once a customer is selected (existing or new), a small card shows name,
+      mobile and address with a "বদলান" button (clears the selection),
+      instead of editable boxes, so an existing customer cannot be edited by
+      accident.
+    - Mobile and address boxes appear while nothing is selected. If nothing is
+      selected but a new name is typed, that customer is created on save with
+      the customer-form rules; its id is remembered for this cart, so a retry
+      never creates a second customer.
   - The database supports Bank and Other too, but the screen does not offer
     them in the MVP.
 - "নতুন বাকি" screen (from the বাকি button):
@@ -109,6 +130,10 @@ before guessing.
 
 ### 3.3 Customers and due ledger (baki khata)
 - Add / edit customers: name, mobile, address, note.
+- Every mobile box (customer form, payment, "নতুন বাকি"): as soon as the typed
+  number is a complete valid mobile (11 digits starting with 01 after removing
+  +88, spaces and dashes), the keyboard is hidden and the box loses focus.
+  Tapping the box again opens the keyboard.
 - Customer list with search, showing how much each customer owes.
 - Customer detail: full history of dues and payments.
 - Record a payment received from a customer (reduces due), with date, amount,
@@ -237,7 +262,8 @@ Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
-("নতুন বাকি"), Receipt; Customer list, Customer detail,
+("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
+import), Receipt; Customer list, Customer detail,
 Add due / receive payment, Sales list, Expense list, Add expense, Reports,
 Settings.
 

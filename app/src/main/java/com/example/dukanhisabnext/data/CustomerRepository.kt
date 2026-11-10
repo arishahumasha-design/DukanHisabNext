@@ -26,6 +26,13 @@ class CustomerRepository(
     fun observeCustomers(query: String): Flow<List<CustomerWithBalance>> =
         customerDao.observeWithBalance(toLatinDigits(query.trim()))
 
+    /**
+     * Customers for choosing one in a sale: searched by name or mobile (Bengali digits accepted),
+     * sorted by name A to Z, without balances.
+     */
+    fun observeCustomerList(query: String): Flow<List<Customer>> =
+        customerDao.observeSearchedByName(toLatinDigits(query.trim()))
+
     /** Total receivable (pabo): what customers who owe money owe in total. */
     fun observeTotalReceivable(): Flow<Long> = ledgerDao.observeTotalReceivable()
 

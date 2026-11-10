@@ -134,9 +134,16 @@
     <string name="field_sale_note">মন্তব্য</string>
     <string name="switch_customer_info">কাস্টমার তথ্য</string>
     <string name="phone_country_prefix">+88 </string>
-    <string name="btn_add_customer_now">নতুন কাস্টমার হিসেবে যোগ করুন</string>
-    <string name="btn_clear_customer">অন্য কাস্টমার</string>
-    <string name="customer_in_khata">খাতায় আছে · বর্তমান বাকি:</string>
+    <string name="field_customer_name_search">নাম বা মোবাইল (লিখলে খুঁজে দেখাবে)</string>
+    <string name="btn_open_customer_list">কাস্টমার তালিকা</string>
+    <string name="dialog_customer_list_title">কাস্টমার তালিকা</string>
+    <string name="btn_close_dialog">বন্ধ করুন</string>
+    <string name="btn_add_customer_dialog">কাস্টমার যুক্ত করুন</string>
+    <string name="btn_change_customer">বদলান</string>
+    <string name="btn_from_phonebook">ফোনবুক থেকে আনুন</string>
+    <string name="title_sale_add_customer">কাস্টমার যুক্ত করুন</string>
+    <string name="customer_off_needed">বাকি থাকবে ৳ %1$s। বাকির জন্য কাস্টমার লাগবে, কিন্তু “কাস্টমার তথ্য” বন্ধ আছে।</string>
+    <string name="btn_turn_on_customer">কাস্টমার তথ্য চালু করুন</string>
     <string name="customer_needed_for_due">বাকি থাকবে ৳ %1$s। তাই কাস্টমারের নাম দিন, না হলে বিক্রি সংরক্ষণ হবে না।</string>
     <string name="saving_sale">সংরক্ষণ হচ্ছে…</string>
 

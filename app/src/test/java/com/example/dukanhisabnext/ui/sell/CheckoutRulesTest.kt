@@ -104,6 +104,21 @@ class CheckoutRulesTest {
     }
 
     @Test
+    fun switchOffMeansNoCustomerEvenIfOneWasChosenEarlier() {
+        // The customer card is only hidden when the switch is off; this sale then has no customer.
+        assertEquals(
+            CustomerDecision.NoCustomer,
+            customerDecision(sectionOn = false, selectedId = 7, name = "", phone = "", address = "", required = false)
+        )
+    }
+
+    @Test
+    fun switchOffWithADueStillNeedsACustomerEvenIfOneWasChosenEarlier() {
+        val d = customerDecision(sectionOn = false, selectedId = 7, name = "", phone = "", address = "", required = true)
+        assertTrue(d is CustomerDecision.Missing)
+    }
+
+    @Test
     fun aChosenCustomerIsUsed() {
         assertEquals(
             CustomerDecision.UseExisting(7),

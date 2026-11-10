@@ -145,6 +145,37 @@ class CustomerRepositoryTest : DatabaseTestBase() {
         assertEquals("রহিম", r.observeCustomers("  রহিম ").first().single().customer.name)
     }
 
+    // ---- The customer list used when choosing a customer for a sale ----
+
+    @Test
+    fun customerListIsSortedByNameNotByDue() = runBlocking {
+        val r = repo()
+        val zahid = r.addCustomer(newCustomer("জাহিদ"))
+        val karim = r.addCustomer(newCustomer("করিম"))
+        val anis = r.addCustomer(newCustomer("আনিস"))
+        ledger(zahid, LedgerEntryType.MANUAL_DUE, 90_000) // the biggest due must NOT come first here
+
+        val names = r.observeCustomerList("").first().map { it.name }
+
+        assertEquals(listOf("আনিস", "করিম", "জাহিদ"), names)
+        assertEquals(zahid, r.observeCustomers("").first().first().customer.id) // the Khata list still puts the due first
+        assertNotNull(karim)
+        assertNotNull(anis)
+    }
+
+    @Test
+    fun customerListSearchesNameAndMobileWithBengaliOrLatinDigits() = runBlocking {
+        val r = repo()
+        r.addCustomer(newCustomer("করিম", "01711000000"))
+        r.addCustomer(newCustomer("রহিম", "01811000000"))
+
+        assertEquals(listOf("রহিম"), r.observeCustomerList("রহি").first().map { it.name })
+        assertEquals(listOf("করিম"), r.observeCustomerList("0171").first().map { it.name })
+        assertEquals(listOf("রহিম"), r.observeCustomerList("০১৮১").first().map { it.name })
+        assertEquals(2, r.observeCustomerList("1100").first().size)
+        assertTrue(r.observeCustomerList("xyz").first().isEmpty())
+    }
+
     // ---- Duplicate mobile warning ----
 
     @Test

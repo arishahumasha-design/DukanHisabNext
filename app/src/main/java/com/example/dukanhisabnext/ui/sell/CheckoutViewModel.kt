@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.SaleRepository
 import com.example.dukanhisabnext.data.SaleResult
-import com.example.dukanhisabnext.data.dao.CustomerWithBalance
 import com.example.dukanhisabnext.data.entity.Customer
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.ui.customers.CustomerFormErrors
@@ -29,24 +28,29 @@ import kotlinx.coroutines.launch
 /** Which screen started the save (that screen moves on to the receipt). */
 enum class CheckoutScreen { PAYMENT, DUE }
 
-/** The "কাস্টমার তথ্য" boxes. The chosen existing customer's id lives in the CartStore. */
+/**
+ * The customer boxes (shown while nobody is selected). The selected customer's id lives in the
+ * CartStore; when one is selected, a card is shown instead of these boxes.
+ */
 data class CustomerInputState(
-    val on: Boolean = false,          // the switch (the নতুন বাকি screen always shows the boxes)
+    val on: Boolean = false,          // the switch (the নতুন বাকি screen always shows the picker)
     val name: String = "",
     val phone: String = "",           // normal digits; shown after a fixed "+88"
     val address: String = "",
-    val errors: CustomerFormErrors = CustomerFormErrors(),
-    val isCreating: Boolean = false   // the small add icon is saving a new customer
+    val errors: CustomerFormErrors = CustomerFormErrors()
 )
 
 data class CheckoutState(
     val receivedText: String,         // "পেয়েছি", starts as the total
     val note: String = "",            // "মন্তব্য", saved as Sale.note
     val customer: CustomerInputState = CustomerInputState(),
-    /** A due that needed a customer when none was given (for the message), or null. */
+    /** The due that has no customer yet (for the message), or null. */
     val customerNeededFor: Long? = null,
     val dueText: String = "",         // "বাকির পরিমাণ" on the নতুন বাকি screen
     val mobileChoiceOpen: Boolean = false,
+    /** The "কাস্টমার তালিকা" dialog. */
+    val listOpen: Boolean = false,
+    val listQuery: String = "",
     val isSaving: Boolean = false,
     val error: PaymentError? = null,
     val savedSaleId: Long? = null,
@@ -57,9 +61,10 @@ data class CheckoutState(
 
 /**
  * Logic for BOTH the payment screen and the "নতুন বাকি" screen. The two screens share ONE
- * instance (the নতুন বাকি screen borrows the payment screen's), so the customer boxes, the note
- * and the save state are the same on both. Saving always goes through
- * SaleRepository.completeSale with the cart's single draft id.
+ * instance (the নতুন বাকি screen borrows the payment screen's), so the customer, the note, the
+ * amounts and the save state are the same on both - and are kept while the add-customer form is
+ * open on top. Saving always goes through SaleRepository.completeSale with the cart's single
+ * draft id.
  */
 class CheckoutViewModel(
     private val sales: SaleRepository,
@@ -89,37 +94,34 @@ class CheckoutViewModel(
     val due: StateFlow<DueView> = combine(summary, _state) { s, st -> dueView(s.total, st.dueText) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), dueView(summary.value.total, ""))
 
-    /** The existing customer chosen for this cart (picked, or created earlier for it), or null. */
+    /** The existing customer selected for this cart (picked, or created earlier for it), or null. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val selectedCustomer: StateFlow<Customer?> = cart.customerId
         .flatMapLatest { id -> if (id == null) flowOf(null) else customers.observeCustomer(id) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
-    /** That customer's balance before this sale (paisa). */
+    /**
+     * Up to 5 existing customers matching what is typed in the name box (name or mobile, the same
+     * search as the customer list), while nobody is selected.
+     */
     @OptIn(ExperimentalCoroutinesApi::class)
-    val selectedBalance: StateFlow<Long> = cart.customerId
-        .flatMapLatest { id -> if (id == null) flowOf(0L) else customers.observeBalance(id) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0L)
-
-    /** Up to 5 existing customers matching the typed name (or mobile), while none is chosen. */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val suggestions: StateFlow<List<CustomerWithBalance>> =
-        combine(_state.map { it.customer.name.trim() }.distinctUntilChanged(), cart.customerId) { name, chosen ->
-            name to chosen
+    val suggestions: StateFlow<List<Customer>> =
+        combine(_state.map { it.customer.name.trim() }.distinctUntilChanged(), cart.customerId) { name, selected ->
+            name to selected
         }
-            .flatMapLatest { (name, chosen) ->
-                if (chosen != null || name.isEmpty()) flowOf(emptyList())
-                else customers.observeCustomers(name).map { it.take(5) }
+            .flatMapLatest { (name, selected) ->
+                if (selected != null || name.isEmpty()) flowOf(emptyList())
+                else customers.observeCustomerList(name).map { it.take(5) }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    init {
-        // A customer already chosen for this cart (for example before going back to the cart
-        // and returning): fill the boxes again.
-        cart.customerId.value?.let { id ->
-            viewModelScope.launch { customers.getCustomer(id)?.let(::fillFrom) }
-        }
-    }
+    /** The rows of the "কাস্টমার তালিকা" dialog: searched, sorted by name A to Z. null = loading. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val customerRows: StateFlow<List<Customer>?> = _state
+        .map { it.listQuery }
+        .distinctUntilChanged()
+        .flatMapLatest { customers.observeCustomerList(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // =====================================================================================
     // Typing
@@ -130,73 +132,56 @@ class CheckoutViewModel(
 
     fun onNoteChange(text: String) = _state.update { it.copy(note = text) }
 
+    /**
+     * The "কাস্টমার তথ্য" switch. OFF means no customer for this sale (a chosen customer is only
+     * hidden, not forgotten, so switching on again brings the card back).
+     */
     fun onCustomerSwitch(on: Boolean) = _state.update {
         it.copy(customer = it.customer.copy(on = on), customerNeededFor = if (on) it.customerNeededFor else null)
     }
 
-    /** Typing a name. If an existing customer was chosen, changing the name un-chooses them. */
-    fun onCustomerNameChange(text: String) {
-        if (cart.customerId.value != null) {
-            cart.setCustomer(null)
-            _state.update { it.copy(customer = it.customer.copy(name = text, phone = "", address = "", errors = CustomerFormErrors())) }
-        } else {
-            _state.update { it.copy(customer = it.customer.copy(name = text, errors = it.customer.errors.copy(name = null))) }
-        }
+    fun onCustomerNameChange(text: String) = _state.update {
+        it.copy(
+            customer = it.customer.copy(name = text, errors = it.customer.errors.copy(name = null)),
+            customerNeededFor = if (text.isNotBlank()) null else it.customerNeededFor
+        )
     }
 
-    fun onCustomerPhoneChange(text: String) =
-        _state.update { it.copy(customer = it.customer.copy(phone = text, errors = it.customer.errors.copy(phone = null))) }
+    fun onCustomerPhoneChange(text: String) = _state.update {
+        it.copy(customer = it.customer.copy(phone = text, errors = it.customer.errors.copy(phone = null)))
+    }
 
     fun onCustomerAddressChange(text: String) =
         _state.update { it.copy(customer = it.customer.copy(address = text)) }
 
-    /** A suggestion was tapped: choose that customer and fill the boxes. */
+    // ---- Selecting a customer ----
+
+    /** A suggestion or a dialog row was tapped: select that customer (a card replaces the boxes). */
     fun onPickCustomer(customer: Customer) {
         cart.setCustomer(customer.id)
-        fillFrom(customer)
+        _state.update {
+            it.copy(
+                customer = CustomerInputState(on = true),
+                customerNeededFor = null,
+                listOpen = false,
+                listQuery = ""
+            )
+        }
     }
 
-    /** The ✕ next to a chosen customer: empty boxes, ready for another one. */
-    fun onClearCustomer() {
+    /** "বদলান": clear the selection and show the empty boxes again. */
+    fun onChangeCustomer() {
         cart.setCustomer(null)
         _state.update { it.copy(customer = CustomerInputState(on = true)) }
     }
 
-    /** The small add icon: add the typed name as a new customer now (customer-form rules). */
-    fun onAddCustomerNow() {
-        val c = _state.value.customer
-        if (c.isCreating || cart.customerId.value != null) return
-        when (val decision = customerDecision(true, null, c.name, c.phone, c.address, required = true)) {
-            is CustomerDecision.Missing -> _state.update { it.copy(customer = it.customer.copy(errors = decision.errors)) }
-            is CustomerDecision.CreateNew -> {
-                _state.update { it.copy(customer = it.customer.copy(isCreating = true)) }
-                viewModelScope.launch {
-                    try {
-                        createCustomer(decision.customer)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        _state.update { it.copy(error = PaymentError.SaveFailed) }
-                    } finally {
-                        _state.update { it.copy(customer = it.customer.copy(isCreating = false)) }
-                    }
-                }
-            }
-            else -> Unit
-        }
-    }
+    // ---- The "কাস্টমার তালিকা" dialog ----
 
-    private fun fillFrom(customer: Customer) = _state.update {
-        it.copy(
-            customer = CustomerInputState(
-                on = true,
-                name = customer.name,
-                phone = customer.phone.orEmpty(),
-                address = customer.address.orEmpty()
-            ),
-            customerNeededFor = null
-        )
-    }
+    fun onOpenCustomerList() = _state.update { it.copy(listOpen = true, listQuery = "") }
+
+    fun onCloseCustomerList() = _state.update { it.copy(listOpen = false, listQuery = "") }
+
+    fun onListQueryChange(text: String) = _state.update { it.copy(listQuery = text) }
 
     /** Creates the customer and REMEMBERS the id for this cart, so a retry never makes a second one. */
     private suspend fun createCustomer(customer: ValidatedCustomer): Long {
@@ -254,7 +239,7 @@ class CheckoutViewModel(
             received = cartSummary.total - dueAmount, // paid = total - due
             method = PaymentMethod.CASH,              // only has meaning when paid > 0
             dueAmount = dueAmount,
-            sectionOn = true                          // the customer boxes are always shown there
+            sectionOn = true                          // the customer picker is always shown there
         )
     }
 
@@ -279,7 +264,7 @@ class CheckoutViewModel(
         )
     }
 
-    private fun isBusy(): Boolean = _state.value.let { it.isSaving || it.savedSaleId != null || it.customer.isCreating }
+    private fun isBusy(): Boolean = _state.value.let { it.isSaving || it.savedSaleId != null }
 
     /** The one way a sale is saved, from either screen. */
     private fun save(
@@ -300,11 +285,12 @@ class CheckoutViewModel(
             required = dueAmount > 0
         )
         if (decision is CustomerDecision.Missing) {
-            // Do not save. Open the customer boxes and say why.
+            // Do not save. Show why. When the switch is off it stays off: the screen then offers
+            // a button to switch it on again.
             _state.update {
                 it.copy(
-                    customer = it.customer.copy(on = true, errors = decision.errors),
-                    customerNeededFor = if (dueAmount > 0) dueAmount else null
+                    customer = it.customer.copy(errors = decision.errors),
+                    customerNeededFor = if (dueAmount > 0 && decision.errors.name != null) dueAmount else null
                 )
             }
             return

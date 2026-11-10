@@ -30,8 +30,11 @@ import com.example.dukanhisabnext.ui.products.StockAdjustScreen
 import com.example.dukanhisabnext.ui.screens.HomeScreen
 import com.example.dukanhisabnext.ui.screens.MoreScreen
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.appViewModel
+import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
 import com.example.dukanhisabnext.ui.sell.CartScreen
 import com.example.dukanhisabnext.ui.sell.CheckoutViewModel
 import com.example.dukanhisabnext.ui.sell.DueScreen
@@ -102,6 +105,7 @@ fun AppNavigation() {
                     PaymentScreen(
                         onBack = { navController.popBackStack() },
                         onOpenDue = { navController.navigate(Routes.DUE) },
+                        onAddCustomer = { navController.navigate(Routes.SALE_ADD_CUSTOMER) },
                         onSaved = { saleId, change -> navController.openReceiptAfterSale(saleId, change) },
                         viewModel = appViewModel(owner = entry) { app, _ ->
                             CheckoutViewModel(app.saleRepository, app.customerRepository, app.cartStore)
@@ -115,10 +119,21 @@ fun AppNavigation() {
                     val paymentEntry = remember(entry) { navController.getBackStackEntry(Routes.PAYMENT) }
                     DueScreen(
                         onBack = { navController.popBackStack() },
+                        onAddCustomer = { navController.navigate(Routes.SALE_ADD_CUSTOMER) },
                         onSaved = { saleId, change -> navController.openReceiptAfterSale(saleId, change) },
                         viewModel = appViewModel(owner = paymentEntry) { app, _ ->
                             CheckoutViewModel(app.saleRepository, app.customerRepository, app.cartStore)
                         }
+                    )
+                }
+                composable(Routes.SALE_ADD_CUSTOMER) {
+                    // The normal add-customer form. When it saves, the new customer is selected for
+                    // the sale in progress, and the payment (or বাকি) screen below it is unchanged:
+                    // the amounts, note and switches typed there are kept.
+                    val app = LocalContext.current.applicationContext as DokanHisabApp
+                    CustomerEditScreen(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { customerId -> app.cartStore.setCustomer(customerId) }
                     )
                 }
                 composable(

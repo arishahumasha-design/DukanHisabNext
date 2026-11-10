@@ -17,6 +17,8 @@ object Routes {
     const val CART = "cart"
     const val PAYMENT = "payment"
     const val DUE = "due"
+    /** The normal add-customer form, opened from a sale. The new customer comes back selected. */
+    const val SALE_ADD_CUSTOMER = "sale_add_customer"
     const val RECEIPT = "receipt/{saleId}?change={change}"
 
     // ---- Khata tab ----
@@ -45,5 +47,5 @@ object Routes {
      */
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
-            route == CART || route == PAYMENT || route == DUE
+            route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER
 }

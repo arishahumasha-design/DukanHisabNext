@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.entity.Customer
+import com.example.dukanhisabnext.ui.products.FormError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,12 +25,14 @@ data class CustomerFormState(
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     /** Becomes true after a successful save: the screen then closes itself. */
-    val finished: Boolean = false
+    val finished: Boolean = false,
+    /** The id of the customer that was just saved (new or edited). A sale uses it to select them. */
+    val savedCustomerId: Long? = null
 )
 
 /**
  * Logic for the add/edit customer screen. The customer id comes from the navigation route
- * (SavedStateHandle holds the route arguments). No id (-1) means "new customer".
+ * (SavedStateHandle holds the route arguments). No id (-1, or none) means "new customer".
  */
 class CustomerEditViewModel(
     private val repo: CustomerRepository,
@@ -89,6 +92,21 @@ class CustomerEditViewModel(
 
     fun onNoteChange(text: String) = _state.update { it.copy(note = text) }
 
+    /**
+     * A contact was picked from the phonebook: fill the name and the mobile. The number is
+     * normalized with the customer-form rules. If it is not a valid Bangladeshi mobile it is left
+     * in the box as it is, with the normal "wrong mobile" error.
+     */
+    fun onPhonebookPicked(contactName: String?, number: String) {
+        val imported = phonebookNumber(number)
+        val name = contactName?.trim().orEmpty()
+        if (name.isNotEmpty()) onNameChange(name)
+        onPhoneChange(imported.text)
+        if (!imported.isValid && imported.text.isNotEmpty()) {
+            _state.update { it.copy(errors = it.errors.copy(phone = FormError.INVALID_PHONE)) }
+        }
+    }
+
     // ---- Save ----
 
     fun save() {
@@ -103,7 +121,7 @@ class CustomerEditViewModel(
                 val checked = result.customer
                 viewModelScope.launch {
                     val original = loaded
-                    if (customerId == null || original == null) {
+                    val savedId = if (customerId == null || original == null) {
                         // createdAt/updatedAt are placeholders: the repository sets the real times.
                         repo.addCustomer(
                             Customer(
@@ -124,8 +142,9 @@ class CustomerEditViewModel(
                                 note = checked.note
                             )
                         )
+                        original.id
                     }
-                    _state.update { it.copy(isSaving = false, finished = true) }
+                    _state.update { it.copy(isSaving = false, finished = true, savedCustomerId = savedId) }
                 }
             }
         }

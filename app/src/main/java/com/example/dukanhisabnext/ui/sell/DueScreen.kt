@@ -34,15 +34,13 @@ import com.example.dukanhisabnext.util.formatTaka
 @Composable
 fun DueScreen(
     onBack: () -> Unit,
+    onAddCustomer: () -> Unit,
     onSaved: (saleId: Long, change: Long) -> Unit,
     viewModel: CheckoutViewModel
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val summary by viewModel.summary.collectAsStateWithLifecycle()
     val due by viewModel.due.collectAsStateWithLifecycle()
-    val selected by viewModel.selectedCustomer.collectAsStateWithLifecycle()
-    val selectedBalance by viewModel.selectedBalance.collectAsStateWithLifecycle()
-    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
 
     LaunchedEffect(state.savedSaleId) {
         val id = state.savedSaleId
@@ -83,14 +81,7 @@ fun DueScreen(
 
                 // ---- Customer: required here ----
                 Text(stringResource(R.string.label_customer_required), style = MaterialTheme.typography.titleMedium)
-                CustomerInfoFields(
-                    input = state.customer,
-                    selected = selected,
-                    selectedBalance = selectedBalance,
-                    suggestions = suggestions,
-                    neededFor = state.customerNeededFor,
-                    viewModel = viewModel
-                )
+                CustomerPickerSection(viewModel = viewModel, onAddCustomer = onAddCustomer)
 
                 NoteField(value = state.note, onValueChange = viewModel::onNoteChange)
 
@@ -102,7 +93,7 @@ fun DueScreen(
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
                 Button(
                     onClick = viewModel::confirmDue,
-                    enabled = !state.isSaving && !state.customer.isCreating && due.error == null,
+                    enabled = !state.isSaving && due.error == null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 10.dp)

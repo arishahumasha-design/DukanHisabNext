@@ -27,6 +27,35 @@ fun normalizeMobile(text: String): String? {
     return digits.takeIf { BD_MOBILE.matches(it) }
 }
 
+/**
+ * True when [text] is already a COMPLETE Bangladeshi mobile number: 11 digits starting with 01
+ * after removing +88, spaces and dashes (Bengali digits count too). The mobile boxes use it to
+ * close the keyboard as soon as there is nothing more to type.
+ *   "01711000000", "+8801711000000", "০১৭১১০০০০০০", "01711 000 000" -> true
+ *   "0171100000" (10 digits), "01711 00" -> false
+ */
+fun isCompleteMobile(text: String): Boolean = normalizeMobile(text) != null
+
+/** A number picked from the phonebook, ready for the mobile box. */
+data class PhonebookNumber(
+    /** The 11-digit mobile when valid; otherwise the cleaned digits, left as they are. */
+    val text: String,
+    val isValid: Boolean
+)
+
+/**
+ * Turns a phonebook number into what the mobile box should show. Phonebook numbers come in any
+ * style ("+880 1711-000000", "(+880) 1711 000000", "০১৭১১ ০০০০০০"), so everything except digits
+ * and a "+" is dropped first, then the customer-form rules apply ([normalizeMobile]).
+ * A number that is not a valid Bangladeshi mobile (a landline, a foreign number) is NOT changed:
+ * it is left in the box and the normal "wrong mobile" error is shown by the caller.
+ */
+fun phonebookNumber(raw: String): PhonebookNumber {
+    val cleaned = toLatinDigits(raw).filter { it in '0'..'9' || it == '+' }
+    val normalized = normalizeMobile(cleaned)
+    return if (normalized != null) PhonebookNumber(normalized, true) else PhonebookNumber(cleaned, false)
+}
+
 /** What the user typed. */
 data class CustomerFormInput(
     val name: String,

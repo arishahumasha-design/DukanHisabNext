@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +52,7 @@ import com.example.dukanhisabnext.util.formatTaka
 fun PaymentScreen(
     onBack: () -> Unit,
     onOpenDue: () -> Unit,
+    onAddCustomer: () -> Unit,
     onSaved: (saleId: Long, change: Long) -> Unit,
     viewModel: CheckoutViewModel = appViewModel { app, _ ->
         CheckoutViewModel(app.saleRepository, app.customerRepository, app.cartStore)
@@ -57,9 +61,6 @@ fun PaymentScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val view by viewModel.view.collectAsStateWithLifecycle()
     val summary by viewModel.summary.collectAsStateWithLifecycle()
-    val selected by viewModel.selectedCustomer.collectAsStateWithLifecycle()
-    val selectedBalance by viewModel.selectedBalance.collectAsStateWithLifecycle()
-    val suggestions by viewModel.suggestions.collectAsStateWithLifecycle()
     val scroll = rememberScrollState()
 
     // Saved from THIS screen: move on to the receipt.
@@ -97,7 +98,7 @@ fun PaymentScreen(
                     return@Column
                 }
 
-                val busy = state.isSaving || state.customer.isCreating
+                val busy = state.isSaving
 
                 // ---- পেয়েছি, with the live change / due line ----
                 NumberField(
@@ -125,9 +126,10 @@ fun PaymentScreen(
                 }
 
                 // ---- The three big buttons ----
+                // No icon here: a check mark would look like a "selected" state, but this button saves at once.
                 BigPayButton(
                     label = stringResource(R.string.btn_pay_cash),
-                    icon = Icons.Filled.Check,
+                    icon = null,
                     enabled = !busy && view.readyToSave,
                     primary = true,
                     onClick = viewModel::onCashTap
@@ -161,14 +163,30 @@ fun PaymentScreen(
                     onCheckedChange = viewModel::onCustomerSwitch
                 )
                 if (state.customer.on) {
-                    CustomerInfoFields(
-                        input = state.customer,
-                        selected = selected,
-                        selectedBalance = selectedBalance,
-                        suggestions = suggestions,
-                        neededFor = state.customerNeededFor,
-                        viewModel = viewModel
-                    )
+                    CustomerPickerSection(viewModel = viewModel, onAddCustomer = onAddCustomer)
+                } else {
+                    // Switched off = no customer for this sale. A due still needs one, so say so
+                    // and offer to switch it on again.
+                    state.customerNeededFor?.let { due ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = stringResource(R.string.customer_off_needed, formatTaka(due)),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Button(
+                                    onClick = { viewModel.onCustomerSwitch(true) },
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                                ) {
+                                    Text(stringResource(R.string.btn_turn_on_customer), style = MaterialTheme.typography.titleMedium)
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -206,19 +224,18 @@ fun PaymentScreen(
 @Composable
 private fun BigPayButton(
     label: String,
-    icon: ImageVector,
+    icon: ImageVector?,
     enabled: Boolean,
     onClick: () -> Unit,
     primary: Boolean = false
 ) {
     val modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)
     val content: @Composable () -> Unit = {
-        Icon(icon, contentDescription = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 12.dp)
-        )
+        if (icon != null) {
+            Icon(icon, contentDescription = null)
+            Spacer(Modifier.width(12.dp))
+        }
+        Text(text = label, style = MaterialTheme.typography.titleLarge)
     }
     if (primary) {
         Button(onClick = onClick, enabled = enabled, modifier = modifier) { content() }
