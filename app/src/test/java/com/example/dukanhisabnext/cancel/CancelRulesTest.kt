@@ -36,14 +36,8 @@ class CancelRulesTest {
         SaleItem(3, 7, productId = 13, productNameSnapshot = "জিরা", quantity = 250, unitPrice = 80_000, lineTotal = 20_000)
     )
 
-    /** The balance formula from SPEC.md section 4, the same one the database uses. */
-    private fun balance(entries: List<LedgerEntry>): Long = entries.sumOf {
-        when (it.type) {
-            LedgerEntryType.OPENING_DUE, LedgerEntryType.SALE_DUE,
-            LedgerEntryType.MANUAL_DUE, LedgerEntryType.CORRECTION_PLUS -> it.amount
-            LedgerEntryType.PAYMENT_RECEIVED, LedgerEntryType.CORRECTION_MINUS -> -it.amount
-        }
-    }
+    /** The balance formula from SPEC.md section 4 (the Kotlin twin of the database formula). */
+    private fun balance(entries: List<LedgerEntry>): Long = com.example.dukanhisabnext.ledger.balanceOf(entries)
 
     private fun entry(type: LedgerEntryType, amount: Long) =
         LedgerEntry(customerId = 3, type = type, amount = amount, entryDate = now, createdAt = now)

@@ -1,22 +1,37 @@
 package com.example.dukanhisabnext.data.dao
 
 import androidx.room.Dao
+import androidx.room.Embedded
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.dukanhisabnext.data.entity.LedgerEntry
 import kotlinx.coroutines.flow.Flow
 
 /**
- * The balance formula from SPEC.md, written once as SQL and reused in queries:
- * (OPENING_DUE + SALE_DUE + MANUAL_DUE + CORRECTION_PLUS) - (PAYMENT_RECEIVED + CORRECTION_MINUS).
- * Amounts are always positive, so "minus" types are subtracted here.
+ * The balance formula from SPEC.md, written once as SQL and reused in every balance query:
+ * (OPENING_DUE + SALE_DUE + MANUAL_DUE + CORRECTION_PLUS + ADVANCE_RETURNED)
+ *   - (PAYMENT_RECEIVED + CORRECTION_MINUS).
+ * Amounts are always positive, so the "minus" types are subtracted here. BOTH lists are written
+ * out: a type that is in neither list counts 0 (it can never be counted the wrong way by
+ * accident). The Kotlin twin is signedAmount() in LedgerRules.kt; a phone test checks they agree.
  */
 internal const val BALANCE_SUM_SQL = """
     COALESCE(SUM(CASE
-        WHEN type IN ('OPENING_DUE', 'SALE_DUE', 'MANUAL_DUE', 'CORRECTION_PLUS') THEN amount
-        ELSE -amount
+        WHEN type IN ('OPENING_DUE', 'SALE_DUE', 'MANUAL_DUE', 'CORRECTION_PLUS', 'ADVANCE_RETURNED') THEN amount
+        WHEN type IN ('PAYMENT_RECEIVED', 'CORRECTION_MINUS') THEN -amount
+        ELSE 0
     END), 0)
 """
+
+/**
+ * One row of a customer's history: the entry, plus (for entries linked to a sale) the sale's
+ * receipt number and whether that sale was cancelled later.
+ */
+data class LedgerHistoryRow(
+    @Embedded val entry: LedgerEntry,
+    val receiptNo: String?,
+    val saleCancelled: Boolean
+)
 
 // On purpose there is NO update and NO delete here: ledger entries are never
 // changed. A mistake is fixed by inserting a correction entry.
@@ -28,6 +43,22 @@ interface LedgerDao {
     /** A customer's history, newest first (by the date the user picked). */
     @Query("SELECT * FROM ledger_entries WHERE customerId = :customerId ORDER BY entryDate DESC, id DESC")
     fun observeForCustomer(customerId: Long): Flow<List<LedgerEntry>>
+
+    /**
+     * The history for the customer detail screen, newest first: by the date the user picked, then
+     * by the real save time, then by id (so two entries at the same moment keep a fixed order).
+     */
+    @Query(
+        """
+        SELECT l.*, s.receiptNo AS receiptNo, (sc.id IS NOT NULL) AS saleCancelled
+        FROM ledger_entries l
+        LEFT JOIN sales s ON s.id = l.saleId
+        LEFT JOIN sale_cancellations sc ON sc.saleId = l.saleId
+        WHERE l.customerId = :customerId
+        ORDER BY l.entryDate DESC, l.createdAt DESC, l.id DESC
+        """
+    )
+    fun observeHistory(customerId: Long): Flow<List<LedgerHistoryRow>>
 
     /** How much this customer owes (paisa). Negative = shop owes the customer (advance). */
     @Query("SELECT $BALANCE_SUM_SQL FROM ledger_entries WHERE customerId = :customerId")
@@ -53,4 +84,8 @@ interface LedgerDao {
     /** Used to allow only one opening due per customer. */
     @Query("SELECT COUNT(*) FROM ledger_entries WHERE customerId = :customerId AND type = 'OPENING_DUE'")
     suspend fun countOpeningDue(customerId: Long): Int
+
+    /** Live version of [countOpeningDue], so the screen can hide the "পুরনো বাকি" button. */
+    @Query("SELECT COUNT(*) FROM ledger_entries WHERE customerId = :customerId AND type = 'OPENING_DUE'")
+    fun observeOpeningDueCount(customerId: Long): Flow<Int>
 }

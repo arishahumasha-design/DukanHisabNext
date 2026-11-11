@@ -218,8 +218,15 @@ before guessing.
 - Opening due: enter the old balance from the shop's paper khata for a
   customer (one-time entry per customer, shown clearly in the history).
 - Fixing a mistake: never delete a ledger entry. Add a correction entry
-  (plus or minus) with a note, so the history stays honest.
-- Summary at the top: total receivable (pabo).
+  (plus or minus) with a required note, so the history stays honest.
+- Giving an advance back in cash: "অগ্রিম ফেরত দিলাম" (ADVANCE_RETURNED), only
+  while the customer has an advance, up to that advance.
+- Paying more than the due is allowed; the rest becomes an advance (অগ্রিম),
+  with a clear warning before saving.
+- Summary at the top: total receivable (pabo), ignoring advances. A
+  "যাদের বাকি আছে" filter shows only customers who owe money.
+- The rules of each entry (amount limit, dates, once-only opening due, double
+  tap) are in section 5, "Khata entries".
 
 ### 3.4 Expenses
 - Expense categories (default: salary, rent, bill, tea/snacks, transport,
@@ -319,14 +326,26 @@ costPriceSnapshot?, lineTotal.
   `NOT_CANCELLED_SQL` in `SaleDao.kt` (sales alias `s`), never its own copy.
 
 **LedgerEntry**: id, customerId, type (OPENING_DUE, SALE_DUE, MANUAL_DUE,
-PAYMENT_RECEIVED, CORRECTION_PLUS, CORRECTION_MINUS), amount (always
-positive), paymentMethod? (for PAYMENT_RECEIVED), saleId?, note?, entryDate,
-createdAt.
+PAYMENT_RECEIVED, CORRECTION_PLUS, CORRECTION_MINUS, ADVANCE_RETURNED), amount
+(always positive), paymentMethod? (for PAYMENT_RECEIVED and ADVANCE_RETURNED),
+saleId?, note?, entryDate, createdAt.
 - `entryDate` is the date the user picks for the entry (default: now).
   `createdAt` is the real time the row was saved. History lists and reports
   use `entryDate`.
-- Customer balance = sum(OPENING_DUE + SALE_DUE + MANUAL_DUE + CORRECTION_PLUS)
-  - sum(PAYMENT_RECEIVED + CORRECTION_MINUS).
+- ADVANCE_RETURNED: the shop gave a customer's advance (অগ্রিম) back in cash.
+  It raises the balance back towards 0. (Types are stored as text with no
+  fixed list, so adding it needed no schema change; the database stays v2.)
+- Customer balance = sum(OPENING_DUE + SALE_DUE + MANUAL_DUE + CORRECTION_PLUS
+  + ADVANCE_RETURNED) - sum(PAYMENT_RECEIVED + CORRECTION_MINUS).
+  - Written once as SQL: `BALANCE_SUM_SQL` in `LedgerDao.kt`, used by every
+    balance query (customer balance, Khata list, total receivable). BOTH lists
+    are written out; a type in neither list counts 0, never the wrong way.
+  - Its Kotlin twin is `signedAmount()` in `ledger/LedgerRules.kt` (no `else`,
+    so a new type does not compile until it is placed). A phone test
+    (`BalanceFormulaTest`) checks the SQL and Kotlin agree for every type.
+  - Adding a ledger type means updating both, and that test.
+- A cancel-sale reversal is a CORRECTION_MINUS with a `saleId`; the history
+  labels it "বিক্রি বাতিল" (a manual correction has no `saleId`).
 - Ledger entries are never edited or deleted. Mistakes are fixed with a
   correction entry.
 
@@ -390,6 +409,32 @@ createdAt.
   subtotal; paid amount cannot exceed the total.
 - A completed sale is never changed. Its old data must not be edited.
 - Stock movements are never deleted. Fix a stock mistake with an ADJUSTMENT.
+- Khata entries (M5): every entry written from the khata screens goes through
+  `LedgerRepository.save` in **one database transaction**, behind one lock.
+  The rules are checked inside the transaction against the balance at that
+  moment. Each form gets a form id when it opens: saving the same form again
+  (double tap, retry) returns the first result and saves nothing new; a
+  refused form can be fixed and saved.
+  - Amount: above 0 and at most ৳1 crore (৳1,00,00,000) per entry.
+  - Date: today or an earlier Dhaka day; a future day is refused. Today is
+    saved as the real moment; an earlier day is saved as that Dhaka day at the
+    current Dhaka time of day. Such a back-dated entry shows its date only and
+    when it was written.
+  - টাকা পেলাম (PAYMENT_RECEIVED): method required (নগদ / বিকাশ / নগদ
+    (মোবাইল)). Paying MORE than the due is allowed; the rest becomes an
+    advance, and the form warns "অগ্রিম ৳ X হবে" before saving.
+  - বাকি দিলাম (MANUAL_DUE): amount, date, optional note.
+  - পুরনো বাকি (OPENING_DUE): any time, even after sales, but only ONCE per
+    customer (checked inside the transaction, so two screens at once still save
+    one). Its date may be in the past.
+  - সংশোধন (CORRECTION_PLUS / CORRECTION_MINUS): the note is required.
+  - অগ্রিম ফেরত দিলাম (ADVANCE_RETURNED): only while the customer has an
+    advance, and never more than that advance; method required.
+  - Notes are trimmed and at most 200 characters.
+- History order: by `entryDate` (newest first), then `createdAt`, then id,
+  grouped by Dhaka day. No running balance on the rows; the current balance is
+  shown at the top. A sale due and a cancel-sale reversal open the receipt; a
+  sale due of a cancelled sale gets a grey "বাতিল" tag.
 
 ## 6. Screens and navigation
 

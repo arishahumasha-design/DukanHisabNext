@@ -3,6 +3,7 @@ package com.example.dukanhisabnext
 import android.app.Application
 import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.CustomerRepository
+import com.example.dukanhisabnext.data.LedgerRepository
 import com.example.dukanhisabnext.data.ProductRepository
 import com.example.dukanhisabnext.data.ReceiptRepository
 import com.example.dukanhisabnext.data.SaleRepository
@@ -23,6 +24,9 @@ class DokanHisabApp : Application() {
     // One shared SaleRepository for the whole app: its lock and double-tap memory only
     // work if every screen uses the same one.
     val saleRepository: SaleRepository by lazy { SaleRepository(database) }
+
+    // One shared LedgerRepository too, for the same reason (lock and double-tap memory).
+    val ledgerRepository: LedgerRepository by lazy { LedgerRepository(database) }
 
     val shopRepository: ShopRepository by lazy { ShopRepository(database) }
     val receiptRepository: ReceiptRepository by lazy { ReceiptRepository(database) }
