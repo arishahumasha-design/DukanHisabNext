@@ -43,7 +43,7 @@ android {
     }
     sourceSets {
         // The exported database schemas (app/schemas) are given to the phone tests, so the
-        // migration test can rebuild an old database version and upgrade it.
+        // migration test can rebuild an old database version from its JSON and upgrade it.
         getByName("androidTest") {
             assets.directories.add("$projectDir/schemas")
         }
@@ -69,8 +69,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
-    // Phone tests only (not in the app): MigrationTestHelper for the database migration test.
-    androidTestImplementation(libs.androidx.room.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
