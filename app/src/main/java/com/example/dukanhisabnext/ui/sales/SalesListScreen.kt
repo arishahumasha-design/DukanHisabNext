@@ -31,7 +31,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
@@ -60,6 +62,8 @@ fun SalesListScreen(
     // The words from strings.xml, handed to the plain functions.
     val monthNames = stringArrayResource(R.array.months_bn).toList()
     val walkIn = stringResource(R.string.walk_in_customer)
+    val summaryTemplate = stringResource(R.string.sales_summary, "{count}", "{total}")
+    val excludedTemplate = stringResource(R.string.sales_summary_cancelled_note, "{count}")
     val periodLabels = mapOf(
         DayPeriod.MORNING to stringResource(R.string.period_morning),
         DayPeriod.NOON to stringResource(R.string.period_noon),
@@ -115,10 +119,10 @@ fun SalesListScreen(
             } else {
                 // ---- Count and total of the filtered sales ----
                 Text(
-                    text = stringResource(
-                        R.string.sales_summary,
-                        toBengaliDigits(current.summary.count.toString()),
-                        formatTaka(current.summary.total)
+                    text = salesSummaryLine(
+                        current.summary,
+                        summaryText = { count, total -> summaryTemplate.replace("{count}", count).replace("{total}", total) },
+                        excludedText = { count -> excludedTemplate.replace("{count}", count) }
                     ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.titleMedium,
@@ -184,7 +188,8 @@ private fun DayHeader(text: String) {
 
 /**
  * One sale: receipt number and time, the customer (or "সাধারণ কাস্টমার"), the total, and a small
- * red "বাকি ৳ X" tag when the sale has a due.
+ * red "বাকি ৳ X" tag when the sale has a due. A cancelled sale gets a small grey "বাতিল" tag instead
+ * (no due tag), and its total is grey and crossed out.
  */
 @Composable
 private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClick: () -> Unit) {
@@ -202,9 +207,25 @@ private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClic
                 Text(
                     text = stringResource(R.string.price_format, formatTaka(row.total)),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    // A cancelled sale is not money any more: grey and crossed out.
+                    color = if (row.isCancelled) MaterialTheme.colorScheme.onSurfaceVariant else Color.Unspecified,
+                    textDecoration = if (row.isCancelled) TextDecoration.LineThrough else null
                 )
-                if (row.dueAmount > 0) {
+                if (showCancelledTag(row)) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.sale_cancelled_tag),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (showDueTag(row)) {
                     Surface(
                         color = MaterialTheme.colorScheme.errorContainer,
                         shape = RoundedCornerShape(8.dp)

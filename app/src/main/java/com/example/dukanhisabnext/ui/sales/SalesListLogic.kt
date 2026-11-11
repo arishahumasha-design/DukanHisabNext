@@ -4,6 +4,7 @@ import com.example.dukanhisabnext.data.dao.SaleListRow
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.dayPeriod
+import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.formatTime12
 import com.example.dukanhisabnext.util.toBengaliDigits
 import com.example.dukanhisabnext.util.toLatinDigits
@@ -83,11 +84,38 @@ fun filterSales(rows: List<SaleListRow>, query: String): List<SaleListRow> =
 // The line above the list: how many sales and their total
 // =========================================================================================
 
-data class SalesSummary(val count: Int, val total: Long)
+/**
+ * [count] and [total] only count sales that are NOT cancelled; [cancelledExcluded] is how many
+ * cancelled sales were left out (they stay visible in the list, tagged, but are not money).
+ */
+data class SalesSummary(val count: Int, val total: Long, val cancelledExcluded: Int = 0)
 
-/** The count and the total (sum of each sale's total, in paisa) of the sales shown. */
-fun salesSummary(rows: List<SaleListRow>): SalesSummary =
-    SalesSummary(count = rows.size, total = rows.sumOf { it.total })
+/** The count and the total (sum of each sale's total, in paisa) of the sales shown, cancelled ones left out. */
+fun salesSummary(rows: List<SaleListRow>): SalesSummary {
+    val active = rows.filterNot { it.isCancelled }
+    return SalesSummary(count = active.size, total = active.sumOf { it.total }, cancelledExcluded = rows.size - active.size)
+}
+
+/**
+ * The line above the list: "N টি বিক্রি · মোট ৳ X", and " (বাতিল N টি বাদ)" after it only when some
+ * cancelled sales were left out. [summaryText] and [excludedText] fill the two strings.xml sentences.
+ */
+fun salesSummaryLine(
+    summary: SalesSummary,
+    summaryText: (count: String, total: String) -> String,
+    excludedText: (count: String) -> String
+): String {
+    val main = summaryText(toBengaliDigits(summary.count.toString()), formatTaka(summary.total))
+    return if (summary.cancelledExcluded > 0) {
+        main + " " + excludedText(toBengaliDigits(summary.cancelledExcluded.toString()))
+    } else {
+        main
+    }
+}
+
+/** The small grey "বাতিল" tag is shown on cancelled rows; the red due tag is not (a cancelled sale owes nothing). */
+fun showCancelledTag(row: SaleListRow): Boolean = row.isCancelled
+fun showDueTag(row: SaleListRow): Boolean = !row.isCancelled && row.dueAmount > 0
 
 // =========================================================================================
 // Grouping by Dhaka day

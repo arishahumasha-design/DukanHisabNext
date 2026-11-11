@@ -198,6 +198,24 @@
     <string name="receipt_not_found">এই রসিদটি পাওয়া যায়নি।</string>
     <string name="btn_back_to_sell">বিক্রির পাতায় ফিরে যান</string>
 
+    <!-- Cancel a sale (বিক্রি বাতিল) -->
+    <string name="btn_cancel_sale">বিক্রি বাতিল করুন</string>
+    <string name="cancel_dialog_title">বিক্রি বাতিল করবেন?</string>
+    <string name="cancel_reason_label">বাতিলের কারণ (না লিখলেও চলবে)</string>
+    <string name="cancel_reason_counter">%1$s / %2$s</string>
+    <string name="cancel_stock_back">স্টক ফেরত যাবে</string>
+    <string name="cancel_refund">কাস্টমারকে %1$s ফেরত দিন</string>
+    <string name="cancel_due_reduced">বাকি %1$s কমবে</string>
+    <string name="cancel_advance_warning">কাস্টমারের ব্যালেন্স হবে অগ্রিম %1$s</string>
+    <string name="cancel_no">না, থাক</string>
+    <string name="cancel_yes">হ্যাঁ, বাতিল করুন</string>
+    <string name="cancel_in_progress">বাতিল করা হচ্ছে…</string>
+    <string name="cancelled_notice">বাতিল করা হয়েছে</string>
+    <string name="cancel_reason_prefix">কারণ</string>
+    <string name="cancel_err_not_found">এই বিক্রিটি পাওয়া যায়নি। কিছুই বদলানো হয়নি।</string>
+    <string name="cancel_err_reason_long">কারণ সর্বোচ্চ ২০০ অক্ষরের হতে পারে। কিছুই বদলানো হয়নি।</string>
+    <string name="cancel_err_unexpected">কিছু একটা ভুল হয়েছে। কিছুই বদলানো হয়নি। আবার চেষ্টা করুন।</string>
+
     <!-- Sales list -->
     <string name="title_sales">বিক্রির তালিকা</string>
     <string name="search_sales">রসিদ নম্বর, নাম বা মোবাইল দিয়ে খুঁজুন</string>
@@ -208,6 +226,8 @@
     <string name="sales_summary">%1$s টি বিক্রি · মোট ৳ %2$s</string>
     <string name="walk_in_customer">সাধারণ কাস্টমার</string>
     <string name="sale_due_tag">বাকি ৳ %1$s</string>
+    <string name="sale_cancelled_tag">বাতিল</string>
+    <string name="sales_summary_cancelled_note">(বাতিল %1$s টি বাদ)</string>
     <string name="empty_sales_none">এখনও কোনো বিক্রি করা হয়নি।</string>
     <string name="empty_sales_match">এই খোঁজা বা ফিল্টারের সাথে মেলে এমন কোনো বিক্রি নেই।</string>
     <!-- The 12 month names, January first (used in the sales list day headers) -->

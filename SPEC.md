@@ -156,13 +156,32 @@ before guessing.
     receipt goes to the Sell tab (empty cart), never to the payment screen.
     If the sale id does not exist, a calm message and a button back to Sell
     are shown.
+  - Cancel (বিক্রি বাতিল), see section 5 for the rules. Under the receipt
+    there is a red outlined button "বিক্রি বাতিল করুন". It is hidden once the
+    sale is cancelled and disabled while a cancel is running (so a double tap
+    does nothing). It opens a confirm dialog "বিক্রি বাতিল করবেন?" with a plain
+    summary: "স্টক ফেরত যাবে"; "কাস্টমারকে ৳ X ফেরত দিন" (the amount paid at
+    the sale, only if above 0); "বাকি ৳ Y কমবে" (only if the sale had a due);
+    and, if the customer's balance would become negative, a bold red warning
+    "কাস্টমারের ব্যালেন্স হবে অগ্রিম ৳ Z". Below it an optional reason box
+    (at most 200 characters, with a counter) and two buttons: "না, থাক" and
+    "হ্যাঁ, বাতিল করুন". The numbers come from `cancelPreview` in CancelRules.
+  - After a successful cancel the receipt stays open and shows a red banner
+    "বাতিল করা হয়েছে" with the Dhaka date and time and the reason (if any).
+    It is also shown whenever the receipt is opened later. The shared text of
+    a cancelled sale starts with the same lines ("বাতিল করা হয়েছে: <date
+    time>", then "কারণ: ..."). "Already cancelled" just shows the banner.
+    Clear Bengali messages say that nothing was changed for: sale not found,
+    reason too long, and an unexpected error.
 - Sales list (বিক্রির তালিকা) under More. It is read-only: no edit, no delete,
   no write query (only a query that returns the sales with the customer's
   name and mobile). Cancelling a sale is done from its receipt (see section
   5, "Cancelling a sale"); return of goods is a separate, later feature.
   - Cancelled sales stay in the list, tagged "বাতিল", but are left out of the
     count and total above the list. When any are left out, a short note says
-    so: "(বাতিল N টি বাদ)". (The screens for this come in cancel step 3.)
+    so: "(বাতিল N টি বাদ)". A cancelled row shows a small grey "বাতিল" tag
+    (no red due tag) and a grey, crossed-out total. Cancelled sales are found
+    by the search and shown under every chip.
   - Saved sales, newest first, in a lazy list (fast with thousands of sales),
     grouped by day in Asia/Dhaka time (a sale made at 11 pm belongs to that
     Dhaka day). Day headers are in Bengali with Bengali digits, for example
@@ -380,8 +399,10 @@ Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
-import), Receipt; Customer list, Customer detail,
-Add due / receive payment, Sales list (বিক্রির তালিকা, read-only), Expense
+import), Receipt (with the cancel button, confirm dialog and banner); Customer
+list, Customer detail,
+Add due / receive payment, Sales list (বিক্রির তালিকা, read-only; cancelled
+sales tagged "বাতিল"), Expense
 list, Add expense, Reports,
 Settings (owner card and shop button), Owner info (small form), Shop info
 ("দোকানের তথ্য", opened from Settings).

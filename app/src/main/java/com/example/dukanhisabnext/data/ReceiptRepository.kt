@@ -23,7 +23,8 @@ class ReceiptRepository(private val db: AppDatabase) {
         val customer = sale.customerId?.let { db.customerDao().getById(it) }
         val balance = customer?.let { db.ledgerDao().getBalance(it.id) }
         val shop = db.shopProfileDao().get()
+        val cancellation = db.saleCancellationDao().getForSale(saleId) // null while the sale is active
 
-        buildReceiptData(sale, items, units, customer, shop, balance, change)
+        buildReceiptData(sale, items, units, customer, shop, balance, change, cancellation)
     }
 }

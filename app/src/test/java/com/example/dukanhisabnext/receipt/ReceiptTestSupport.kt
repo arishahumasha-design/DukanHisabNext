@@ -30,6 +30,8 @@ val testLabels = ReceiptLabels(
     saleDue = "এই বিক্রির বাকি",
     customerTotalDue = "আপনার মোট বাকি",
     note = "মন্তব্য",
+    cancelledNotice = "বাতিল করা হয়েছে",
+    cancelReason = "কারণ",
     taka = "৳",
     unit = {
         when (it) {
@@ -81,7 +83,10 @@ fun receipt(
     change: Long = 0,
     saleDue: Long = 0,
     customerTotalDue: Long? = null,
-    note: String? = null
+    note: String? = null,
+    cancelledAt: Long? = null,
+    cancelReason: String? = null,
+    customerBalance: Long? = null
 ) = ReceiptData(
     shopName = shopName,
     shopAddress = shopAddress,
@@ -100,7 +105,11 @@ fun receipt(
     change = change,
     saleDue = saleDue,
     customerTotalDue = customerTotalDue,
-    note = note
+    note = note,
+    saleId = 7,
+    customerBalance = customerBalance,
+    cancelledAt = cancelledAt,
+    cancelReason = cancelReason
 )
 
 /** A saved sale as the database would give it. */

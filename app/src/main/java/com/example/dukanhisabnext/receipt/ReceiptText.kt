@@ -29,6 +29,8 @@ data class ReceiptLabels(
     val saleDue: String,           // এই বিক্রির বাকি
     val customerTotalDue: String,
     val note: String,
+    val cancelledNotice: String,   // বাতিল করা হয়েছে (the banner title; the shared text starts with it)
+    val cancelReason: String,      // কারণ
     val taka: String,              // ৳
     val unit: (ProductUnit) -> String,
     val method: (PaymentMethod) -> String,
@@ -50,6 +52,23 @@ fun receiptDateTime(createdAt: Long, labels: ReceiptLabels): String =
 fun receiptPaidLabel(data: ReceiptData, labels: ReceiptLabels): String =
     if (data.showMethod) "${labels.paid} (${labels.method(data.paymentMethod)})" else labels.paid
 
+/**
+ * The "this sale was cancelled" notice: shown as a red banner on the receipt screen and as the
+ * first lines of the shared text. [dateTime] is when it was cancelled (Dhaka), [reason] is already
+ * labelled ("কারণ: ...") and null when no reason was given.
+ */
+data class CancelNotice(val title: String, val dateTime: String, val reason: String?)
+
+/** null while the sale is active. */
+fun cancelNotice(data: ReceiptData, labels: ReceiptLabels): CancelNotice? {
+    val at = data.cancelledAt ?: return null
+    return CancelNotice(
+        title = labels.cancelledNotice,
+        dateTime = receiptDateTime(at, labels),
+        reason = data.cancelReason?.let { "${labels.cancelReason}: $it" }
+    )
+}
+
 private const val SEPARATOR = "--------------------"
 
 /**
@@ -59,6 +78,13 @@ private const val SEPARATOR = "--------------------"
  */
 fun buildReceiptText(data: ReceiptData, labels: ReceiptLabels): String = buildString {
     fun money(paisa: Long) = receiptMoney(paisa, labels)
+
+    // ---- A cancelled sale says so first ("বাতিল করা হয়েছে: <date time>", then the reason) ----
+    cancelNotice(data, labels)?.let { notice ->
+        appendLine("${notice.title}: ${notice.dateTime}")
+        notice.reason?.let { appendLine(it) }
+        appendLine(SEPARATOR)
+    }
 
     // ---- Shop ----
     appendLine(data.shopName ?: labels.shopPlaceholder)

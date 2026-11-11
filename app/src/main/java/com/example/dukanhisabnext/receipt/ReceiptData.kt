@@ -4,6 +4,7 @@ import com.example.dukanhisabnext.data.entity.Customer
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.Sale
+import com.example.dukanhisabnext.data.entity.SaleCancellation
 import com.example.dukanhisabnext.data.entity.SaleItem
 import com.example.dukanhisabnext.data.entity.ShopProfile
 
@@ -46,8 +47,16 @@ data class ReceiptData(
     val saleDue: Long,                  // এই বিক্রির বাকি
     /** The customer's CURRENT total due, from the ledger. null unless the sale has a customer who owes money. */
     val customerTotalDue: Long?,
-    val note: String?
+    val note: String?,
+    // ---- Needed for cancelling a sale (বিক্রি বাতিল) ----
+    val saleId: Long = 0,
+    /** The customer's real balance (can be 0 or negative); null when the sale has no customer. */
+    val customerBalance: Long? = null,
+    /** When the sale was cancelled (UTC millis), or null while it is still active. */
+    val cancelledAt: Long? = null,
+    val cancelReason: String? = null
 ) {
+    val isCancelled: Boolean get() = cancelledAt != null
     val showChange: Boolean get() = shouldShowChange(change)
     val showDiscount: Boolean get() = discount > 0
     val showDelivery: Boolean get() = deliveryCharge > 0
@@ -75,7 +84,8 @@ fun buildReceiptData(
     customer: Customer?,
     shop: ShopProfile?,
     customerBalance: Long?,
-    change: Long
+    change: Long,
+    cancellation: SaleCancellation? = null
 ): ReceiptData = ReceiptData(
     shopName = shop?.name.orNullIfBlank(),
     shopAddress = shop?.address.orNullIfBlank(),
@@ -103,5 +113,9 @@ fun buildReceiptData(
     saleDue = sale.dueAmount,
     // Only for a sale WITH a customer, and only while that customer still owes money.
     customerTotalDue = if (customer != null && customerBalance != null && customerBalance > 0) customerBalance else null,
-    note = sale.note.orNullIfBlank()
+    note = sale.note.orNullIfBlank(),
+    saleId = sale.id,
+    customerBalance = if (customer != null) customerBalance else null,
+    cancelledAt = cancellation?.createdAt,
+    cancelReason = cancellation?.reason.orNullIfBlank()
 )

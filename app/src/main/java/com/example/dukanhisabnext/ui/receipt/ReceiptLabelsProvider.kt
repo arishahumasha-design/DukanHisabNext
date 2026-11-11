@@ -3,11 +3,27 @@ package com.example.dukanhisabnext.ui.receipt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.cancel.CancelDialogLabels
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.receipt.ReceiptLabels
 import com.example.dukanhisabnext.ui.products.labelRes
 import com.example.dukanhisabnext.util.DayPeriod
+
+/** The words of the cancel confirm dialog, from strings.xml. */
+@Composable
+fun cancelDialogLabels(): CancelDialogLabels {
+    val stockBack = stringResource(R.string.cancel_stock_back)
+    val refund = stringResource(R.string.cancel_refund, "{amount}")
+    val dueReduced = stringResource(R.string.cancel_due_reduced, "{amount}")
+    val advance = stringResource(R.string.cancel_advance_warning, "{amount}")
+    return CancelDialogLabels(
+        stockBack = stockBack,
+        refund = { refund.replace("{amount}", it) },
+        dueReduced = { dueReduced.replace("{amount}", it) },
+        advance = { advance.replace("{amount}", it) }
+    )
+}
 
 /**
  * The receipt words from strings.xml, handed to the pure receipt code. Used both to draw the
@@ -46,6 +62,8 @@ fun receiptLabels(): ReceiptLabels {
         saleDue = stringResource(R.string.receipt_sale_due),
         customerTotalDue = stringResource(R.string.receipt_customer_total_due),
         note = stringResource(R.string.receipt_note),
+        cancelledNotice = stringResource(R.string.cancelled_notice),
+        cancelReason = stringResource(R.string.cancel_reason_prefix),
         taka = stringResource(R.string.unit_taka),
         unit = { units.getValue(it) },
         method = { methods.getValue(it) },

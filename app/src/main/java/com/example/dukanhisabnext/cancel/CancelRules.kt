@@ -80,8 +80,15 @@ data class CancelPreview(
 }
 
 /** [currentBalance] is the customer's balance from the ledger right now (null when no customer). */
-fun cancelPreview(sale: Sale, currentBalance: Long?): CancelPreview {
-    val reversed = dueReversalEntry(sale, now = 0L)?.amount ?: 0L
-    val after = if (sale.customerId != null && currentBalance != null) currentBalance - reversed else null
-    return CancelPreview(refundToCustomer = sale.paidAmount, dueReversed = reversed, balanceAfter = after)
+fun cancelPreview(sale: Sale, currentBalance: Long?): CancelPreview =
+    cancelPreview(sale.customerId != null, sale.paidAmount, sale.dueAmount, currentBalance)
+
+/**
+ * The same numbers from the plain facts of a sale (the receipt screen has these, not a Sale row).
+ * The due is only reversed when the sale has a customer, exactly like [dueReversalEntry].
+ */
+fun cancelPreview(hasCustomer: Boolean, paidAmount: Long, dueAmount: Long, currentBalance: Long?): CancelPreview {
+    val reversed = if (hasCustomer && dueAmount > 0) dueAmount else 0L
+    val after = if (hasCustomer && currentBalance != null) currentBalance - reversed else null
+    return CancelPreview(refundToCustomer = paidAmount, dueReversed = reversed, balanceAfter = after)
 }

@@ -13,6 +13,21 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
+import com.example.dukanhisabnext.cancel.CancelFeedback
+import com.example.dukanhisabnext.cancel.CancelSummaryLine
+import com.example.dukanhisabnext.cancel.MAX_CANCEL_REASON_LENGTH
+import com.example.dukanhisabnext.cancel.cancelButtonEnabled
+import com.example.dukanhisabnext.cancel.cancelSummaryFor
+import com.example.dukanhisabnext.cancel.reasonLength
+import com.example.dukanhisabnext.cancel.showCancelButton
+import com.example.dukanhisabnext.receipt.CancelNotice
+import com.example.dukanhisabnext.receipt.cancelNotice
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -50,9 +65,12 @@ import com.example.dukanhisabnext.util.toBengaliDigits
 fun ReceiptScreen(
     onBack: () -> Unit,
     onNewSale: () -> Unit,
-    viewModel: ReceiptViewModel = appViewModel { app, args -> ReceiptViewModel(app.receiptRepository, args) }
+    viewModel: ReceiptViewModel = appViewModel { app, args ->
+        ReceiptViewModel(app.receiptRepository, app.saleRepository, args)
+    }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val cancelState by viewModel.cancel.collectAsStateWithLifecycle()
     val labels = receiptLabels()
     val context = LocalContext.current
     val chooserTitle = stringResource(R.string.share_chooser_title)
@@ -74,7 +92,40 @@ fun ReceiptScreen(
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp)
                 ) {
+                    // The red banner when this sale was cancelled (date, time and reason).
+                    cancelNotice(current.data, labels)?.let { CancelBanner(it) }
                     ReceiptBody(data = current.data, labels = labels)
+
+                    // A calm message when a cancel did not go through (nothing was changed).
+                    cancelState.feedback?.let { feedback ->
+                        Text(
+                            text = stringResource(feedbackText(feedback)),
+                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    // Hidden once cancelled; disabled while a cancel is running.
+                    if (showCancelButton(current.data)) {
+                        OutlinedButton(
+                            onClick = viewModel::onCancelClick,
+                            enabled = cancelButtonEnabled(cancelState.cancelling),
+                            modifier = Modifier.padding(top = 16.dp).fillMaxWidth().heightIn(min = 56.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text(stringResource(R.string.btn_cancel_sale), style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+                }
+                if (cancelState.dialogOpen) {
+                    CancelDialog(
+                        summary = cancelSummaryFor(current.data, cancelDialogLabels(), labels),
+                        state = cancelState,
+                        onReasonChange = viewModel::onReasonChange,
+                        onConfirm = viewModel::onConfirm,
+                        onDismiss = viewModel::onDismissDialog
+                    )
                 }
                 ActionBar(
                     onShare = { shareText(context, chooserTitle, buildReceiptText(current.data, labels)) },
@@ -83,6 +134,98 @@ fun ReceiptScreen(
             }
         }
     }
+}
+
+private fun feedbackText(feedback: CancelFeedback): Int = when (feedback) {
+    CancelFeedback.SALE_NOT_FOUND -> R.string.cancel_err_not_found
+    CancelFeedback.REASON_TOO_LONG -> R.string.cancel_err_reason_long
+    CancelFeedback.UNEXPECTED -> R.string.cancel_err_unexpected
+}
+
+/** The red "বাতিল করা হয়েছে" banner with the Dhaka date and time and the reason (if any). */
+@Composable
+private fun CancelBanner(notice: CancelNotice) {
+    Surface(
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = notice.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Text(notice.dateTime, color = MaterialTheme.colorScheme.onErrorContainer)
+            notice.reason?.let { Text(it, color = MaterialTheme.colorScheme.onErrorContainer) }
+        }
+    }
+}
+
+/** The confirm dialog: a plain summary, an optional reason (at most 200 characters) and two buttons. */
+@Composable
+private fun CancelDialog(
+    summary: List<CancelSummaryLine>,
+    state: CancelUiState,
+    onReasonChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.cancel_dialog_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                summary.forEach { line ->
+                    Text(
+                        text = "• " + line.text,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (line.isWarning) FontWeight.Bold else FontWeight.Normal,
+                        color = if (line.isWarning) MaterialTheme.colorScheme.error else Color.Unspecified
+                    )
+                }
+                OutlinedTextField(
+                    value = state.reason,
+                    onValueChange = onReasonChange,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    label = { Text(stringResource(R.string.cancel_reason_label)) },
+                    supportingText = {
+                        Text(
+                            stringResource(
+                                R.string.cancel_reason_counter,
+                                toBengaliDigits(reasonLength(state.reason).toString()),
+                                toBengaliDigits(MAX_CANCEL_REASON_LENGTH.toString())
+                            )
+                        )
+                    },
+                    minLines = 2,
+                    maxLines = 4,
+                    enabled = !state.cancelling
+                )
+                state.feedback?.let {
+                    Text(stringResource(feedbackText(it)), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !state.cancelling,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text(stringResource(if (state.cancelling) R.string.cancel_in_progress else R.string.cancel_yes))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !state.cancelling) {
+                Text(stringResource(R.string.cancel_no))
+            }
+        }
+    )
 }
 
 /** A calm message when there is no such sale, with a way back to the Sell tab. */
