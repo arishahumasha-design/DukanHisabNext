@@ -40,8 +40,14 @@ import com.example.dukanhisabnext.ui.sell.CheckoutViewModel
 import com.example.dukanhisabnext.ui.sell.DueScreen
 import com.example.dukanhisabnext.ui.sell.PaymentScreen
 import com.example.dukanhisabnext.ui.receipt.ReceiptScreen
+import com.example.dukanhisabnext.ui.settings.OwnerScreen
+import com.example.dukanhisabnext.ui.settings.SettingsScreen
 import com.example.dukanhisabnext.ui.shop.ShopScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.ui.sell.SellScreen
+
+/** A note passed back from "দোকানের তথ্য" to Settings: the shop was just saved. */
+private const val SHOP_SAVED_KEY = "shop_saved"
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
 // that shows whichever screen is selected).
@@ -192,11 +198,39 @@ fun AppNavigation() {
                 composable(Routes.MORE) {
                     MoreScreen(
                         onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
-                        onOpenShop = { navController.navigate(Routes.SHOP) }
+                        onOpenSettings = { navController.navigate(Routes.SETTINGS) }
                     )
                 }
+                composable(Routes.SETTINGS) { entry ->
+                    // "দোকানের তথ্য" leaves a "saved" note here when it closes after saving.
+                    val shopSaved by entry.savedStateHandle
+                        .getStateFlow(SHOP_SAVED_KEY, false)
+                        .collectAsStateWithLifecycle()
+                    SettingsScreen(
+                        onBack = { navController.popBackStack() },
+                        onEditOwner = {
+                            entry.savedStateHandle[SHOP_SAVED_KEY] = false
+                            navController.navigate(Routes.OWNER)
+                        },
+                        onOpenShop = {
+                            entry.savedStateHandle[SHOP_SAVED_KEY] = false
+                            navController.navigate(Routes.SHOP)
+                        },
+                        shopSavedMessage = shopSaved
+                    )
+                }
+                composable(Routes.OWNER) {
+                    OwnerScreen(onBack = { navController.popBackStack() })
+                }
                 composable(Routes.SHOP) {
-                    ShopScreen(onBack = { navController.popBackStack() })
+                    ShopScreen(
+                        onBack = { navController.popBackStack() },
+                        // After saving, go back to Settings (it shows "saved" and the new shop label).
+                        onSaved = {
+                            navController.previousBackStackEntry?.savedStateHandle?.set(SHOP_SAVED_KEY, true)
+                            navController.popBackStack()
+                        }
+                    )
                 }
                 composable(Routes.PRODUCTS) {
                     ProductListScreen(

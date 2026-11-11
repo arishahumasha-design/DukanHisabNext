@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,9 +36,16 @@ import com.example.dukanhisabnext.ui.components.messageRes
 @Composable
 fun ShopScreen(
     onBack: () -> Unit,
+    onSaved: () -> Unit = {},
     viewModel: ShopViewModel = appViewModel { app, _ -> ShopViewModel(app.shopRepository) }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // After a successful save the app goes back to where it came from (Settings), which then
+    // shows the "saved" message and the updated shop button.
+    LaunchedEffect(state.saved) {
+        if (state.saved) onSaved()
+    }
 
     SubScreenScaffold(title = stringResource(R.string.title_shop), onBack = onBack) { padding ->
         Column(

@@ -18,11 +18,11 @@ import androidx.compose.ui.unit.dp
 import com.example.dukanhisabnext.R
 
 /**
- * The More tab: a list of places to go. Products and the shop info exist so far.
- * Expenses, Reports and the other settings are added in their own milestones (no dead buttons).
+ * The More tab: a list of places to go. Products and Settings exist so far (the shop info is
+ * opened from Settings). Expenses and Reports are added in their own milestones (no dead buttons).
  */
 @Composable
-fun MoreScreen(onOpenProducts: () -> Unit, onOpenShop: () -> Unit, modifier: Modifier = Modifier) {
+fun MoreScreen(onOpenProducts: () -> Unit, onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         Text(
             text = stringResource(R.string.title_more),
@@ -30,7 +30,7 @@ fun MoreScreen(onOpenProducts: () -> Unit, onOpenShop: () -> Unit, modifier: Mod
             modifier = Modifier.padding(16.dp)
         )
         MoreItem(label = stringResource(R.string.more_products), onClick = onOpenProducts)
-        MoreItem(label = stringResource(R.string.more_shop), onClick = onOpenShop)
+        MoreItem(label = stringResource(R.string.more_settings), onClick = onOpenSettings)
     }
 }
 

@@ -16,8 +16,6 @@
 
     <!-- More screen -->
     <string name="more_products">পণ্য</string>
-    <!-- (more_shop is further down, with the shop info strings) -->
-
     <!-- Common -->
     <string name="back">পেছনে যান</string>
     <string name="btn_save">সংরক্ষণ করুন</string>
@@ -200,7 +198,15 @@
     <string name="btn_back_to_sell">বিক্রির পাতায় ফিরে যান</string>
 
     <!-- Shop info -->
-    <string name="more_shop">দোকানের তথ্য</string>
+    <string name="more_settings">সেটিংস</string>
+    <string name="title_settings">সেটিংস</string>
+    <string name="owner_label">মালিক</string>
+    <string name="owner_name_placeholder">মালিকের নাম দিন</string>
+    <string name="btn_edit_owner">এডিট করুন</string>
+    <string name="title_owner">মালিকের তথ্য</string>
+    <string name="owner_saved">মালিকের তথ্য সংরক্ষিত হয়েছে।</string>
+    <string name="btn_add_shop">দোকান যুক্ত করুন</string>
+    <string name="btn_change_shop">দোকান পরিবর্তন করুন</string>
     <string name="title_shop">দোকানের তথ্য</string>
     <string name="field_shop_name">দোকানের নাম</string>
     <string name="field_owner_name">মালিকের নাম — ঐচ্ছিক</string>

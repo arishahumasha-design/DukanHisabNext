@@ -198,11 +198,32 @@ before guessing.
 - Dashboard (home): today's sales, today's expense, total due, low-stock count.
 
 ### 3.6 Settings
+- Settings screen (More → সেটিংস), with a top bar, a back arrow and the title
+  "সেটিংস". For now it has only an owner card and a shop button (no
+  subscription, AI credits, SMS, language or currency rows):
+  - Owner card, from the single ShopProfile row: a round avatar with the
+    first letter of the owner name (no photo; a person icon if there is no
+    name), the owner name, the small label "মালিক" and the mobile in Bengali
+    digits. If the owner name is empty, a neutral placeholder text from
+    strings.xml is shown. An outlined button "এডিট করুন" opens a small form
+    with the owner name and the mobile (the shared mobile box; both
+    optional), a save button and a clear saved message. It writes to the same
+    ShopProfile row.
+  - A big full-width shop button. If the shop name is empty: "দোকান যুক্ত
+    করুন". If the shop name exists: "দোকান পরিবর্তন করুন", with the shop name
+    in small text above it. Both open the "দোকানের তথ্য" screen. After saving
+    there the app returns to Settings, which shows a saved message, and the
+    label updates by itself. "দোকান পরিবর্তন করুন" edits this single shop;
+    multiple shops stay out of scope.
+  - The avatar letter is the first letter (or digit) of the name with leading
+    spaces and symbols skipped; an English letter is shown in capitals.
 - Shop profile: shop name, owner name, mobile, address (used on receipts).
-  The screen "দোকানের তথ্য" is under More. It edits and saves the single
+  The screen "দোকানের তথ্য" (opened from Settings) edits and saves the single
   ShopProfile row. Only the shop name is required. The mobile is optional and
-  uses the shared mobile box and the customer-form validation. A clear
-  "saved" message is shown after saving.
+  uses the shared mobile box and the customer-form validation. The ShopProfile
+  has ONE mobile: it is both the owner's mobile on the Settings card and the
+  shop mobile printed on receipts. A shop name that is empty counts as "no
+  shop yet".
 - Manual backup: export the database to one file the user can save or share
   (for example to Google Drive or WhatsApp). The file includes a backup
   format version number.
@@ -301,7 +322,8 @@ Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্�
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
 import), Receipt; Customer list, Customer detail,
 Add due / receive payment, Sales list, Expense list, Add expense, Reports,
-Shop info ("দোকানের তথ্য"), Settings.
+Settings (owner card and shop button), Owner info (small form), Shop info
+("দোকানের তথ্য", opened from Settings).
 
 ## 7. Out of scope for the MVP
 

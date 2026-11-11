@@ -9,6 +9,7 @@ import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.ShopProfile
 import com.example.dukanhisabnext.data.entity.StockMovement
 import com.example.dukanhisabnext.data.entity.StockMovementType
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -215,6 +216,75 @@ class ReceiptAndShopRepositoryTest : DatabaseTestBase() {
         assertEquals(1, countRows("shop_profile"))
         assertEquals("করিম স্টোর", shop.get()!!.name)
         assertEquals("বাজার", shop.get()!!.address)
+    }
+
+    // ---- The owner part of the same row (Settings) ----
+
+    @Test
+    fun updatingTheOwnerKeepsTheShopNameAndAddress() = runBlocking {
+        val shop = ShopRepository(db)
+        shop.save(ShopProfile(name = "করিম স্টোর", ownerName = "পুরনো", phone = "01711000000", address = "বাজার রোড"))
+
+        shop.updateOwner(ownerName = "নতুন মালিক", phone = "01911000000")
+
+        val saved = shop.get()!!
+        assertEquals("করিম স্টোর", saved.name)      // kept
+        assertEquals("বাজার রোড", saved.address)     // kept
+        assertEquals("নতুন মালিক", saved.ownerName)  // changed
+        assertEquals("01911000000", saved.phone)     // changed
+        assertEquals(1, countRows("shop_profile"))
+    }
+
+    @Test
+    fun updatingTheOwnerBeforeAnyShopCreatesTheRowWithAnEmptyShopName() = runBlocking {
+        val shop = ShopRepository(db)
+
+        shop.updateOwner(ownerName = "করিম", phone = "01711000000")
+
+        val saved = shop.get()!!
+        assertEquals("", saved.name) // counts as "no shop yet"
+        assertEquals("করিম", saved.ownerName)
+        assertEquals("01711000000", saved.phone)
+        assertEquals(1, countRows("shop_profile"))
+        assertFalse(com.example.dukanhisabnext.ui.settings.hasShop(saved.name))
+    }
+
+    @Test
+    fun theOwnerCanBeClearedAgain() = runBlocking {
+        val shop = ShopRepository(db)
+        shop.save(ShopProfile(name = "করিম স্টোর", ownerName = "করিম", phone = "01711000000"))
+
+        shop.updateOwner(ownerName = null, phone = null)
+
+        val saved = shop.get()!!
+        assertNull(saved.ownerName)
+        assertNull(saved.phone)
+        assertEquals("করিম স্টোর", saved.name)
+    }
+
+    @Test
+    fun savingTheShopThenTheOwnerBothEndUpInTheOneRow() = runBlocking {
+        val shop = ShopRepository(db)
+        shop.updateOwner("করিম", "01711000000")                                   // owner first
+        shop.save(ShopProfile(name = "করিম স্টোর", ownerName = "করিম", phone = "01711000000", address = "বাজার"))
+
+        val saved = shop.get()!!
+        assertEquals("করিম স্টোর", saved.name)
+        assertEquals("করিম", saved.ownerName)
+        assertEquals(1, countRows("shop_profile"))
+        assertTrue(com.example.dukanhisabnext.ui.settings.hasShop(saved.name))
+    }
+
+    @Test
+    fun observeFollowsTheOneRow() = runBlocking {
+        val shop = ShopRepository(db)
+        assertNull(shop.observe().first())
+
+        shop.updateOwner("করিম", null)
+        assertEquals("করিম", shop.observe().first()!!.ownerName)
+
+        shop.save(ShopProfile(name = "করিম স্টোর", ownerName = "করিম"))
+        assertEquals("করিম স্টোর", shop.observe().first()!!.name)
     }
 
     @Test
