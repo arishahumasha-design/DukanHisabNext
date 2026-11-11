@@ -15,6 +15,10 @@ interface ShopProfileDao {
     @Query("SELECT * FROM shop_profile WHERE id = ${ShopProfile.SINGLE_ROW_ID}")
     fun observe(): Flow<ShopProfile?>
 
+    /** The shop profile once (for a receipt, or to fill the form). null until it is filled in. */
+    @Query("SELECT * FROM shop_profile WHERE id = ${ShopProfile.SINGLE_ROW_ID}")
+    suspend fun get(): ShopProfile?
+
     /** Upsert = insert if missing, otherwise update. */
     @Upsert
     suspend fun save(profile: ShopProfile)

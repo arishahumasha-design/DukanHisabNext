@@ -18,22 +18,28 @@ import androidx.compose.ui.unit.dp
 import com.example.dukanhisabnext.R
 
 /**
- * The More tab: a list of places to go. Only Products exists so far.
- * Expenses, Reports and Settings are added in their own milestones (no dead buttons).
+ * The More tab: a list of places to go. Products and the shop info exist so far.
+ * Expenses, Reports and the other settings are added in their own milestones (no dead buttons).
  */
 @Composable
-fun MoreScreen(onOpenProducts: () -> Unit, modifier: Modifier = Modifier) {
+fun MoreScreen(onOpenProducts: () -> Unit, onOpenShop: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         Text(
             text = stringResource(R.string.title_more),
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(16.dp)
         )
-        ListItem(
-            modifier = Modifier.clickable(onClick = onOpenProducts),
-            headlineContent = { Text(stringResource(R.string.more_products)) },
-            trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) }
-        )
-        HorizontalDivider()
+        MoreItem(label = stringResource(R.string.more_products), onClick = onOpenProducts)
+        MoreItem(label = stringResource(R.string.more_shop), onClick = onOpenShop)
     }
+}
+
+@Composable
+private fun MoreItem(label: String, onClick: () -> Unit) {
+    ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
+        headlineContent = { Text(label) },
+        trailingContent = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) }
+    )
+    HorizontalDivider()
 }

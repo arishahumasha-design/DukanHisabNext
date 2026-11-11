@@ -121,9 +121,41 @@ before guessing.
 - Optional customer on any sale.
 - On completion: save the sale, reduce stock, add ledger entry if there is a
   due, show the receipt.
-- Receipt screen: shop name, receipt number, date, customer, items, subtotal,
-  discount, delivery, total, paid, due. Share as text. (Sharing as an image
-  and Bluetooth printing are NOT in the MVP.)
+- Receipt screen. It loads a SAVED sale by its id (sale + items + customer +
+  shop profile), never the cart, so the same screen works right after a save
+  and later from the sales list. Layout, in this order:
+  1. shop name, address, mobile (if the shop name is empty, a neutral
+     placeholder from strings.xml is shown);
+  2. receipt number (YYMMDD-NNN);
+  3. date and time in Asia/Dhaka, Bengali digits;
+  4. customer name and mobile (only if the sale has a customer);
+  5. a product table: name (as sold), quantity with unit, unit price, line
+     total;
+  6. subtotal; discount (only if above 0); delivery charge (only if above 0);
+  7. মোট প্রদেয় (total);
+  8. পরিশোধ (paid) with the payment method (নগদ / বিকাশ / নগদ (মোবাইল));
+     the method is named only when something was paid;
+  9. ফেরত (change), see below;
+  10. এই বিক্রির বাকি (only if above 0);
+  11. the customer's CURRENT total due, computed from the ledger (only if
+      the sale has a customer and that due is above 0);
+  12. the sale note, if any.
+  Bengali digits and Bangladeshi digit grouping everywhere. No VAT, no print
+  button, no "Powered by".
+  - Change (ফেরত): when the receipt opens right after a save, a "ফেরত" line is
+    shown if there was change to give back (above 0). The value travels in the
+    route (receipt/{saleId}?change=...), because it is not stored in the
+    database. When the receipt is opened later (for example from the sales
+    list) there is no change line.
+  - Buttons: "শেয়ার করুন" shares the receipt as plain text through Android's
+    share sheet (ACTION_SEND, text/plain; no permission); "নতুন বিক্রয়" goes to
+    the Sell tab. Sharing as an image and Bluetooth printing are NOT in the
+    MVP.
+  - Navigation: after a sale is saved, the receipt opens and the cart and
+    payment screens are removed from the back stack. System Back from the
+    receipt goes to the Sell tab (empty cart), never to the payment screen.
+    If the sale id does not exist, a calm message and a button back to Sell
+    are shown.
 - Sales list (বিক্রির তালিকা) under More: newest first, showing receipt
   number, date, customer, total and due. Tapping a sale opens the same
   receipt screen, built from the saved data (read-only). No edit or delete.
@@ -167,6 +199,10 @@ before guessing.
 
 ### 3.6 Settings
 - Shop profile: shop name, owner name, mobile, address (used on receipts).
+  The screen "দোকানের তথ্য" is under More. It edits and saves the single
+  ShopProfile row. Only the shop name is required. The mobile is optional and
+  uses the shared mobile box and the customer-form validation. A clear
+  "saved" message is shown after saving.
 - Manual backup: export the database to one file the user can save or share
   (for example to Google Drive or WhatsApp). The file includes a backup
   format version number.
@@ -265,7 +301,7 @@ Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্�
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
 import), Receipt; Customer list, Customer detail,
 Add due / receive payment, Sales list, Expense list, Add expense, Reports,
-Settings.
+Shop info ("দোকানের তথ্য"), Settings.
 
 ## 7. Out of scope for the MVP
 

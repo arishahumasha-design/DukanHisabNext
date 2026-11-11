@@ -11,6 +11,7 @@ object Routes {
     const val PRODUCTS = "products"
     const val PRODUCT_EDIT = "product_edit?productId={productId}"
     const val STOCK_ADJUST = "stock_adjust/{productId}"
+    const val SHOP = "shop_profile"
 
     // ---- Sell tab: screen A (picker) and screen B (cart) ----
     const val SELL = "sell"
@@ -47,5 +48,6 @@ object Routes {
      */
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
-            route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER
+            route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER ||
+            route == SHOP
 }

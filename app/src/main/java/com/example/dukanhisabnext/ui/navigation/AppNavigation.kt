@@ -39,7 +39,8 @@ import com.example.dukanhisabnext.ui.sell.CartScreen
 import com.example.dukanhisabnext.ui.sell.CheckoutViewModel
 import com.example.dukanhisabnext.ui.sell.DueScreen
 import com.example.dukanhisabnext.ui.sell.PaymentScreen
-import com.example.dukanhisabnext.ui.sell.ReceiptPlaceholderScreen
+import com.example.dukanhisabnext.ui.receipt.ReceiptScreen
+import com.example.dukanhisabnext.ui.shop.ShopScreen
 import com.example.dukanhisabnext.ui.sell.SellScreen
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
@@ -146,8 +147,14 @@ fun AppNavigation() {
                         }
                     )
                 ) {
-                    // Back (or "নতুন বিক্রি") returns to the product picker.
-                    ReceiptPlaceholderScreen(onNewSale = { navController.popBackStack(Routes.SELL, inclusive = false) })
+                    // The back arrow and the system Back button do the same: leave the receipt. Right
+                    // after a sale that lands on the product picker (the cart is empty), never on
+                    // the payment screen, because the payment screens were removed from the back
+                    // stack when the sale was saved. "নতুন বিক্রয়" goes to the Sell tab.
+                    ReceiptScreen(
+                        onBack = { navController.popBackStack() },
+                        onNewSale = { navController.openNewSale() }
+                    )
                 }
             }
 
@@ -183,7 +190,13 @@ fun AppNavigation() {
             // The More tab is a small group ("graph") of screens that start at the More list.
             navigation(route = Screen.More.route, startDestination = Routes.MORE) {
                 composable(Routes.MORE) {
-                    MoreScreen(onOpenProducts = { navController.navigate(Routes.PRODUCTS) })
+                    MoreScreen(
+                        onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
+                        onOpenShop = { navController.navigate(Routes.SHOP) }
+                    )
+                }
+                composable(Routes.SHOP) {
+                    ShopScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.PRODUCTS) {
                     ProductListScreen(
@@ -222,5 +235,18 @@ fun AppNavigation() {
 private fun NavController.openReceiptAfterSale(saleId: Long, change: Long) {
     navigate(Routes.receipt(saleId, change)) {
         popUpTo(Routes.SELL) { inclusive = false }
+    }
+}
+
+/**
+ * Goes to the Sell tab's product picker. If the picker is already on the back stack (a receipt
+ * opened right after a sale), everything above it is removed. Otherwise (a receipt opened from
+ * another tab, for example a sales list) the Sell tab is opened fresh.
+ */
+private fun NavController.openNewSale() {
+    if (popBackStack(Routes.SELL, inclusive = false)) return
+    navigate(Routes.SELL) {
+        popUpTo(graph.findStartDestination().id) // leave the current tab's screens
+        launchSingleTop = true
     }
 }
