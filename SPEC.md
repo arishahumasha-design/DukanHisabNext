@@ -156,9 +156,27 @@ before guessing.
     receipt goes to the Sell tab (empty cart), never to the payment screen.
     If the sale id does not exist, a calm message and a button back to Sell
     are shown.
-- Sales list (বিক্রির তালিকা) under More: newest first, showing receipt
-  number, date, customer, total and due. Tapping a sale opens the same
-  receipt screen, built from the saved data (read-only). No edit or delete.
+- Sales list (বিক্রির তালিকা) under More. It is read-only: no edit, no delete,
+  no write query (only a query that returns the sales with the customer's
+  name and mobile). Cancel or return of a sale is a separate, later feature
+  (it is not part of the MVP).
+  - Saved sales, newest first, in a lazy list (fast with thousands of sales),
+    grouped by day in Asia/Dhaka time (a sale made at 11 pm belongs to that
+    Dhaka day). Day headers are in Bengali with Bengali digits, for example
+    "১০ নভেম্বর ২০২৬".
+  - Each row: receipt number, time (Dhaka), the customer name or the neutral
+    word "সাধারণ কাস্টমার" if the sale has no customer, the total, and a small
+    red "বাকি ৳ X" tag if the sale has a due.
+  - A search box matches the receipt number (partial, with or without the
+    dash), the customer name or the customer mobile (Bengali or Latin digits).
+  - Filter chips: আজ, এই মাস, সব, using the Dhaka day and month boundaries.
+    The default is আজ. Above the list: the count and the total of the
+    filtered sales.
+  - Tapping a row opens the same receipt screen with only the sale id (so
+    there is no change line). Back returns to the list with the search and
+    the filter kept.
+  - Empty states in Bengali: no sales at all, and no match for the search or
+    the filter.
 
 ### 3.3 Customers and due ledger (baki khata)
 - Add / edit customers: name, mobile, address, note.
@@ -321,7 +339,8 @@ Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
 import), Receipt; Customer list, Customer detail,
-Add due / receive payment, Sales list, Expense list, Add expense, Reports,
+Add due / receive payment, Sales list (বিক্রির তালিকা, read-only), Expense
+list, Add expense, Reports,
 Settings (owner card and shop button), Owner info (small form), Shop info
 ("দোকানের তথ্য", opened from Settings).
 

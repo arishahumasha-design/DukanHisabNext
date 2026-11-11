@@ -40,6 +40,7 @@ import com.example.dukanhisabnext.ui.sell.CheckoutViewModel
 import com.example.dukanhisabnext.ui.sell.DueScreen
 import com.example.dukanhisabnext.ui.sell.PaymentScreen
 import com.example.dukanhisabnext.ui.receipt.ReceiptScreen
+import com.example.dukanhisabnext.ui.sales.SalesListScreen
 import com.example.dukanhisabnext.ui.settings.OwnerScreen
 import com.example.dukanhisabnext.ui.settings.SettingsScreen
 import com.example.dukanhisabnext.ui.shop.ShopScreen
@@ -198,7 +199,28 @@ fun AppNavigation() {
                 composable(Routes.MORE) {
                     MoreScreen(
                         onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
+                        onOpenSales = { navController.navigate(Routes.SALES_LIST) },
                         onOpenSettings = { navController.navigate(Routes.SETTINGS) }
+                    )
+                }
+                composable(Routes.SALES_LIST) {
+                    // The list keeps its search and filter in its ViewModel, so Back from a
+                    // receipt returns to exactly the same list.
+                    SalesListScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenSale = { saleId -> navController.navigate(Routes.saleReceipt(saleId)) }
+                    )
+                }
+                composable(
+                    route = Routes.SALE_RECEIPT,
+                    arguments = listOf(navArgument("saleId") { type = NavType.LongType })
+                ) {
+                    // The same receipt screen as after a sale, but with only the sale id: there is no
+                    // "change" in the route, so no change (ফেরত) line is shown. It lives in the More
+                    // group so the More tab stays highlighted. Back returns to the list.
+                    ReceiptScreen(
+                        onBack = { navController.popBackStack() },
+                        onNewSale = { navController.openNewSale() }
                     )
                 }
                 composable(Routes.SETTINGS) { entry ->

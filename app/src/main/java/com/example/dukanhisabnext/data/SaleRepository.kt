@@ -8,12 +8,15 @@ import com.example.dukanhisabnext.data.entity.Sale
 import com.example.dukanhisabnext.data.entity.SaleItem
 import com.example.dukanhisabnext.data.entity.StockMovement
 import com.example.dukanhisabnext.data.entity.StockMovementType
+import com.example.dukanhisabnext.data.dao.SaleListRow
 import com.example.dukanhisabnext.util.CartLine
+import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.ReceiptNumber
 import com.example.dukanhisabnext.util.SaleAmounts
 import com.example.dukanhisabnext.util.SaleCalculator
 import com.example.dukanhisabnext.util.SaleCheck
 import com.example.dukanhisabnext.util.SaleError
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -85,6 +88,13 @@ class SaleRepository(
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SaleResult.Saved>?) =
             size > 100
     }
+
+    /** The sales list for a time window, newest first, with customer name and mobile. Read-only. */
+    fun observeSalesList(range: DhakaTime.TimeRange): Flow<List<SaleListRow>> =
+        saleDao.observeList(range.startMillis, range.endMillisExclusive)
+
+    /** The number of saved sales (all time). */
+    fun observeSalesCount(): Flow<Int> = saleDao.observeCount()
 
     /** A saved sale, for showing it again (the receipt). */
     suspend fun getSale(id: Long): Sale? = saleDao.getSale(id)

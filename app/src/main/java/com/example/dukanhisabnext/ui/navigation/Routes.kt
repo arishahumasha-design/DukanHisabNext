@@ -11,6 +11,9 @@ object Routes {
     const val PRODUCTS = "products"
     const val PRODUCT_EDIT = "product_edit?productId={productId}"
     const val STOCK_ADJUST = "stock_adjust/{productId}"
+    const val SALES_LIST = "sales_list"
+    /** A receipt opened from the sales list: only the sale id, so there is no change line. */
+    const val SALE_RECEIPT = "sale_receipt/{saleId}"
     const val SETTINGS = "settings"
     const val OWNER = "owner_info"
     const val SHOP = "shop_profile"
@@ -40,6 +43,8 @@ object Routes {
         if (customerId == null) "customer_edit" else "customer_edit?customerId=$customerId"
 
     fun customerDetail(customerId: Long): String = "customer_detail/$customerId"
+
+    fun saleReceipt(saleId: Long): String = "sale_receipt/$saleId"
 
     /** [change] is the ফেরত given back (paisa). It is not stored in the database, so it travels here. */
     fun receipt(saleId: Long, change: Long = 0L): String = "receipt/$saleId?change=$change"
