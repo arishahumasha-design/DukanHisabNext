@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -86,14 +88,26 @@ fun SalesListScreen(
             )
 
             // ---- Filter chips: আজ, এই মাস, সব ----
+            // While searching, ALL sales are searched: the chips are greyed out and a note says so.
+            // Clearing the search brings the chosen chip back.
+            val searching = isSearching(query)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterOption(SalesFilter.TODAY, R.string.filter_today, filter, viewModel)
-                FilterOption(SalesFilter.THIS_MONTH, R.string.filter_month, filter, viewModel)
-                FilterOption(SalesFilter.ALL, R.string.filter_all, filter, viewModel)
+                FilterOption(SalesFilter.TODAY, R.string.filter_today, filter, !searching, viewModel)
+                FilterOption(SalesFilter.THIS_MONTH, R.string.filter_month, filter, !searching, viewModel)
+                FilterOption(SalesFilter.ALL, R.string.filter_all, filter, !searching, viewModel)
             }
+            if (searching) {
+                Text(
+                    text = stringResource(R.string.search_all_note),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(4.dp))
 
             val current = ui
             if (current == null) {
@@ -143,10 +157,12 @@ private fun FilterOption(
     option: SalesFilter,
     label: Int,
     selected: SalesFilter,
+    enabled: Boolean,
     viewModel: SalesListViewModel
 ) {
     FilterChip(
         selected = selected == option,
+        enabled = enabled,
         onClick = { viewModel.onFilterChange(option) },
         label = { Text(stringResource(label), style = MaterialTheme.typography.titleSmall) }
     )

@@ -203,6 +203,7 @@
     <string name="filter_today">আজ</string>
     <string name="filter_month">এই মাস</string>
     <string name="filter_all">সব</string>
+    <string name="search_all_note">খোঁজার সময় সব বিক্রিতে খোঁজা হচ্ছে</string>
     <string name="sales_summary">%1$s টি বিক্রি · মোট ৳ %2$s</string>
     <string name="walk_in_customer">সাধারণ কাস্টমার</string>
     <string name="sale_due_tag">বাকি ৳ %1$s</string>

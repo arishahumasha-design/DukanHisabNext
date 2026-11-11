@@ -342,6 +342,141 @@ class SalesListLogicTest {
     // Customer label
     // =====================================================================================
 
+    // =====================================================================================
+    // Searching ignores the আজ / এই মাস / সব chip (step 5b2)
+    // =====================================================================================
+
+    private val noonOn10Nov = utc("2026-11-10T06:00:00Z")
+    private val saleToday = row(1, utc("2026-11-10T03:00:00Z"), name = "করিম", total = 10_000)
+    private val saleLastWeek = row(2, utc("2026-11-03T03:00:00Z"), name = "করিম মিয়া", total = 20_000)
+    private val saleLastMonth = row(3, utc("2026-10-05T03:00:00Z"), name = "রহিম", total = 5_000)
+    private val everySale = listOf(saleToday, saleLastWeek, saleLastMonth)
+
+    /**
+     * What the screen does: load the window of the EFFECTIVE filter, then search, group and total.
+     * (In the app the database cuts the window; here the same cut is done in memory.)
+     */
+    private fun screen(chip: SalesFilter, query: String): SalesListUi {
+        val range = salesFilterRange(effectiveSalesFilter(chip, query), noonOn10Nov)
+        val loaded = everySale.filter { it.createdAt >= range.startMillis && it.createdAt < range.endMillisExclusive }
+        return buildSalesListUi(loaded, query, totalSalesInDb = everySale.size)
+    }
+
+    private fun ids(ui: SalesListUi) = ui.items.filterIsInstance<SalesListItem.Entry>().map { it.row.id }
+
+    @Test
+    fun isSearchingOnlyWhenThereIsRealText() {
+        assertFalse(isSearching(""))
+        assertFalse(isSearching("   "))
+        assertTrue(isSearching("করিম"))
+        assertTrue(isSearching(" a "))
+        assertTrue(isSearching("২৬১১১০"))
+    }
+
+    @Test
+    fun withoutSearchTextTheChipDecidesTheWindow() {
+        for (chip in SalesFilter.entries) {
+            assertEquals(chip, effectiveSalesFilter(chip, ""))
+            assertEquals(chip, effectiveSalesFilter(chip, "   "))
+        }
+    }
+
+    @Test
+    fun withSearchTextTheWindowIsAlwaysAllWhateverTheChip() {
+        for (chip in SalesFilter.entries) {
+            assertEquals(SalesFilter.ALL, effectiveSalesFilter(chip, "করিম"))
+            assertEquals(SalesFilter.ALL, effectiveSalesFilter(chip, "২৬১১১০"))
+            assertEquals(SalesFilter.ALL, effectiveSalesFilter(chip, "x"))
+        }
+    }
+
+    @Test
+    fun theEffectiveWindowWhileSearchingCoversEveryMoment() {
+        val range = salesFilterRange(effectiveSalesFilter(SalesFilter.TODAY, "করিম"), noonOn10Nov)
+        for (moment in listOf(0L, saleLastMonth.createdAt, saleToday.createdAt, utc("2099-01-01T00:00:00Z"))) {
+            assertTrue(moment >= range.startMillis && moment < range.endMillisExclusive)
+        }
+    }
+
+    @Test
+    fun searchFindsOlderSalesEvenWithTheTodayChip() {
+        // Without searching, আজ shows only today's sale...
+        assertEquals(listOf(1L), ids(screen(SalesFilter.TODAY, "")))
+        // ...but searching "করিম" also finds last week's sale.
+        assertEquals(listOf(1L, 2L), ids(screen(SalesFilter.TODAY, "করিম")))
+    }
+
+    @Test
+    fun searchFindsOlderSalesEvenWithTheThisMonthChip() {
+        // এই মাস does not include October...
+        assertEquals(listOf(1L, 2L), ids(screen(SalesFilter.THIS_MONTH, "")))
+        // ...but searching does.
+        assertEquals(listOf(3L), ids(screen(SalesFilter.THIS_MONTH, "রহিম")))
+    }
+
+    @Test
+    fun whileSearchingTheChipMakesNoDifference() {
+        val results = SalesFilter.entries.map { ids(screen(it, "করিম")) }
+        assertEquals(listOf(listOf(1L, 2L), listOf(1L, 2L), listOf(1L, 2L)), results)
+    }
+
+    @Test
+    fun clearingTheSearchRestoresTheChipWindow() {
+        // The chip stays আজ the whole time: type, then clear.
+        assertEquals(listOf(1L), ids(screen(SalesFilter.TODAY, "")))        // before
+        assertEquals(listOf(1L, 2L), ids(screen(SalesFilter.TODAY, "করিম"))) // searching: all sales
+        assertEquals(listOf(1L), ids(screen(SalesFilter.TODAY, "")))        // cleared: আজ again
+    }
+
+    @Test
+    fun clearingTheSearchRestoresTheMonthChipToo() {
+        assertEquals(listOf(1L, 2L, 3L), ids(screen(SalesFilter.THIS_MONTH, "ম"))) // matches all three names
+        assertEquals(listOf(1L, 2L), ids(screen(SalesFilter.THIS_MONTH, "")))      // cleared: Nov only
+    }
+
+    @Test
+    fun spacesAloneDoNotCountAsSearching() {
+        assertEquals(listOf(1L), ids(screen(SalesFilter.TODAY, "   "))) // still আজ
+    }
+
+    @Test
+    fun theCountAndTotalFollowTheSearchResult() {
+        assertEquals(SalesSummary(count = 2, total = 30_000), screen(SalesFilter.TODAY, "করিম").summary)
+        assertEquals(SalesSummary(count = 1, total = 10_000), screen(SalesFilter.TODAY, "").summary)
+        assertEquals(SalesSummary(count = 3, total = 35_000), screen(SalesFilter.TODAY, "ম").summary)
+    }
+
+    @Test
+    fun aSearchWithNoResultInAllSalesShowsTheNoMatchMessage() {
+        for (chip in SalesFilter.entries) {
+            val ui = screen(chip, "zzz")
+            assertEquals(EmptyKind.NO_MATCH, ui.empty)
+            assertEquals(SalesSummary(0, 0), ui.summary)
+        }
+    }
+
+    @Test
+    fun searchingByReceiptNumberAlsoLooksAtAllSales() {
+        val old = row(9, utc("2026-01-15T06:00:00Z"), receiptNo = "260115-004")
+        val range = salesFilterRange(effectiveSalesFilter(SalesFilter.TODAY, "260115"), noonOn10Nov)
+        val ui = buildSalesListUi(
+            listOf(old).filter { it.createdAt >= range.startMillis && it.createdAt < range.endMillisExclusive },
+            "260115", totalSalesInDb = 1
+        )
+        assertEquals(listOf(9L), ui.items.filterIsInstance<SalesListItem.Entry>().map { it.row.id })
+    }
+
+    @Test
+    fun theChosenChipIsNeverChangedByTheFunction() {
+        // The chip is only read, never replaced: after clearing, the same chip is back in force.
+        var chip = SalesFilter.THIS_MONTH
+        effectiveSalesFilter(chip, "করিম")
+        assertEquals(SalesFilter.THIS_MONTH, chip)
+        assertEquals(SalesFilter.THIS_MONTH, effectiveSalesFilter(chip, ""))
+        chip = SalesFilter.ALL
+        assertEquals(SalesFilter.ALL, effectiveSalesFilter(chip, ""))
+    }
+
     @Test
     fun theCustomerLabelIsTheNameOrTheNeutralWord() {
         assertEquals("করিম", customerLabel("করিম", "সাধারণ কাস্টমার"))

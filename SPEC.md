@@ -172,6 +172,10 @@ before guessing.
   - Filter chips: আজ, এই মাস, সব, using the Dhaka day and month boundaries.
     The default is আজ. Above the list: the count and the total of the
     filtered sales.
+  - While the search box has text, ALL sales are searched, whatever chip is
+    chosen: the chips are greyed out with the short note "খোঁজার সময় সব
+    বিক্রিতে খোঁজা হচ্ছে". When the search box is cleared, the chosen chip
+    applies again. The count and total follow the result.
   - Tapping a row opens the same receipt screen with only the sale id (so
     there is no change line). Back returns to the list with the search and
     the filter kept.

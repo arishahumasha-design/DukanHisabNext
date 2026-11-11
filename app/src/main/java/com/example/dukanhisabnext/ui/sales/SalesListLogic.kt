@@ -29,6 +29,17 @@ fun salesFilterRange(filter: SalesFilter, nowMillis: Long): DhakaTime.TimeRange 
     SalesFilter.ALL -> DhakaTime.TimeRange(0L, Long.MAX_VALUE)
 }
 
+/** True while the search box has text (spaces alone do not count). */
+fun isSearching(query: String): Boolean = query.isNotBlank()
+
+/**
+ * The filter that really decides which sales are loaded. While the search box has text, ALL sales
+ * are searched whatever chip is chosen (the chip does not apply). When the box is cleared, the
+ * chosen chip applies again (it was never forgotten).
+ */
+fun effectiveSalesFilter(chip: SalesFilter, query: String): SalesFilter =
+    if (isSearching(query)) SalesFilter.ALL else chip
+
 // =========================================================================================
 // Search: receipt number, customer name or customer mobile
 // =========================================================================================
