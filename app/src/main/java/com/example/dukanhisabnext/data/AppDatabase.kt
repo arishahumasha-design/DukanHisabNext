@@ -8,6 +8,7 @@ import com.example.dukanhisabnext.data.dao.CustomerDao
 import com.example.dukanhisabnext.data.dao.ExpenseDao
 import com.example.dukanhisabnext.data.dao.LedgerDao
 import com.example.dukanhisabnext.data.dao.ProductDao
+import com.example.dukanhisabnext.data.dao.SaleCancellationDao
 import com.example.dukanhisabnext.data.dao.SaleDao
 import com.example.dukanhisabnext.data.dao.ShopProfileDao
 import com.example.dukanhisabnext.data.dao.StockMovementDao
@@ -18,6 +19,7 @@ import com.example.dukanhisabnext.data.entity.ExpenseCategory
 import com.example.dukanhisabnext.data.entity.LedgerEntry
 import com.example.dukanhisabnext.data.entity.Product
 import com.example.dukanhisabnext.data.entity.Sale
+import com.example.dukanhisabnext.data.entity.SaleCancellation
 import com.example.dukanhisabnext.data.entity.SaleItem
 import com.example.dukanhisabnext.data.entity.ShopProfile
 import com.example.dukanhisabnext.data.entity.StockMovement
@@ -40,9 +42,10 @@ import com.example.dukanhisabnext.data.entity.StockMovement
         SaleItem::class,
         LedgerEntry::class,
         ExpenseCategory::class,
-        Expense::class
+        Expense::class,
+        SaleCancellation::class // added in version 2 (see Migrations.kt)
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -53,6 +56,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun saleDao(): SaleDao
     abstract fun ledgerDao(): LedgerDao
     abstract fun expenseDao(): ExpenseDao
+    abstract fun saleCancellationDao(): SaleCancellationDao
 
     companion object {
         const val FILE_NAME = "dokan_hisab.db"
@@ -68,7 +72,11 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     FILE_NAME
-                ).build().also { INSTANCE = it }
+                )
+                    // Turns an older database file into the current version, keeping all data.
+                    .addMigrations(*ALL_MIGRATIONS)
+                    .build()
+                    .also { INSTANCE = it }
             }
     }
 }

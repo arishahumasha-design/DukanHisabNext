@@ -90,6 +90,7 @@
     <string name="movement_purchase">কেনা</string>
     <string name="movement_sale">বিক্রি</string>
     <string name="movement_adjustment">সংশোধন</string>
+    <string name="movement_sale_cancel">বিক্রি বাতিল</string>
     <string name="movement_line">%1$s · %2$s</string>
 
     <!-- Sell screen -->

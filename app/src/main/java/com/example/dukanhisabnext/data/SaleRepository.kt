@@ -1,6 +1,13 @@
 package com.example.dukanhisabnext.data
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
+import com.example.dukanhisabnext.cancel.CancelReasonCheck
+import com.example.dukanhisabnext.cancel.checkCancelReason
+import com.example.dukanhisabnext.cancel.dueReversalEntry
+import com.example.dukanhisabnext.cancel.stockBackMovements
+import com.example.dukanhisabnext.data.dao.SalesTotalsRow
+import com.example.dukanhisabnext.data.entity.SaleCancellation
 import com.example.dukanhisabnext.data.entity.LedgerEntry
 import com.example.dukanhisabnext.data.entity.LedgerEntryType
 import com.example.dukanhisabnext.data.entity.PaymentMethod
@@ -60,6 +67,24 @@ sealed interface SaleResult {
 /** The steps of a save, in order. Tests use them to simulate a crash between steps. */
 enum class SaveStep { SALE_SAVED, ITEMS_SAVED, STOCK_SAVED, LEDGER_SAVED }
 
+/** What happened when we tried to cancel a sale. */
+sealed interface CancelResult {
+    /** The sale is now cancelled: stock came back, and its due (if any) was taken away. */
+    data class Cancelled(val cancellation: SaleCancellation) : CancelResult
+
+    /** It was already cancelled (a double tap or a retry). Nothing was changed. */
+    data class AlreadyCancelled(val cancellation: SaleCancellation) : CancelResult
+
+    /** There is no sale with this id. Nothing was changed. */
+    data object SaleNotFound : CancelResult
+
+    /** The reason is longer than 200 characters. Nothing was changed. */
+    data object ReasonTooLong : CancelResult
+}
+
+/** The steps of a cancellation, in order. Tests use them to simulate a crash between steps. */
+enum class CancelStep { CANCELLATION_SAVED, STOCK_RETURNED, DUE_REVERSED }
+
 /**
  * Saves a sale: Sale + SaleItems + stock movements + (if there is a due) one ledger entry,
  * all inside ONE database transaction. If anything fails, nothing at all is saved
@@ -72,13 +97,15 @@ enum class SaveStep { SALE_SAVED, ITEMS_SAVED, STOCK_SAVED, LEDGER_SAVED }
 class SaleRepository(
     private val db: AppDatabase,
     private val clock: () -> Long = System::currentTimeMillis,
-    private val afterStep: (SaveStep) -> Unit = {}
+    private val afterStep: (SaveStep) -> Unit = {},
+    private val afterCancelStep: (CancelStep) -> Unit = {}
 ) {
     private val saleDao = db.saleDao()
     private val productDao = db.productDao()
     private val customerDao = db.customerDao()
     private val stockDao = db.stockMovementDao()
     private val ledgerDao = db.ledgerDao()
+    private val cancellationDao = db.saleCancellationDao()
 
     /** Only one save runs at a time in this app (a lock, like a single door). */
     private val saveLock = Mutex()
@@ -96,8 +123,76 @@ class SaleRepository(
     /** The number of saved sales (all time). */
     fun observeSalesCount(): Flow<Int> = saleDao.observeCount()
 
+    /** Count and total of the sales in a window, WITHOUT cancelled sales (for reports). */
+    fun observeActiveTotals(range: DhakaTime.TimeRange): Flow<SalesTotalsRow> =
+        saleDao.observeActiveTotals(range.startMillis, range.endMillisExclusive)
+
     /** A saved sale, for showing it again (the receipt). */
     suspend fun getSale(id: Long): Sale? = saleDao.getSale(id)
+
+    /** The cancellation of a sale, or null if it is not cancelled. */
+    suspend fun getCancellation(saleId: Long): SaleCancellation? = cancellationDao.getForSale(saleId)
+
+    /** Live: the receipt shows its "বাতিল" banner as soon as the sale is cancelled. */
+    fun observeCancellation(saleId: Long): Flow<SaleCancellation?> = cancellationDao.observeForSale(saleId)
+
+    // =====================================================================================
+    // Cancel a sale (বিক্রি বাতিল)
+    // =====================================================================================
+
+    /**
+     * Cancels a sale in ONE transaction: records the cancellation, brings back the stock of every
+     * item (SALE_CANCEL, positive), and if the sale left a due, takes exactly that due away with a
+     * CORRECTION_MINUS ledger entry. The sale row is never changed and its receipt number is never
+     * reused. If any step fails, nothing is saved.
+     *
+     * Cancel only once: a check inside the transaction, plus the unique index on saleId, turn a
+     * double tap or a retry into [CancelResult.AlreadyCancelled] (nothing changes the second time).
+     * [reason] is optional; it is trimmed and may be at most 200 characters.
+     */
+    suspend fun cancelSale(saleId: Long, reason: String?): CancelResult {
+        val cleanReason = when (val checked = checkCancelReason(reason)) {
+            CancelReasonCheck.TooLong -> return CancelResult.ReasonTooLong
+            is CancelReasonCheck.Ok -> checked.reason
+        }
+        // The same lock as saving: one write at a time in this app.
+        return saveLock.withLock {
+            try {
+                db.withTransaction { cancelInsideTransaction(saleId, cleanReason) }
+            } catch (e: SQLiteConstraintException) {
+                // Two cancels raced past the check (for example from two screens at once). The
+                // unique index stopped the second; its transaction was rolled back. Report it calmly.
+                val existing = cancellationDao.getForSale(saleId) ?: throw e
+                CancelResult.AlreadyCancelled(existing)
+            }
+        }
+    }
+
+    private suspend fun cancelInsideTransaction(saleId: Long, reason: String?): CancelResult {
+        // 1. The sale must exist, and must not be cancelled yet.
+        val sale = saleDao.getSale(saleId) ?: return CancelResult.SaleNotFound
+        cancellationDao.getForSale(saleId)?.let { return CancelResult.AlreadyCancelled(it) }
+
+        val now = clock()
+
+        // 2. The cancellation record. A second one for the same sale would break the unique index.
+        val cancellation = SaleCancellation(saleId = saleId, reason = reason, createdAt = now)
+        val cancellationId = cancellationDao.insert(cancellation)
+        afterCancelStep(CancelStep.CANCELLATION_SAVED)
+
+        // 3. Stock comes back for every item (also for archived products, and also when the
+        //    sale had pushed the stock below zero: the sold quantity is simply added back).
+        stockDao.insertAll(stockBackMovements(saleId, saleDao.getItems(saleId), now))
+        afterCancelStep(CancelStep.STOCK_RETURNED)
+
+        // 4. The sale's due (if any) is taken away again: exactly that amount, linked to the sale.
+        dueReversalEntry(sale, now)?.let { entry ->
+            ledgerDao.insert(entry)
+            afterCancelStep(CancelStep.DUE_REVERSED)
+        }
+
+        return CancelResult.Cancelled(cancellation.copy(id = cancellationId))
+    }
 
     suspend fun completeSale(draft: SaleDraft): SaleResult = saveLock.withLock {
         // Double tap: this cart was already saved -> give back the same result, save nothing.

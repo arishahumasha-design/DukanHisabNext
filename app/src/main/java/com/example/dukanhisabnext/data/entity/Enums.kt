@@ -6,7 +6,11 @@ package com.example.dukanhisabnext.data.entity
 
 enum class ProductUnit { PIECE, KG, LITRE, PACKET, DOZEN }
 
-enum class StockMovementType { OPENING, PURCHASE, SALE, ADJUSTMENT }
+/**
+ * SALE_CANCEL: stock coming back because a sale was cancelled (positive quantity, linked to the
+ * sale). Room stores the name as text with no fixed list, so adding a value needs no schema change.
+ */
+enum class StockMovementType { OPENING, PURCHASE, SALE, ADJUSTMENT, SALE_CANCEL }
 
 /** BANK and OTHER exist in the database but are not shown on screen in the MVP. */
 enum class PaymentMethod { CASH, BKASH, NAGAD, BANK, OTHER }

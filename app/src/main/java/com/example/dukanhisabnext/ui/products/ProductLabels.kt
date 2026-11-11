@@ -23,6 +23,7 @@ fun StockMovementType.labelRes(): Int = when (this) {
     StockMovementType.PURCHASE -> R.string.movement_purchase
     StockMovementType.SALE -> R.string.movement_sale
     StockMovementType.ADJUSTMENT -> R.string.movement_adjustment
+    StockMovementType.SALE_CANCEL -> R.string.movement_sale_cancel
 }
 
 /** Negative stock is a warning (red); stock at or under the low-stock level is a softer one (amber). */

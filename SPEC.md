@@ -158,8 +158,11 @@ before guessing.
     are shown.
 - Sales list (বিক্রির তালিকা) under More. It is read-only: no edit, no delete,
   no write query (only a query that returns the sales with the customer's
-  name and mobile). Cancel or return of a sale is a separate, later feature
-  (it is not part of the MVP).
+  name and mobile). Cancelling a sale is done from its receipt (see section
+  5, "Cancelling a sale"); return of goods is a separate, later feature.
+  - Cancelled sales stay in the list, tagged "বাতিল", but are left out of the
+    count and total above the list. When any are left out, a short note says
+    so: "(বাতিল N টি বাদ)". (The screens for this come in cancel step 3.)
   - Saved sales, newest first, in a lazy list (fast with thousands of sales),
     grouped by day in Asia/Dhaka time (a sale made at 11 pm belongs to that
     Dhaka day). Day headers are in Bengali with Bengali digits, for example
@@ -266,7 +269,8 @@ Editable tables (Product, Customer, Expense) also have `updatedAt`.
 **Product**: id, name, categoryId?, unit, sellPrice, costPrice?, lowStockLevel?,
 isActive, createdAt, updatedAt.
 
-**StockMovement**: id, productId, type (OPENING, PURCHASE, SALE, ADJUSTMENT),
+**StockMovement**: id, productId, type (OPENING, PURCHASE, SALE, ADJUSTMENT,
+SALE_CANCEL),
 quantity (positive = stock in, negative = stock out), unitCost? (buying price
 per unit, filled for PURCHASE), referenceSaleId?, note?, createdAt.
 - Current stock of a product = sum of its movements.
@@ -286,6 +290,14 @@ dueAmount, note?, createdAt.
 **SaleItem**: id, saleId, productId, productNameSnapshot, quantity, unitPrice,
 costPriceSnapshot?, lineTotal.
 - Snapshots keep old receipts correct even if the product changes later.
+
+**SaleCancellation**: id, saleId (unique, foreign key to Sale), reason?
+(trimmed, at most 200 characters), createdAt.
+- A sale is cancelled when it has a SaleCancellation row. The Sale row itself
+  is never changed. There is no update or delete for this table.
+- Every query that counts sales for money (totals, reports, dashboard, M7)
+  must leave cancelled sales out with the one shared condition
+  `NOT_CANCELLED_SQL` in `SaleDao.kt` (sales alias `s`), never its own copy.
 
 **LedgerEntry**: id, customerId, type (OPENING_DUE, SALE_DUE, MANUAL_DUE,
 PAYMENT_RECEIVED, CORRECTION_PLUS, CORRECTION_MINUS), amount (always
@@ -313,6 +325,16 @@ createdAt.
 - Indexes on `Product.name`, `Customer.name` and `Customer.phone` for search.
 - Indexes on the foreign-key columns (`saleId`, `productId`, `customerId`).
 - Use real foreign keys. Use transactions for every multi-table write.
+- Unique index on `SaleCancellation.saleId` (a sale is cancelled only once).
+
+### Database version and migrations
+
+- The database is version 2. Version 1 → 2 only adds the `sale_cancellations`
+  table and its unique index (`MIGRATION_1_2` in `data/Migrations.kt`).
+- The schema of every version is exported to `app/schemas` and committed.
+  Every version change needs a Migration plus a migration test (PC: the SQL
+  equals the exported schema; phone: `MigrationTest` upgrades a real old
+  database). Never `fallbackToDestructiveMigration`.
 
 ## 5. Business rules
 
@@ -322,8 +344,24 @@ createdAt.
 - A sale with a due requires a customer.
 - Stock may go negative (shopkeepers often sell before updating stock), but the
   product shows a warning.
-- Deleting a sale is not allowed in the MVP. Use a "return/cancel" feature
-  later, so history stays correct.
+- Deleting a sale is never allowed. A wrong sale is cancelled instead, so
+  history stays correct.
+- Cancelling a sale (বিক্রি বাতিল) runs in **one database transaction**:
+  insert the SaleCancellation (optional reason); insert one SALE_CANCEL stock
+  movement per item with the sold quantity as a positive number, linked to the
+  sale (archived products too; a sale that pushed stock below zero simply gets
+  the sold quantity back); and if the sale left a due, insert a
+  CORRECTION_MINUS ledger entry for exactly that due, linked to the sale. If
+  any step fails, nothing is saved.
+  - Only once: checked inside the transaction and guarded by the unique
+    index. A second cancel (double tap, two screens) changes nothing.
+  - Allowed at any time, also long after the sale. The receipt number is
+    never reused; the next sale gets the next number.
+  - Money paid at the sale (`paidAmount`) is handed back outside the app;
+    there is no "refunded" field. If the customer had already paid part of
+    the due later, the balance can become negative; it is shown as "অগ্রিম"
+    (advance) and is not counted in the total receivable.
+  - Return of only some goods is a later feature.
 - Archiving a product hides it from selling but keeps old sales intact.
 - Receipt numbers: short, unique, human-readable (for example date + counter).
   Format `YYMMDD-NNN`: the Asia/Dhaka date plus a daily counter (at least 3
