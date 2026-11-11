@@ -227,6 +227,35 @@ before guessing.
   "যাদের বাকি আছে" filter shows only customers who owe money.
 - The rules of each entry (amount limit, dates, once-only opening due, double
   tap) are in section 5, "Khata entries".
+- Customer detail screen: the existing info (name, balance, mobile with
+  tap-to-call, address, note, edit) and then the action buttons: টাকা পেলাম,
+  বাকি দিলাম, পুরনো বাকি (only while none exists), সংশোধন, অগ্রিম ফেরত দিলাম
+  (only while the customer has an advance). Under them the history
+  ("লেনদেনের হিসাব"), a lazy list grouped by Dhaka day with Bengali day
+  headers, newest first. A row shows: the type label with its extra (receipt
+  number for a sale due and a cancel reversal, method for a payment and an
+  advance return, the note for a correction), the amount with "+" (adds to
+  the due, amber) or "−" (takes away, green), the note, and the time. The
+  opening due row is highlighted. A back-dated row shows the date only and
+  "লেখা হয়েছে <date>". A sale row and a cancel-reversal row open the
+  receipt; a sale due of a cancelled sale has a grey "বাতিল" tag. With no
+  history a Bengali message is shown.
+- Entry form (one screen for all five actions, opened from the buttons): the
+  customer name and current balance; for সংশোধন a (+) / (−) choice; the
+  amount; a live "এরপর ব্যালেন্স হবে ..." line and, when the entry makes an
+  advance (for example a payment bigger than the due), a bold red "অগ্রিম ৳ X
+  হবে" warning; the date (a calendar that offers no future day, today by
+  default in Dhaka); the method (নগদ / বিকাশ / নগদ (মোবাইল)) for a payment and
+  an advance return; a note (200 characters, with a counter; required for
+  সংশোধন). For অগ্রিম ফেরত the most that can be given back is shown. A form id
+  is made when the form opens and the save button is disabled while saving
+  (double tap saves once). The typed values live in the ViewModel, so rotation
+  keeps them. Every failed check has its own Bengali message under the right
+  box; an unexpected error says nothing was saved. After a successful save the
+  app goes back to the customer, which shows a short "সংরক্ষিত হয়েছে" message.
+- Khata tab: "মোট পাবো" stays (it ignores advances), a "যাদের বাকি আছে" chip
+  next to "সবাই" shows only customers who owe, the list is still sorted by
+  the biggest due, and advances are shown in green.
 
 ### 3.4 Expenses
 - Expense categories (default: salary, rent, bill, tea/snacks, transport,
@@ -444,9 +473,11 @@ Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
-import), Receipt (with the cancel button, confirm dialog and banner); Customer
-list, Customer detail,
-Add due / receive payment, Sales list (বিক্রির তালিকা, read-only; cancelled
+import), Receipt (with the cancel button, confirm dialog and banner); Khata:
+Customer list (with the "সবাই" / "যাদের বাকি আছে" chips), Customer detail (info,
+balance, action buttons and the history grouped by Dhaka day; a sale row opens
+its receipt), and the ONE shared Entry form ("ledger_entry") for টাকা পেলাম,
+বাকি দিলাম, পুরনো বাকি, সংশোধন and অগ্রিম ফেরত দিলাম, Sales list (বিক্রির তালিকা, read-only; cancelled
 sales tagged "বাতিল"), Expense
 list, Add expense, Reports,
 Settings (owner card and shop button), Owner info (small form), Shop info

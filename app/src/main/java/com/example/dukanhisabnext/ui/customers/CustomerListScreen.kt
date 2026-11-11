@@ -1,9 +1,11 @@
 package com.example.dukanhisabnext.ui.customers
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -46,6 +49,7 @@ fun CustomerListScreen(
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val customers by viewModel.customers.collectAsStateWithLifecycle()
+    val onlyOwing by viewModel.onlyOwing.collectAsStateWithLifecycle()
     val totalReceivable by viewModel.totalReceivable.collectAsStateWithLifecycle()
 
     // This tab sits inside the app frame, which already keeps clear of the system bars.
@@ -95,6 +99,22 @@ fun CustomerListScreen(
                     }
                 }
             )
+            // Filter chips: everybody, or only the customers who owe money.
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = !onlyOwing,
+                    onClick = { viewModel.onOnlyOwingChange(false) },
+                    label = { Text(stringResource(R.string.khata_filter_all), style = MaterialTheme.typography.titleSmall) }
+                )
+                FilterChip(
+                    selected = onlyOwing,
+                    onClick = { viewModel.onOnlyOwingChange(true) },
+                    label = { Text(stringResource(R.string.khata_filter_owing), style = MaterialTheme.typography.titleSmall) }
+                )
+            }
             HorizontalDivider()
 
             // The list. null = still loading.
@@ -102,7 +122,11 @@ fun CustomerListScreen(
             when {
                 list == null -> Unit
                 list.isEmpty() -> {
-                    val message = if (query.isNotBlank()) R.string.empty_customer_search else R.string.empty_customers
+                    val message = when (customerEmptyKind(searching = query.isNotBlank(), onlyOwing = onlyOwing)) {
+                        CustomerEmptyKind.NO_SEARCH_RESULT -> R.string.empty_customer_search
+                        CustomerEmptyKind.NOBODY_OWES -> R.string.empty_customers_owing
+                        CustomerEmptyKind.NO_CUSTOMERS -> R.string.empty_customers
+                    }
                     Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
                     }

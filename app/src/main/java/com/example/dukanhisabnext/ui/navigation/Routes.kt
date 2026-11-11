@@ -31,6 +31,10 @@ object Routes {
     const val KHATA = "khata"
     const val CUSTOMER_EDIT = "customer_edit?customerId={customerId}"
     const val CUSTOMER_DETAIL = "customer_detail/{customerId}"
+    /** The ONE khata entry form. {action} is a LedgerAction name (PAYMENT, MANUAL_DUE, ...). */
+    const val LEDGER_ENTRY = "ledger_entry/{customerId}/{action}"
+    /** A receipt opened from a customer's history: only the sale id (no change line). */
+    const val KHATA_RECEIPT = "khata_receipt/{saleId}"
 
     /** [productId] = null opens the form empty, to add a new product. */
     fun productEdit(productId: Long?): String =
@@ -44,6 +48,10 @@ object Routes {
 
     fun customerDetail(customerId: Long): String = "customer_detail/$customerId"
 
+    fun ledgerEntry(customerId: Long, action: String): String = "ledger_entry/$customerId/$action"
+
+    fun khataReceipt(saleId: Long): String = "khata_receipt/$saleId"
+
     fun saleReceipt(saleId: Long): String = "sale_receipt/$saleId"
 
     /** [change] is the ফেরত given back (paisa). It is not stored in the database, so it travels here. */
@@ -56,5 +64,5 @@ object Routes {
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
             route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER ||
-            route == SHOP || route == OWNER
+            route == SHOP || route == OWNER || route == LEDGER_ENTRY
 }
