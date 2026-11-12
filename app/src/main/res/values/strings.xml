@@ -492,4 +492,23 @@
     <string name="label_note">নোট</string>
     <string name="btn_edit">সম্পাদনা</string>
     <string name="tap_to_call">ট্যাপ করে কল করুন</string>
+    <!-- Backup and restore: one message per BackupProblem (ui/backup/BackupLabels.kt). -->
+    <string name="err_backup_no_space">ফোনে যথেষ্ট জায়গা নেই। কিছু ছবি বা ভিডিও মুছে আবার চেষ্টা করুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_file_too_large">ফাইলটি অনেক বড়। এটি দোকান হিসাবের ব্যাকআপ বলে মনে হচ্ছে না। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_cannot_read">ফাইলটি পড়া গেল না। অন্য জায়গা থেকে আবার বাছুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_not_a_zip">এটি দোকান হিসাবের ব্যাকআপ ফাইল নয়, অথবা ফাইলটি নষ্ট বা অসম্পূর্ণ। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_unsafe_zip">ফাইলটির ভেতরে অজানা বা অনিরাপদ জিনিস আছে, তাই খোলা হয়নি। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_manifest_missing">ফাইলটি অসম্পূর্ণ: ব্যাকআপের তথ্য-পাতা নেই। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_manifest_bad">ফাইলটির ব্যাকআপ তথ্য ঠিক নেই। ফাইলটি নষ্ট হতে পারে। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_not_dokan">এটি দোকান হিসাবের ব্যাকআপ ফাইল নয়। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_format_too_new">এই ব্যাকআপ অ্যাপের নতুন সংস্করণে তৈরি। আগে অ্যাপটি আপডেট করুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_schema_too_new">এই ব্যাকআপ অ্যাপের নতুন সংস্করণে তৈরি। আগে অ্যাপটি আপডেট করুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_hash_mismatch">ফাইলটি নষ্ট বা অসম্পূর্ণ (কপি করার সময় কিছু হারিয়েছে)। অন্য একটি ব্যাকআপ বাছুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_db_damaged">ব্যাকআপের ভেতরের হিসাব নষ্ট, তাই ফেরত আনা যাবে না। অন্য একটি ব্যাকআপ বাছুন। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_not_this_app">এই ফাইলের হিসাব দোকান হিসাব অ্যাপের নয়। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_migration_failed">এই ব্যাকআপকে অ্যাপের বর্তমান সংস্করণে আনা গেল না। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_counts_mismatch">ব্যাকআপের হিসাবের সংখ্যা মিলছে না। ফাইলটি নষ্ট হতে পারে। আপনার ডেটা বদলায়নি।</string>
+    <string name="err_backup_unexpected">কিছু একটা ভুল হয়েছে। আপনার ডেটা বদলায়নি। আবার চেষ্টা করুন।</string>
+    <string name="backup_recovered_not_finished">আগের বার ডেটা ফেরত আনা শেষ হয়নি (অ্যাপ বন্ধ হয়ে গিয়েছিল)। আপনার আগের ডেটা ঠিক আছে, কিছুই বদলায়নি।</string>
+    <string name="backup_recovered_finished">ব্যাকআপ থেকে ডেটা ফেরত আনা শেষ হয়েছে।</string>
 </resources>

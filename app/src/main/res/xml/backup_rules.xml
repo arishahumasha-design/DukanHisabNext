@@ -1,13 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android's automatic backup, for Android 11 and older (Android 12+ reads data_extraction_rules.xml).
+    Keep the two files the same (BackupRulesTest checks it).
+
+    Backed up (and ONLY these, because the file lists includes):
+      - the shop's database: dokan_hisab.db and its -wal file
+      - the small backup settings file: backup_prefs.xml (when the last backup was made)
+    Left out, because nothing includes them (an <exclude> outside an include is refused by Android's
+    checks, so they are not written as excludes):
+      - files/backup-work/       the restore work folder
+      - files/restore-safety/    the safety copy from before the last restore
+      - files/restore.state, files/restore.result, databases/dokan_hisab.db.restore-prepared
+      - the cache folder (never backed up by Android)
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <include domain="database" path="dokan_hisab.db" />
+    <include domain="database" path="dokan_hisab.db-wal" />
+    <include domain="sharedpref" path="backup_prefs.xml" />
 </full-backup-content>

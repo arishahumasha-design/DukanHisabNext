@@ -80,5 +80,17 @@ abstract class AppDatabase : RoomDatabase() {
                     .build()
                     .also { INSTANCE = it }
             }
+
+        /**
+         * Closes the shared database so its files can be swapped by a restore. After this the app
+         * must restart (the repositories still hold the closed one); the next getInstance opens
+         * whatever file is then in place.
+         */
+        fun closeInstance() {
+            synchronized(this) {
+                INSTANCE?.close()
+                INSTANCE = null
+            }
+        }
     }
 }

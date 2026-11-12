@@ -389,17 +389,36 @@ before guessing.
   has ONE mobile: it is both the owner's mobile on the Settings card and the
   shop mobile printed on receipts. A shop name that is empty counts as "no
   shop yet".
-- Manual backup: export the database to one file the user can save or share
-  (for example to Google Drive or WhatsApp). The file includes a backup
-  format version number.
-- Restore: before replacing any data, check that the file is a valid backup
-  of a supported version. If the check fails, change nothing and show a clear
-  message. Automatic backup is NOT in the MVP.
+- Manual backup (M8): one zip file named
+  `DokanHisab-backup-YYYY-MM-DD-HHmm.zip` (Dhaka date and time, Latin
+  digits), which the user can save ("save as" with the system file picker,
+  no permission) or share ("শেয়ার করুন", through a FileProvider entry). The
+  zip holds `manifest.properties` (format name and version, `platform=android`,
+  database version, app version, time, size, SHA-256, row count of every
+  table) and `database/dokan_hisab.db` (one clean file). The full format is
+  in `docs/DATA_FORMAT.md`, so a later web or iOS version can read it.
+- Restore (M8): every check runs on private copies before anything is
+  replaced (the list is in section 5). If a check fails, nothing changes and
+  a clear Bengali message says why, ending "আপনার ডেটা বদলায়নি". An older
+  backup (database version 1 or 2) is brought up to date by the normal
+  migrations. No extra backup is made before a restore; instead the data from
+  before the restore is kept as ONE safety copy, with the button "আগের ডেটা
+  ফিরিয়ে আনুন" (undo); the next restore replaces it.
+- Backup reminder: a small line on Home when the last backup is older than 7
+  days (or there is none). No notification.
+- Android's automatic backup stays on, with explicit rules in
+  `backup_rules.xml` and `data_extraction_rules.xml` (cloud backup and device
+  transfer alike): only the database (`dokan_hisab.db`, `-wal`) and the small
+  settings file `backup_prefs.xml` are included, so the restore work folder,
+  the safety copy, the marker files and the cache are never backed up.
 
 ## 4. Data model (Room entities)
 
 All ids are `Long` auto-generated. All timestamps are `Long` (UTC epoch
 millis). Money fields are paisa. Quantity fields are thousandths.
+Every table and column, these conventions and the backup file are described
+for other platforms in `docs/DATA_FORMAT.md` (a PC test, `DataFormatDocTest`,
+fails when the schema has a table or column the document misses).
 Editable tables (Product, Customer, Expense) also have `updatedAt`.
 
 **ShopProfile** (single row): name, ownerName, phone, address.
@@ -651,6 +670,48 @@ built on the shared conditions above:
   Information lines under it, shown only when not 0 and NOT part of the
   profit: ডেলিভারি চার্জ, ব্যক্তিগত খরচ. The "আনুমানিক" note shows when some
   sold lines have no cost price.
+- Backup and restore (M8): the rules are in `backup/BackupFormat.kt` (pure,
+  PC-tested), the file work in `backup/BackupEngine.kt` (phone-tested with
+  real files). One job at a time.
+  - Making a backup: the database and its `-wal` are copied while holding
+    the database's write lock, so a sale is either wholly in the backup or not
+    at all. The copy is turned into one file, checked like a restore would
+    check it, zipped, and the zip is read back and verified before it is
+    handed out.
+  - Restore checks, in this order (the first failure stops; message key in
+    brackets): 1. size at most 256 MB and enough free space (FILE_TOO_LARGE,
+    NO_SPACE); 2. it opens as a zip (NOT_A_ZIP; a path-escape name refused by
+    Android itself → UNSAFE_ZIP); 3. the entry list: at most 32 entries, safe
+    names, no duplicates, only the two allowed entries (UNSAFE_ZIP), the
+    manifest present (MANIFEST_MISSING), the database present
+    (NOT_DOKAN_BACKUP), manifest at most 64 KB (MANIFEST_BAD), database at
+    most 512 MB (FILE_TOO_LARGE), no zip-bomb ratio (UNSAFE_ZIP); 4. the
+    manifest: not ours (NOT_DOKAN_BACKUP), newer format or encrypted
+    (FORMAT_TOO_NEW), a missing or wrong value (MANIFEST_BAD); 5. database
+    version newer (SCHEMA_TOO_NEW) or unknown, wrong entry name (MANIFEST_BAD);
+    6. unpacked with a cap, size and SHA-256 equal the manifest
+    (HASH_MISMATCH); 7. SQLite header, integrity check, foreign-key check and
+    version = manifest (DB_DAMAGED; a file is never deleted by a failed open);
+    8. Room's identity hash of that version (NOT_THIS_APP, or SCHEMA_TOO_NEW
+    for a newer version); 9. the row counts equal the manifest
+    (COUNTS_MISMATCH); 10. upgraded with the normal migrations and Room's full
+    schema check, the counts unchanged (MIGRATION_FAILED, COUNTS_MISMATCH).
+    Anything else: UNEXPECTED. The live database is never opened by a check.
+  - The swap, after the user agrees: the old safety copy is deleted; the
+    marker `restore.state` (written atomically) says PREPARED; the live
+    database is closed; its files move (rename) into `restore-safety/`, the
+    database file last; marker SAFETY; the prepared database is renamed to the
+    live name; marker SWAPPED; the result note is written, the work folder and
+    the marker removed; the app restarts.
+  - At every app start, before the database is opened, `BackupEngine.recover`
+    reads the marker: none → nothing to do (left-overs removed); PREPARED or
+    SAFETY → the old files are put back (or, if none had moved, the prepared
+    file is deleted): the old data, unchanged; SWAPPED → the new data stays,
+    only the clean-up is finished. An unreadable marker counts as PREPARED.
+    So a crash at any moment gives the old data or the new data, never a mix
+    (phone-tested at every step).
+  - Undo ("আগের ডেটা ফিরিয়ে আনুন") takes the safety copy through the same
+    checks and the same swap; the data it replaces becomes the new safety copy.
 
 ## 6. Screens and navigation
 

@@ -1,6 +1,10 @@
 package com.example.dukanhisabnext
 
 import android.app.Application
+import androidx.core.content.pm.PackageInfoCompat
+import com.example.dukanhisabnext.backup.BackupEngine
+import com.example.dukanhisabnext.backup.BackupPaths
+import com.example.dukanhisabnext.backup.RecoveryOutcome
 import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.ExpenseRepository
@@ -19,7 +23,36 @@ import com.example.dukanhisabnext.ui.sell.CartStore
  * This is hand-written wiring, so no extra library like Hilt is needed.
  */
 class DokanHisabApp : Application() {
+    /**
+     * What the start-up check found about a restore that was stopped half-way (a crash, the battery).
+     * Set in onCreate, before anything can open the database.
+     */
+    var startupRecovery: RecoveryOutcome = RecoveryOutcome.NOTHING
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        startupRecovery = try {
+            BackupEngine.recover(BackupPaths(getDatabasePath(AppDatabase.FILE_NAME), filesDir))
+        } catch (e: java.io.IOException) {
+            // Files could not be moved back: leave the marker so the next start tries again.
+            RecoveryOutcome.NOTHING
+        }
+    }
+
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
+
+    /** Backups and restores. Uses the same database file as the rest of the app. */
+    val backupEngine: BackupEngine by lazy {
+        val info = packageManager.getPackageInfo(packageName, 0)
+        BackupEngine(
+            context = this,
+            getLive = { database },
+            closeLive = { AppDatabase.closeInstance() },
+            appVersionCode = PackageInfoCompat.getLongVersionCode(info),
+            appVersionName = info.versionName.orEmpty()
+        )
+    }
     val productRepository: ProductRepository by lazy { ProductRepository(database) }
     val customerRepository: CustomerRepository by lazy { CustomerRepository(database) }
 

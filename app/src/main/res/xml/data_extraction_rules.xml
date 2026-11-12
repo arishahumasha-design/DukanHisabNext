@@ -1,19 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android's automatic backup and phone-to-phone transfer, for Android 12 and newer.
+    The same rules as backup_rules.xml (BackupRulesTest checks it).
+
+    Backed up (and ONLY these, because the sections list includes):
+      - the shop's database: dokan_hisab.db and its -wal file
+      - the small backup settings file: backup_prefs.xml
+    Left out, because nothing includes them: files/backup-work/ (restore work folder),
+    files/restore-safety/ (safety copy), files/restore.state, files/restore.result,
+    databases/dokan_hisab.db.restore-prepared, and the cache folder.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <include domain="database" path="dokan_hisab.db" />
+        <include domain="database" path="dokan_hisab.db-wal" />
+        <include domain="sharedpref" path="backup_prefs.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <include domain="database" path="dokan_hisab.db" />
+        <include domain="database" path="dokan_hisab.db-wal" />
+        <include domain="sharedpref" path="backup_prefs.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>
