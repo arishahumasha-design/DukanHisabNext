@@ -249,6 +249,7 @@
     <!-- Shop info -->
     <string name="more_sales">বিক্রির তালিকা</string>
     <string name="more_expenses">খরচ</string>
+    <string name="more_reports">রিপোর্ট</string>
     <string name="more_settings">সেটিংস</string>
     <string name="title_settings">সেটিংস</string>
     <string name="owner_label">মালিক</string>
@@ -323,6 +324,55 @@
         <item>পরিবার</item>
         <item>অন্যান্য</item>
     </string-array>
+
+    <!-- Product list: the low-stock chip -->
+    <string name="chip_low_stock">কম স্টক</string>
+    <string name="empty_low_stock">কম স্টকের কোনো পণ্য নেই। সব ঠিক আছে।</string>
+
+    <!-- Reports (রিপোর্ট) -->
+    <string name="title_reports">রিপোর্ট</string>
+    <string name="report_tab_sales">বিক্রি</string>
+    <string name="report_tab_due">বাকি</string>
+    <string name="report_tab_expenses">খরচ</string>
+    <string name="report_tab_profit">লাভ-ক্ষতি</string>
+    <string name="report_pick_dates">উপরের "তারিখ বাছুন" চাপ দিয়ে শুরু ও শেষ তারিখ বাছুন।</string>
+    <string name="report_sales_count">বিক্রির সংখ্যা</string>
+    <string name="report_sales_net">নিট বিক্রি (সাব-টোটাল − ছাড়)</string>
+    <string name="report_sales_delivery">ডেলিভারি চার্জ</string>
+    <string name="report_sales_total">মোট বিক্রি</string>
+    <string name="report_sales_paid">পরিশোধ</string>
+    <string name="report_sales_due">বাকি</string>
+    <string name="report_sales_count_value">%1$s টি</string>
+    <string name="report_cancelled_note">(বাতিল %1$s টি বাদ)</string>
+    <string name="report_sales_list_title">এই সময়ের বিক্রি</string>
+    <string name="report_empty_sales">এই সময়ে কোনো বিক্রি নেই।</string>
+    <string name="report_due_now_title">এখন কত বাকি</string>
+    <string name="report_due_owing_title">যাদের বাকি আছে</string>
+    <string name="report_due_period_title">এই সময়ের লেনদেন</string>
+    <string name="report_empty_owing">এখন কারও বাকি নেই।</string>
+    <string name="report_empty_expenses">এই সময়ে কোনো খরচ নেই।</string>
+    <string name="report_profit_net_sales">নিট বিক্রি</string>
+    <string name="report_profit_cost">পণ্যের ক্রয়মূল্য</string>
+    <string name="report_profit_gross">মোট লাভ</string>
+    <string name="report_profit_gross_loss">মোট ক্ষতি</string>
+    <string name="report_profit_shop_expenses">দোকানের খরচ</string>
+    <string name="report_profit_net">নিট লাভ</string>
+    <string name="report_profit_net_loss">নিট ক্ষতি</string>
+    <string name="report_profit_delivery_info">ডেলিভারি চার্জ %1$s (লাভে ধরা হয়নি)</string>
+    <string name="report_profit_personal_info">ব্যক্তিগত খরচ %1$s (দোকানের লাভ থেকে বাদ দেওয়া হয়নি)</string>
+    <string name="report_approximate">আনুমানিক: %1$s টি পণ্য-লাইনের ক্রয়মূল্য জানা নেই (বিক্রি %2$s), তাই লাভ আসলের চেয়ে বেশি দেখাতে পারে।</string>
+
+    <!-- Home dashboard -->
+    <string name="home_title">আজকের হিসাব</string>
+    <string name="home_card_sales">আজকের বিক্রি</string>
+    <string name="home_card_expense">আজকের খরচ</string>
+    <string name="home_card_receivable">মোট পাবো</string>
+    <string name="home_card_low_stock">কম স্টক</string>
+    <string name="home_sales_count">%1$s টি বিক্রি</string>
+    <string name="home_sales_none">এখনও কোনো বিক্রি নেই</string>
+    <string name="home_expense_split">দোকান %1$s · ব্যক্তিগত %2$s</string>
+    <string name="home_low_stock_count">%1$s টি পণ্য</string>
+    <string name="home_low_stock_ok">সব ঠিক আছে</string>
 
     <!-- Expenses: list -->
     <string name="title_expenses">খরচ</string>

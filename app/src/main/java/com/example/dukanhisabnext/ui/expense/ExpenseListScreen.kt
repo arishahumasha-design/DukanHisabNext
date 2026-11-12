@@ -234,7 +234,7 @@ fun ExpenseListScreen(
 
 /** দোকানের খরচ, ব্যক্তিগত and মোট of the whole period, then every category (largest first, personal ones marked). */
 @Composable
-private fun SummaryCard(summary: ExpenseSummary, taka: String) {
+internal fun SummaryCard(summary: ExpenseSummary, taka: String) {
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (line in expenseSummaryLines()) {

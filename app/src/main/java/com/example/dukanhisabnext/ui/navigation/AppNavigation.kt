@@ -29,6 +29,8 @@ import com.example.dukanhisabnext.ui.expense.ExpenseFormScreen
 import com.example.dukanhisabnext.ui.expense.ExpenseListScreen
 import com.example.dukanhisabnext.ui.expense.NO_DELETED_EXPENSE
 import com.example.dukanhisabnext.ui.khata.ContactsScreen
+import com.example.dukanhisabnext.ui.report.DashboardTarget
+import com.example.dukanhisabnext.ui.report.ReportScreen
 import com.example.dukanhisabnext.ui.khata.KhataScreen
 import com.example.dukanhisabnext.ledger.LedgerAction
 import com.example.dukanhisabnext.ui.customers.LedgerFormScreen
@@ -112,7 +114,20 @@ fun AppNavigation() {
             startDestination = Screen.Home.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Screen.Home.route) { HomeScreen() }
+            composable(Screen.Home.route) {
+                // The four Home cards open the matching screen (the sales and expense lists open on আজ,
+                // the product list with the "কম স্টক" chip on, the Khata tab as a tab).
+                HomeScreen(
+                    onOpen = { target ->
+                        when (target) {
+                            DashboardTarget.SALES_LIST -> navController.navigate(Routes.SALES_LIST)
+                            DashboardTarget.EXPENSE_LIST -> navController.navigate(Routes.EXPENSES)
+                            DashboardTarget.KHATA -> navController.openTab(Screen.Khata)
+                            DashboardTarget.LOW_STOCK_PRODUCTS -> navController.navigate(Routes.products(lowStock = true))
+                        }
+                    }
+                )
+            }
 
             // The বিক্রি tab is a group of two screens: the product picker, then the cart.
             // The cart itself lives in the app-wide CartStore, so going back loses nothing.
@@ -221,10 +236,11 @@ fun AppNavigation() {
             navigation(route = Screen.More.route, startDestination = Routes.MORE) {
                 composable(Routes.MORE) {
                     MoreScreen(
-                        onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
+                        onOpenProducts = { navController.navigate(Routes.products(lowStock = false)) },
                         onOpenContacts = { navController.navigate(Routes.CONTACTS) },
                         onOpenSales = { navController.navigate(Routes.SALES_LIST) },
                         onOpenExpenses = { navController.navigate(Routes.EXPENSES) },
+                        onOpenReports = { navController.navigate(Routes.REPORTS) },
                         onOpenSettings = { navController.navigate(Routes.SETTINGS) }
                     )
                 }
@@ -311,6 +327,14 @@ fun AppNavigation() {
                         }
                     )
                 }
+                composable(Routes.REPORTS) {
+                    // A sale opens its receipt and a customer opens the customer detail, both inside the More group.
+                    ReportScreen(
+                        onBack = { navController.popBackStack() },
+                        onOpenReceipt = { saleId -> navController.navigate(Routes.saleReceipt(saleId)) },
+                        onOpenCustomer = { id -> navController.navigate(CONTACT_CUSTOMER_ROUTES.detailOf(id)) }
+                    )
+                }
                 composable(Routes.EXPENSE_CATEGORIES) {
                     CategoriesScreen(onBack = { navController.popBackStack() })
                 }
@@ -323,7 +347,14 @@ fun AppNavigation() {
                     )
                 }
                 customerScreens(navController, CONTACT_CUSTOMER_ROUTES)
-                composable(Routes.PRODUCTS) {
+                composable(
+                    route = Routes.PRODUCTS,
+                    // false unless the Home card "কম স্টক" opens the list with the chip already on.
+                    arguments = listOf(navArgument("lowStock") {
+                        type = NavType.BoolType
+                        defaultValue = false
+                    })
+                ) {
                     ProductListScreen(
                         onBack = { navController.popBackStack() },
                         onAddProduct = { navController.navigate(Routes.productEdit(null)) },
@@ -424,6 +455,18 @@ private fun NavGraphBuilder.customerScreens(navController: NavController, r: Cus
 private fun NavController.openReceiptAfterSale(saleId: Long, change: Long) {
     navigate(Routes.receipt(saleId, change)) {
         popUpTo(Routes.SELL) { inclusive = false }
+    }
+}
+
+/**
+ * Opens a bottom-bar tab the same way a tap on it does (the tab's own screens are kept and restored,
+ * and Back from a tab goes to Home).
+ */
+private fun NavController.openTab(screen: Screen) {
+    navigate(screen.route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 

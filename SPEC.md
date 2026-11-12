@@ -655,7 +655,7 @@ built on the shared conditions above:
 ## 6. Screens and navigation
 
 Bottom navigation: **Home**, **Sell** (new sale), **Khata** ("বাকির খাতা"),
-**More** (products, contacts, sales list, expenses, settings; reports later).
+**More** (products, contacts, sales list, expenses, reports, settings).
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
@@ -749,6 +749,52 @@ repeat; each default is made once).
   renames it. The add / rename dialog has the name and the checkbox "দোকানের খরচ
   নয় (ব্যক্তিগত)". Duplicate names are refused with a message, the last shown
   category cannot be hidden (a message says so), and there is no real delete.
+
+More tab → "রিপোর্ট" (M7), after "খরচ" (final order: পণ্য, যোগাযোগ, বিক্রির
+তালিকা, খরচ, রিপোর্ট, সেটিংস). One screen, registered in the More group (route
+`reports`), with four tabs বিক্রি | বাকি | খরচ | লাভ-ক্ষতি and ONE row of time
+chips আজ (default) | ৭ দিন | এই মাস | এই বছর | তারিখ বাছুন shared by the tabs
+(the same Dhaka windows and the same shared `DateRangePickerFlow` as the Khata
+tab and the expense list). The tab, the chip and the custom days live in the
+ViewModel with a SavedStateHandle (rotation, Back, the app closed in the
+background). Only the shown tab loads its data. Every number is the same as on
+the screen that already shows it (section 5, "Reports"). "তারিখ বাছুন" before both
+days are chosen says "pick the dates" (the বাকি tab still shows its "now" box).
+- বিক্রি: a box with the count, নিট বিক্রি (subtotal − discount), ডেলিভারি চার্জ,
+  মোট বিক্রি, পরিশোধ and বাকি, and "(বাতিল N টি বাদ)" when any cancelled sale
+  was left out; then the period's sales (cancelled ones not listed; they stay
+  in the sales list with their tag) grouped by Dhaka day with the receipt number,
+  time, customer, total and a red "বাকি ৳ X" tag. A tap opens the receipt.
+- বাকি: "এখন কত বাকি": the Khata সব box (পাবো / অগ্রিম / নিট, the whole shop)
+  and the customers who owe, biggest first (a tap opens the customer detail);
+  then "এই সময়ের লেনদেন": the Khata period box (বাকি দিলাম with "বিক্রিতে ৳X ·
+  হাতে ৳Y", টাকা পেলাম, the other lines only when not 0, নিট পরিবর্তন).
+- খরচ: the expense screen's summary box (দোকানের খরচ, ব্যক্তিগত, মোট, each
+  category with its count, personal ones marked), and "no expense" when empty.
+- লাভ-ক্ষতি: the box নিট বিক্রি, − পণ্যের ক্রয়মূল্য, = মোট লাভ, − দোকানের খরচ,
+  = নিট লাভ. A loss is written "নিট ক্ষতি" and the last line is red; a negative
+  gross profit is written "মোট ক্ষতি". Under the box, only when not 0: "ডেলিভারি
+  চার্জ ৳X (লাভে ধরা হয়নি)" and "ব্যক্তিগত খরচ ৳Y (দোকানের লাভ থেকে বাদ দেওয়া
+  হয়নি)". When some sold lines have no cost price, a note "আনুমানিক: N টি
+  পণ্য-লাইনের ক্রয়মূল্য জানা নেই (বিক্রি ৳X)" says how many lines and how much
+  sale value.
+
+Home dashboard (M7, replaces the placeholder): the title "আজকের হিসাব" and four
+cards that update live (the Dhaka day is re-read every minute, so a phone left
+open past midnight moves on). Each card opens a screen:
+- আজকের বিক্রি: the total of today's sales without cancelled ones, and "N টি
+  বিক্রি" (or "এখনও কোনো বিক্রি নেই") → the sales list (opens on আজ);
+- আজকের খরচ: today's expense total, with a small "দোকান ৳X · ব্যক্তিগত ৳Y" line
+  when some personal spending exists → the expense list (opens on আজ);
+- মোট পাবো: the Khata পাবো (advances not subtracted) → the Khata tab;
+- কম স্টক: "N টি পণ্য" (amber) or "সব ঠিক আছে" (green) → the product list with
+  the "কম স্টক" chip already on (route `products?lowStock=true`).
+
+Product list (M7): a "কম স্টক" filter chip next to the category chips. It shows
+the products whose stock tag is not normal (negative stock, or stock at or below
+the alert level; the same rule as the tags and the Home card) and works together
+with the search, the category chips and the archived switch. When nothing is low,
+the empty message says "কম স্টকের কোনো পণ্য নেই। সব ঠিক আছে।".
 
 ## 7. Out of scope for the MVP
 

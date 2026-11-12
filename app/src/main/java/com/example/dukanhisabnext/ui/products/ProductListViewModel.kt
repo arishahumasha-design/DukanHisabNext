@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.products
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.data.ProductRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -20,7 +22,10 @@ import kotlinx.coroutines.launch
  * the "show archived" switch, and the live list. The screen only draws this.
  * A ViewModel survives screen rotation, so nothing is lost when the phone turns.
  */
-class ProductListViewModel(private val repo: ProductRepository) : ViewModel() {
+class ProductListViewModel(
+    private val repo: ProductRepository,
+    savedStateHandle: SavedStateHandle = SavedStateHandle()
+) : ViewModel() {
 
     // MutableStateFlow = a box holding the current value that screens can watch.
     // We keep the writable box private and give the screen a read-only view.
@@ -32,6 +37,13 @@ class ProductListViewModel(private val repo: ProductRepository) : ViewModel() {
 
     private val _showArchived = MutableStateFlow(false)
     val showArchived: StateFlow<Boolean> = _showArchived.asStateFlow()
+
+    /**
+     * The "কম স্টক" chip (negative stock, or stock at or below the alert level). The route may open the
+     * list with it already on (the Home card "কম স্টক"): then the argument "lowStock" is true.
+     */
+    private val _lowStockOnly = MutableStateFlow(savedStateHandle.get<Boolean>("lowStock") ?: false)
+    val lowStockOnly: StateFlow<Boolean> = _lowStockOnly.asStateFlow()
 
     val categories: StateFlow<List<Category>> = repo.observeCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -47,7 +59,11 @@ class ProductListViewModel(private val repo: ProductRepository) : ViewModel() {
             Triple(query.trim(), categoryId, archived)
         }
             .flatMapLatest { (query, categoryId, archived) ->
-                repo.observeProducts(isActive = !archived, query = query, categoryId = categoryId)
+                // The database applies the search, the category and the archived switch; the
+                // "কম স্টক" chip then filters that list (the same rule as the tags on the rows).
+                combine(repo.observeProducts(isActive = !archived, query = query, categoryId = categoryId), _lowStockOnly) { list, onlyLow ->
+                    filterLowStock(list, onlyLow)
+                }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -57,6 +73,10 @@ class ProductListViewModel(private val repo: ProductRepository) : ViewModel() {
 
     fun onCategorySelected(categoryId: Long?) {
         _selectedCategoryId.value = categoryId
+    }
+
+    fun onLowStockOnlyChange(value: Boolean) {
+        _lowStockOnly.value = value
     }
 
     fun onShowArchivedChange(show: Boolean) {

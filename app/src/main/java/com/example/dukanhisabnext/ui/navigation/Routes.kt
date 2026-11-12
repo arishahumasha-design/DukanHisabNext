@@ -8,7 +8,7 @@ package com.example.dukanhisabnext.ui.navigation
 object Routes {
     // ---- More tab ----
     const val MORE = "more"
-    const val PRODUCTS = "products"
+    const val PRODUCTS = "products?lowStock={lowStock}"
     const val PRODUCT_EDIT = "product_edit?productId={productId}"
     const val STOCK_ADJUST = "stock_adjust/{productId}"
     const val SALES_LIST = "sales_list"
@@ -17,6 +17,8 @@ object Routes {
     const val SETTINGS = "settings"
     // ---- More tab: খরচ (expenses) ----
     const val EXPENSES = "expenses"
+    // ---- More tab: রিপোর্ট ----
+    const val REPORTS = "reports"
     /** The ONE expense form. No expenseId = a new expense; with an id = edit that expense. */
     const val EXPENSE_FORM = "expense_form?expenseId={expenseId}"
     const val EXPENSE_CATEGORIES = "expense_categories"
@@ -52,6 +54,9 @@ object Routes {
     /** [productId] = null opens the form empty, to add a new product. */
     fun productEdit(productId: Long?): String =
         if (productId == null) "product_edit" else "product_edit?productId=$productId"
+
+    /** The product list. [lowStock] = true opens it with the "কম স্টক" chip already on (the Home card). */
+    fun products(lowStock: Boolean = false): String = "products?lowStock=$lowStock"
 
     fun stockAdjust(productId: Long): String = "stock_adjust/$productId"
 

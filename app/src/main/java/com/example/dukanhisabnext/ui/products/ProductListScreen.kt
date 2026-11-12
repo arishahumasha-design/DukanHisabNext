@@ -51,7 +51,7 @@ fun ProductListScreen(
     onAddProduct: () -> Unit,
     onEditProduct: (Long) -> Unit,
     onAdjustStock: (Long) -> Unit,
-    viewModel: ProductListViewModel = appViewModel { app, _ -> ProductListViewModel(app.productRepository) }
+    viewModel: ProductListViewModel = appViewModel { app, args -> ProductListViewModel(app.productRepository, args) }
 ) {
     // collectAsStateWithLifecycle: turns the ViewModel's live value into screen state,
     // and stops listening while the screen is not visible.
@@ -59,6 +59,7 @@ fun ProductListScreen(
     val selectedCategoryId by viewModel.selectedCategoryId.collectAsStateWithLifecycle()
     val showArchived by viewModel.showArchived.collectAsStateWithLifecycle()
     val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val lowStockOnly by viewModel.lowStockOnly.collectAsStateWithLifecycle()
     val products by viewModel.products.collectAsStateWithLifecycle()
 
     SubScreenScaffold(
@@ -102,6 +103,14 @@ fun ProductListScreen(
                         label = { Text(stringResource(R.string.chip_all)) }
                     )
                 }
+                // "কম স্টক": only the products that need attention (works with the search and the category)
+                item {
+                    FilterChip(
+                        selected = lowStockOnly,
+                        onClick = { viewModel.onLowStockOnlyChange(!lowStockOnly) },
+                        label = { Text(stringResource(R.string.chip_low_stock)) }
+                    )
+                }
                 items(categories, key = { it.id }) { category ->
                     FilterChip(
                         selected = selectedCategoryId == category.id,
@@ -130,10 +139,11 @@ fun ProductListScreen(
             when {
                 list == null -> Unit
                 list.isEmpty() -> {
-                    val message = when {
-                        query.isNotBlank() || selectedCategoryId != null -> R.string.empty_search
-                        showArchived -> R.string.empty_archived
-                        else -> R.string.empty_products
+                    val message = when (productEmptyKind(query.isNotBlank(), selectedCategoryId != null, lowStockOnly, showArchived)) {
+                        ProductEmptyKind.NO_MATCH -> R.string.empty_search
+                        ProductEmptyKind.LOW_STOCK_NONE -> R.string.empty_low_stock
+                        ProductEmptyKind.NO_ARCHIVED -> R.string.empty_archived
+                        ProductEmptyKind.NO_PRODUCTS -> R.string.empty_products
                     }
                     Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)

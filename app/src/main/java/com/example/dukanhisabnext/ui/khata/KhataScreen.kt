@@ -353,7 +353,7 @@ private fun SummaryLine.labelRes(): Int = when (this) {
 
 /** "সব": পাবো, অগ্রিম and নিট for the whole shop. */
 @Composable
-private fun AllSummaryCard(summary: KhataAllSummary) {
+internal fun AllSummaryCard(summary: KhataAllSummary) {
     Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SummaryColumn(stringResource(R.string.khata_sum_receivable), summary.receivable, BalanceStatus.OWES, Modifier.weight(1f))
@@ -383,7 +383,7 @@ private fun SummaryColumn(label: String, amount: Long, status: BalanceStatus, mo
 
 /** A period: বাকি দিলাম (with its small breakdown), টাকা পেলাম, the other lines only when not 0, and নিট পরিবর্তন. */
 @Composable
-private fun PeriodSummaryCard(summary: PeriodSummary) {
+internal fun PeriodSummaryCard(summary: PeriodSummary) {
     val taka = stringResource(R.string.unit_taka)
     Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
