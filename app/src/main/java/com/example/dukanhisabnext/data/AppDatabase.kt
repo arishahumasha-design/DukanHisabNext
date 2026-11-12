@@ -10,6 +10,7 @@ import com.example.dukanhisabnext.data.dao.LedgerDao
 import com.example.dukanhisabnext.data.dao.ProductDao
 import com.example.dukanhisabnext.data.dao.SaleCancellationDao
 import com.example.dukanhisabnext.data.dao.SaleDao
+import com.example.dukanhisabnext.data.dao.ReportDao
 import com.example.dukanhisabnext.data.dao.ShopProfileDao
 import com.example.dukanhisabnext.data.dao.StockMovementDao
 import com.example.dukanhisabnext.data.entity.Category
@@ -57,6 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun ledgerDao(): LedgerDao
     abstract fun expenseDao(): ExpenseDao
     abstract fun saleCancellationDao(): SaleCancellationDao
+    abstract fun reportDao(): ReportDao // read-only queries for the reports (no table of its own)
 
     companion object {
         const val FILE_NAME = "dokan_hisab.db"

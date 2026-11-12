@@ -6,6 +6,7 @@ import com.example.dukanhisabnext.data.CustomerRepository
 import com.example.dukanhisabnext.data.ExpenseRepository
 import com.example.dukanhisabnext.data.LedgerRepository
 import com.example.dukanhisabnext.data.ProductRepository
+import com.example.dukanhisabnext.data.ReportRepository
 import com.example.dukanhisabnext.data.ReceiptRepository
 import com.example.dukanhisabnext.data.SaleRepository
 import com.example.dukanhisabnext.data.ShopRepository
@@ -29,6 +30,7 @@ class DokanHisabApp : Application() {
     // One shared LedgerRepository too, for the same reason (lock and double-tap memory).
     val ledgerRepository: LedgerRepository by lazy { LedgerRepository(database) }
     val expenseRepository: ExpenseRepository by lazy { ExpenseRepository(database) }
+    val reportRepository: ReportRepository by lazy { ReportRepository(database) }
 
     val shopRepository: ShopRepository by lazy { ShopRepository(database) }
     val receiptRepository: ReceiptRepository by lazy { ReceiptRepository(database) }

@@ -331,15 +331,36 @@ before guessing.
 - Out of scope: receipts or photos, recurring expenses, budgets, export.
 
 ### 3.5 Reports
-- Date filter: today, this month, this year, custom range.
-- Sales report: list of sales and total sales. Show net sales
-  (subtotal - discount) and delivery charge as separate lines.
-- Due report: total receivable and a customer-wise list.
-- Expense report: total and by category.
+- One "রিপোর্ট" screen (More → রিপোর্ট) with four tabs বিক্রি | বাকি | খরচ |
+  লাভ-ক্ষতি and the time chips আজ | ৭ দিন | এই মাস | এই বছর | তারিখ বাছুন (the
+  same Dhaka windows and the same shared date picker as the Khata and expense
+  screens). (The screens come in M7 part 2; the numbers and rules are below.)
+- Sales report: the count, net sales (subtotal - discount), the delivery
+  charge as its own line, the total, and the paid and due parts, plus the list
+  of sales. A sale belongs to the Dhaka day of its createdAt. A cancelled sale
+  is left out of EVERY number of every period (whenever it was cancelled);
+  "(বাতিল N টি বাদ)" says how many were left out, and the cancelled sales stay
+  visible in the sales list with their tag.
+- Due report: the CURRENT balances of the whole shop (পাবো / অগ্রিম / নিট, the
+  same numbers as the Khata সব view) and the customers who owe, plus the
+  period's movement (বাকি দিলাম / টাকা পেলাম / ... / নিট পরিবর্তন, the same as
+  the Khata period summary).
+- Expense report: দোকানের খরচ, ব্যক্তিগত, মোট and each category, the same as
+  the expense screen (an expense belongs to its expenseDate).
 - Profit/loss: net sales (subtotal - discount) minus cost of goods sold minus
-  expenses. Delivery charge is not mixed into net sales. (If a product has no
-  cost price, show a note that profit is approximate.)
-- Dashboard (home): today's sales, today's expense, total due, low-stock count.
+  SHOP expenses only = নিট লাভ (or ক্ষতি). The delivery charge and the personal
+  expenses are shown as information lines and are NOT part of the profit. If
+  some sold lines have no cost price, the profit is marked "আনুমানিক" with how
+  many lines and how much sale value had no cost price (their cost is left
+  out, so the profit is too high by that unknown cost).
+- Dashboard (home): আজকের বিক্রি (count and total, without cancelled sales),
+  আজকের খরচ (the total with a small shop / personal split), মোট পাবো (the Khata
+  পাবো) and কম স্টক (active products with negative stock or stock at or below
+  their alert level: the same rule as the product tags). The numbers are live.
+  Tapping a card opens the sales list (আজ), the expense list (আজ), the Khata tab,
+  or the product list with a "কম স্টক" filter.
+- Out of scope: PDF / Excel export, charts, comparing periods, a cash-flow
+  report, tax.
 
 ### 3.6 Settings
 - Settings screen (More → সেটিংস), with a top bar, a back arrow and the title
@@ -457,6 +478,22 @@ SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY, OTHER).
   (`e.isDeleted = 0`, alias `e` for expenses) for "this expense counts", and
   `SHOP_EXPENSE_SQL` (that plus `c.isPersonal = 0`, alias `c` for the joined
   expense_categories) for "this is a cost of running the shop" (M7 profit).
+
+**Reports (M7, no new table)**: `ReportDao` has three read-only queries, all
+built on the shared conditions above:
+- `observeSalesReport(start, end)`: count, subtotal, discount, delivery,
+  total, paid and due of the sales of a window, cancelled sales left out by
+  `NOT_CANCELLED_SQL`, plus how many were left out.
+- `observeCostOfGoods(start, end)`: the cost of the sold lines that have a
+  cost price, each line's cost by `LINE_COST_SQL` = (quantity x
+  costPriceSnapshot + 500) / 1000, which is exactly `SaleCalculator.lineTotal`
+  (half-up once per line); plus the number of lines and the sale value of the
+  lines WITHOUT a cost price. Cancelled sales are left out.
+- `observeLowStockCount()`: active products with `LOW_STOCK_SQL` = stock < 0,
+  or an alert level is set and stock ≤ it (the same rule as `stockStatus()`
+  for the product tags). Stock is the sum of the product's movements.
+- No index was added: `sales.createdAt` has none (a year of a small shop
+  scans fast); add one later with a migration only if it gets slow.
 
 ### Indexes and integrity
 
@@ -582,6 +619,38 @@ SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY, OTHER).
     first. The lines always add up (tested, also with random data). Like the
     khata, the summary covers the whole period; the search only filters the
     rows.
+- Reports (M7): every report number comes from the same rule as the screen
+  that already shows it; there is no second formula (`report/ReportRules.kt`
+  only puts the numbers together). Phone tests (`ReportQueriesTest`) check, on
+  the same data:
+  - sales report total and count = the sales list totals
+    (`observeActiveTotals`) = the sales list summary (`salesSummary`) = the
+    Kotlin twin (`salesReportFrom`); its cancelled count = the list's "(বাতিল N
+    টি বাদ)"; total = net sales + delivery = paid + due;
+  - due report পাবো = `observeTotalReceivable` = the Khata পাবো; the period's
+    নিট পরিবর্তন = the sum of `signedAmount` of the window's entries;
+  - expense report total = the expense screen total; shop part =
+    `observeShopTotalInRange`; personal = total − shop;
+  - cost of goods: the SQL = the sum of `SaleCalculator.lineTotal` per line on
+    tricky values (0.333 x ৳100.01, 0.5 paisa per line rounded up per line,
+    very large numbers), and a cancelled sale's lines are not a cost;
+  - net profit = net sales − cost of goods − SHOP expenses; the delivery
+    charge and personal expenses are not taken away;
+  - the low-stock count = the number of active products whose product tag is
+    not normal; archived products never count.
+- Profit / loss box (`profitLines()`):
+
+  | Line | Amount |
+  |---|---|
+  | নিট বিক্রি | subtotal − discount |
+  | − পণ্যের ক্রয়মূল্য | cost of goods sold (lines with a cost price) |
+  | = মোট লাভ | net sales − cost of goods |
+  | − দোকানের খরচ | shop expenses (`SHOP_EXPENSE_SQL`) |
+  | = নিট লাভ / ক্ষতি | gross profit − shop expenses (below 0 = ক্ষতি) |
+
+  Information lines under it, shown only when not 0 and NOT part of the
+  profit: ডেলিভারি চার্জ, ব্যক্তিগত খরচ. The "আনুমানিক" note shows when some
+  sold lines have no cost price.
 
 ## 6. Screens and navigation
 
