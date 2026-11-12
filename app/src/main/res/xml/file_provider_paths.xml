@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    What the share sheet may read from this app: ONLY the shared-backups folder inside the cache
+    folder (BackupManager puts the backup zip there, and clears it at the next share and at start-up).
+    The cache folder is never backed up by Android and nothing else is exposed.
+-->
+<paths>
+    <cache-path name="shared_backups" path="shared-backups/" />
+</paths>

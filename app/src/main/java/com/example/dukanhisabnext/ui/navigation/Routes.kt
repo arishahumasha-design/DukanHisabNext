@@ -15,6 +15,7 @@ object Routes {
     /** A receipt opened from the sales list: only the sale id, so there is no change line. */
     const val SALE_RECEIPT = "sale_receipt/{saleId}"
     const val SETTINGS = "settings"
+    const val BACKUP = "backup"
     // ---- More tab: খরচ (expenses) ----
     const val EXPENSES = "expenses"
     // ---- More tab: রিপোর্ট ----

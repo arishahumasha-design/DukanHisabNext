@@ -1,6 +1,7 @@
 package com.example.dukanhisabnext.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -27,12 +29,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.backup.lastBackupText
+import com.example.dukanhisabnext.ui.backup.PLACEHOLDER
+import com.example.dukanhisabnext.ui.backup.periodWords
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 
@@ -46,6 +53,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onEditOwner: () -> Unit,
     onOpenShop: () -> Unit,
+    onOpenBackup: () -> Unit,
     shopSavedMessage: Boolean,
     viewModel: SettingsViewModel = appViewModel { app, _ -> SettingsViewModel(app.shopRepository) }
 ) {
@@ -68,6 +76,7 @@ fun SettingsScreen(
 
                 OwnerCard(ui = current, onEdit = onEditOwner)
                 ShopSection(shopName = current.shopName, onClick = onOpenShop)
+                BackupRow(onClick = onOpenBackup)
             }
         }
     }
@@ -172,6 +181,37 @@ private fun ShopSection(shopName: String?, onClick: () -> Unit) {
                 ShopButtonKind.CHANGE -> R.string.btn_change_shop
             }
             Text(stringResource(label), style = MaterialTheme.typography.titleLarge)
+        }
+    }
+}
+
+/**
+ * "ব্যাকআপ ও রিস্টোর": the last backup time (Dhaka time) or "এখনও ব্যাকআপ নেওয়া হয়নি", and opens the backup screen.
+ * The time is kept in the small settings file and set only after a backup file was really written.
+ */
+@Composable
+private fun BackupRow(onClick: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = (context.applicationContext as DokanHisabApp).backupPrefs
+    val lastBackupAt by prefs.lastBackupAt.collectAsStateWithLifecycle()
+    val lastTemplate = stringResource(R.string.backup_last_at, PLACEHOLDER)
+    val subtitle = lastBackupText(
+        lastBackupAt = lastBackupAt,
+        neverText = stringResource(R.string.backup_never),
+        labelFormat = { time -> lastTemplate.replace(PLACEHOLDER, time) },
+        periodWord = periodWords()
+    )
+    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+        Row(
+            modifier = Modifier.padding(16.dp).heightIn(min = 48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.title_backup), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
         }
     }
 }

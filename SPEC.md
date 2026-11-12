@@ -857,6 +857,53 @@ the alert level; the same rule as the tags and the Home card) and works together
 with the search, the category chips and the archived switch. When nothing is low,
 the empty message says "কম স্টকের কোনো পণ্য নেই। সব ঠিক আছে।".
 
+Backup and restore screens (M8 part 2; the engine is section 5):
+- Settings has a third card "ব্যাকআপ ও রিস্টোর" (after the owner card and the
+  shop button). Its second line is the last backup time in Dhaka time with
+  Bengali digits ("শেষ ব্যাকআপ: ১২/১১/২০২৬ দুপুর ১২:০৯") or "এখনও ব্যাকআপ নেওয়া
+  হয়নি". It opens the screen "ব্যাকআপ ও রিস্টোর" (route `backup`, inside the
+  More group). The time is kept in `backup_prefs.xml` (`BackupPrefs`, outside
+  the database, so a restore keeps it) and is set ONLY after a backup file was
+  written to the place the user chose and read back to match. Sharing does
+  not set it (the app cannot know the file arrived).
+- The screen has: the last-backup card; "ব্যাকআপ ফাইল সংরক্ষণ করুন" (system
+  "save as" picker, `CreateDocument`, name `DokanHisab-backup-YYYY-MM-DD-HHmm.zip`
+  with Latin digits, Dhaka time); "শেয়ার করুন" (share sheet, `ACTION_SEND`
+  through a FileProvider with a `cache-path` for `shared-backups/` only, no
+  permission; the folder is emptied at the next share and at start-up); both
+  go through a dialog with the exact warning "এই ফাইলে সব কাস্টমারের নাম,
+  মোবাইল নম্বর আর টাকার হিসাব খোলা অবস্থায় আছে। নিজের Google Drive বা বিশ্বস্ত
+  জায়গায় রাখুন, কাউকে পাঠাবেন না।", which a tap outside does not close
+  (Back or "বাতিল" cancels); the same sentence in small text under the two
+  buttons; "ব্যাকআপ থেকে ফিরিয়ে আনুন" (system "open" picker, any file type, so a
+  renamed file reaches the checks and is refused with a clear message); and
+  "আগের ডেটা ফিরিয়ে আনুন", shown only while a safety copy exists, with a
+  confirm dialog. A cancelled picker is not an error.
+- Restore flow: pick → progress line (ফাইল পড়া হচ্ছে… / ফাইল যাচাই হচ্ছে…) →
+  summary dialog "এই ব্যাকআপ দিয়ে বদলে দেবেন?" with the backup's date and the
+  counts of বিক্রি, কাস্টমার, পণ্য, খরচ and খাতার এন্ট্রি in the backup next to
+  the counts now (raw table rows), and the sentence that the current data is
+  kept as a safety copy; buttons "হ্যাঁ, এই ব্যাকআপ দিয়ে বদলে দিন" and
+  "বাতিল" (a tap outside does not close it; cancelling throws the prepared copy
+  away). A failed check shows the engine's Bengali message (it ends "আপনার
+  ডেটা বদলায়নি") and changes nothing.
+- While the swap runs (and the app restarts) a full-screen "রিস্টোর হচ্ছে…" covers
+  the whole app, the bottom bar too; Back does nothing. After the restart a
+  full-screen note is shown once: "ডেটা ফিরিয়ে আনা হয়েছে" (or "আগের ডেটা ফিরিয়ে
+  আনা হয়েছে") with the backup's date and the restored counts, or the start-up
+  check's note when the last restore did not finish, or "ডেটা ফিরিয়ে আনা যায়নি…"
+  when the last step failed and the app was restarted (the old data is back).
+- `BackupManager` (app-wide, owns its own coroutine scope) runs the one job
+  at a time and holds the state the screens only watch: Idle, Working(step),
+  AwaitingConfirm(summary), ShareReady, Done, Failed(problem), Restarting.
+  Rotation or Back never cancels a job; a second start while a job runs is
+  refused and the buttons are disabled (`backup/BackupJob.kt`,
+  `BackupScreenLogic.kt`, PC-tested).
+- Home: when there is data (at least one sale, customer or product) and the
+  last backup is MORE than 7 days old (exactly 7 days is not), or there never
+  was one, a small line under the cards "আপনি ৭ দিনের বেশি ব্যাকআপ নেননি — এখনই
+  নিন" opens the backup screen. No notification.
+
 ## 7. Out of scope for the MVP
 
 Bluetooth/thermal printing, bKash/Nagad QR, SMS, subscriptions, online shop,

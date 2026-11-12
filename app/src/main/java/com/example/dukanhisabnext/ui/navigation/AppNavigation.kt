@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -52,6 +53,8 @@ import com.example.dukanhisabnext.ui.sell.DueScreen
 import com.example.dukanhisabnext.ui.sell.PaymentScreen
 import com.example.dukanhisabnext.ui.receipt.ReceiptScreen
 import com.example.dukanhisabnext.ui.sales.SalesListScreen
+import com.example.dukanhisabnext.ui.backup.BackupOverlays
+import com.example.dukanhisabnext.ui.backup.BackupScreen
 import com.example.dukanhisabnext.ui.settings.OwnerScreen
 import com.example.dukanhisabnext.ui.settings.SettingsScreen
 import com.example.dukanhisabnext.ui.shop.ShopScreen
@@ -73,6 +76,15 @@ private const val NO_CUSTOMER = -1L
 // that shows whichever screen is selected).
 @Composable
 fun AppNavigation() {
+    // The whole app, with two full-screen layers above it for restore (see BackupOverlays).
+    Box(modifier = Modifier.fillMaxSize()) {
+        AppFrame()
+        BackupOverlays()
+    }
+}
+
+@Composable
+private fun AppFrame() {
     // The NavController remembers which screen we are on (and survives rotation).
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -118,6 +130,7 @@ fun AppNavigation() {
                 // The four Home cards open the matching screen (the sales and expense lists open on আজ,
                 // the product list with the "কম স্টক" chip on, the Khata tab as a tab).
                 HomeScreen(
+                    onOpenBackup = { navController.navigate(Routes.BACKUP) },
                     onOpen = { target ->
                         when (target) {
                             DashboardTarget.SALES_LIST -> navController.navigate(Routes.SALES_LIST)
@@ -279,8 +292,12 @@ fun AppNavigation() {
                             entry.savedStateHandle[SHOP_SAVED_KEY] = false
                             navController.navigate(Routes.SHOP)
                         },
+                        onOpenBackup = { navController.navigate(Routes.BACKUP) },
                         shopSavedMessage = shopSaved
                     )
+                }
+                composable(Routes.BACKUP) {
+                    BackupScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.OWNER) {
                     OwnerScreen(onBack = { navController.popBackStack() })

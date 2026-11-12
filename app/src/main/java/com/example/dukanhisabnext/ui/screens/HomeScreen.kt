@@ -40,7 +40,13 @@ import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import com.example.dukanhisabnext.backup.hasShopData
+import com.example.dukanhisabnext.backup.shouldRemindBackup
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -53,7 +59,9 @@ import kotlinx.coroutines.flow.stateIn
  */
 class HomeViewModel(
     reports: ReportRepository,
-    private val clock: () -> Long = System::currentTimeMillis
+    private val clock: () -> Long = System::currentTimeMillis,
+    lastBackupAt: StateFlow<Long?> = MutableStateFlow(null),
+    private val rowCounts: suspend () -> Map<String, Long> = { emptyMap() }
 ) : ViewModel() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,6 +74,18 @@ class HomeViewModel(
         .distinctUntilChanged()
         .flatMapLatest { today -> reports.observeDashboard(today) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /**
+     * The small "no backup for more than 7 days" line. It is checked again whenever the dashboard
+     * changes (a sale, a customer...) and when a backup is made. Only when there is data to lose.
+     */
+    val showBackupReminder: StateFlow<Boolean> = combine(dashboard.filterNotNull(), lastBackupAt) { _, last -> last }
+        .map { last ->
+            val counts = rowCounts()
+            val hasData = hasShopData(counts["sales"] ?: 0, counts["customers"] ?: 0, counts["products"] ?: 0)
+            shouldRemindBackup(clock(), last, hasData)
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 }
 
 /**
@@ -76,10 +96,14 @@ class HomeViewModel(
 @Composable
 fun HomeScreen(
     onOpen: (DashboardTarget) -> Unit,
+    onOpenBackup: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = appViewModel { app, _ -> HomeViewModel(app.reportRepository) }
+    viewModel: HomeViewModel = appViewModel { app, _ ->
+        HomeViewModel(app.reportRepository, lastBackupAt = app.backupPrefs.lastBackupAt, rowCounts = app.backupManager::currentCounts)
+    }
 ) {
     val dashboard by viewModel.dashboard.collectAsStateWithLifecycle()
+    val showBackupReminder by viewModel.showBackupReminder.collectAsStateWithLifecycle()
     val taka = stringResource(R.string.unit_taka)
 
     Column(
@@ -146,6 +170,17 @@ fun HomeScreen(
                     onClick = { onOpen(targetOf(card)) }
                 )
             }
+        }
+
+        // A small line, not a notification: no backup for more than 7 days (or ever) and there is data.
+        if (showBackupReminder) {
+            Text(
+                text = stringResource(R.string.home_backup_reminder),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenBackup).padding(vertical = 12.dp)
+            )
         }
     }
 }
