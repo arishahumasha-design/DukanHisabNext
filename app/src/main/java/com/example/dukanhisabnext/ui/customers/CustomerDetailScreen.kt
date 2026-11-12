@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.customers
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -107,7 +108,10 @@ fun CustomerDetailScreen(
     }
 
     SubScreenScaffold(title = stringResource(R.string.title_customer_detail), onBack = onBack) { padding ->
-        val c = customer ?: return@SubScreenScaffold
+        val c = customer ?: run {
+            LoadingIndicator(Modifier.padding(padding).fillMaxSize())
+            return@SubScreenScaffold
+        }
 
         LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
             // ---- The details ----

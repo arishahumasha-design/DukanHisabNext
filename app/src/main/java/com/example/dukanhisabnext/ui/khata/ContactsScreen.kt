@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.khata
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -106,7 +107,9 @@ fun ContactsScreen(
             HorizontalDivider()
 
             val current = ui
-            if (current != null) {
+            if (current == null) {
+                LoadingIndicator(Modifier.fillMaxSize())
+            } else {
                 val empty = contactsEmptyKind(current.totalCustomers, current.rows.size)
                 if (empty != null) {
                     val message = if (empty == KhataEmpty.NO_CUSTOMERS) R.string.empty_customers else R.string.empty_customer_search

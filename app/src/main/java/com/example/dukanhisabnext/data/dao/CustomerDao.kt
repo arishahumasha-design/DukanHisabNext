@@ -42,7 +42,7 @@ interface CustomerDao {
         SELECT * FROM customers
         WHERE name LIKE '%' || :query || '%'
            OR phone LIKE '%' || :query || '%'
-        ORDER BY name
+        ORDER BY name COLLATE NOCASE, name
         """
     )
     fun observeSearchedByName(query: String): Flow<List<Customer>>
@@ -59,7 +59,7 @@ interface CustomerDao {
         FROM customers c
         WHERE c.name LIKE '%' || :query || '%'
            OR c.phone LIKE '%' || :query || '%'
-        ORDER BY balance DESC, c.name
+        ORDER BY balance DESC, c.name COLLATE NOCASE, c.name
         """
     )
     fun observeWithBalance(query: String): Flow<List<CustomerWithBalance>>

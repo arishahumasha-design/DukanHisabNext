@@ -62,6 +62,7 @@ fun CartScreen(
     val summary by viewModel.summary.collectAsStateWithLifecycle()
     val stocks by viewModel.stocks.collectAsStateWithLifecycle()
     val unavailable by viewModel.unavailable.collectAsStateWithLifecycle()
+    val costPrices by viewModel.costPrices.collectAsStateWithLifecycle()
     val canContinue by viewModel.canContinue.collectAsStateWithLifecycle()
 
     SubScreenScaffold(title = stringResource(R.string.cart_title), onBack = onBack) { padding ->
@@ -87,6 +88,7 @@ fun CartScreen(
                             line = line,
                             stock = stocks[line.input.productId] ?: 0L, // no movements yet = stock 0
                             unavailable = line.input.productId in unavailable,
+                            costPrice = costPrices[line.input.productId],
                             viewModel = viewModel
                         )
                     }
@@ -226,7 +228,7 @@ private fun DiscountUnitToggle(selected: DiscountUnit, onSelect: (DiscountUnit) 
 
 /** One cart line: name, remove, quantity, price, line total (computed, read-only), stock warning. */
 @Composable
-private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, viewModel: CartViewModel) {
+private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, costPrice: Long?, viewModel: CartViewModel) {
     val input = line.input
     val unitText = stringResource(input.unit.labelRes())
 
@@ -314,6 +316,27 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                     Spacer(Modifier.width(6.dp))
                     Text(
                         text = stringResource(R.string.stock_warning_line, formatQuantity(stock), unitText),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = StockStatus.LOW.color()
+                    )
+                }
+            }
+
+            // The price typed here is below what the product cost: a warning, the sale is still allowed.
+            if (costPrice != null && isBelowCost(line.unitPrice, costPrice)) {
+                Row(
+                    modifier = Modifier.padding(top = 4.dp, end = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.Warning,
+                        contentDescription = null,
+                        tint = StockStatus.LOW.color(),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.below_cost_line, formatTaka(costPrice)),
                         style = MaterialTheme.typography.bodySmall,
                         color = StockStatus.LOW.color()
                     )

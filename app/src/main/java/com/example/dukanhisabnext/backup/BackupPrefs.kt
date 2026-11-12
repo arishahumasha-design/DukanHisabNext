@@ -25,6 +25,20 @@ class BackupPrefs(context: Context) {
         last.value = at
     }
 
+    /** How many times the one-time "ব্যাকআপ নিন" dialog was shown (it stops after 2). */
+    var nudgeShownCount: Int
+        get() = prefs.getInt(KEY_NUDGE_SHOWN, 0)
+        set(value) {
+            prefs.edit().putInt(KEY_NUDGE_SHOWN, value).commit()
+        }
+
+    /** True once the user tapped "ব্যাকআপ নিন" in that dialog: it never comes back. */
+    var nudgeUsed: Boolean
+        get() = prefs.getBoolean(KEY_NUDGE_USED, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_NUDGE_USED, value).commit()
+        }
+
     var restoreFailedNote: Boolean
         get() = prefs.getBoolean(KEY_FAILED, false)
         set(value) {
@@ -34,5 +48,7 @@ class BackupPrefs(context: Context) {
     private companion object {
         const val KEY_LAST = "lastBackupAt"
         const val KEY_FAILED = "restoreFailedNote"
+        const val KEY_NUDGE_SHOWN = "nudgeShownCount"
+        const val KEY_NUDGE_USED = "nudgeUsed"
     }
 }

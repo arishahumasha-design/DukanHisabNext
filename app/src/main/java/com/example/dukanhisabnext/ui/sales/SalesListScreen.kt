@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sales
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -117,7 +118,7 @@ fun SalesListScreen(
 
             val current = ui
             if (current == null) {
-                Box(modifier = Modifier.fillMaxSize()) // still loading
+                LoadingIndicator(Modifier.fillMaxSize()) // still loading
             } else {
                 // ---- Count and total of the filtered sales ----
                 Text(

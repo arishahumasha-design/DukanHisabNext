@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.receipt
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -77,7 +78,7 @@ fun ReceiptScreen(
 
     SubScreenScaffold(title = stringResource(R.string.title_receipt), onBack = onBack) { padding ->
         when (val current = state) {
-            ReceiptUiState.Loading -> Box(modifier = Modifier.padding(padding).fillMaxSize())
+            ReceiptUiState.Loading -> LoadingIndicator(Modifier.padding(padding).fillMaxSize())
 
             ReceiptUiState.NotFound -> NotFoundContent(
                 onNewSale = onNewSale,

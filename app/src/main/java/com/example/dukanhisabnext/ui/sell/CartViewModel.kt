@@ -3,7 +3,10 @@ package com.example.dukanhisabnext.ui.sell
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.data.ProductRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -21,6 +24,17 @@ class CartViewModel(
 
     /** Current stock per product, for the "more than in stock" warning on cart lines. */
     val stocks: StateFlow<Map<Long, Long>> = repo.observeStocks()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    /**
+     * The buying price of each product in the cart that has one, for the "below cost" warning.
+     * Read again whenever the set of products in the cart changes (not on every keystroke).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val costPrices: StateFlow<Map<Long, Long>> = cart.state
+        .map { state -> state.lines.map { it.productId }.distinct().sorted() }
+        .distinctUntilChanged()
+        .mapLatest { ids -> repo.costPricesOf(ids) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** What was typed in the cart (the text of each box and the switches). */

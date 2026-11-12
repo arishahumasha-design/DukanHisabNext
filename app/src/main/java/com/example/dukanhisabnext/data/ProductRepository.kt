@@ -37,6 +37,11 @@ class ProductRepository(
     fun observeStocks(): Flow<Map<Long, Long>> =
         stockDao.observeAllStocks().map { rows -> rows.associate { it.productId to it.stock } }
 
+    /** The buying price (paisa) of each of these products that has one. Products without a cost price are left out. */
+    suspend fun costPricesOf(ids: List<Long>): Map<Long, Long> =
+        if (ids.isEmpty()) emptyMap()
+        else productDao.getProducts(ids).mapNotNull { p -> p.costPrice?.let { p.id to it } }.toMap()
+
     fun observeMovements(productId: Long): Flow<List<StockMovement>> = stockDao.observeForProduct(productId)
 
     suspend fun getProduct(id: Long): Product? = productDao.getProduct(id)

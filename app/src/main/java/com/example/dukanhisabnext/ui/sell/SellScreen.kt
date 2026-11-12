@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -150,7 +151,7 @@ private fun ProductPicker(
 ) {
     HorizontalDivider()
     when {
-        products == null -> Box(modifier) // still loading
+        products == null -> LoadingIndicator(modifier) // still loading
         products.isEmpty() -> Box(modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(if (filtering) R.string.empty_search else R.string.empty_products),

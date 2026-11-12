@@ -3,6 +3,7 @@ package com.example.dukanhisabnext.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -124,7 +125,14 @@ private fun AppFrame() {
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.padding(innerPadding)
+            // With the keyboard open, the screens lift themselves by the keyboard's height
+            // (imePadding), and that height already includes the system navigation bar. So the
+            // frame's own bottom padding (the nav bar) is dropped then; otherwise it is counted
+            // twice and leaves a gap between a pinned Save bar and the keyboard.
+            modifier = Modifier.padding(
+                top = innerPadding.calculateTopPadding(),
+                bottom = if (imeVisible) 0.dp else innerPadding.calculateBottomPadding()
+            )
         ) {
             composable(Screen.Home.route) {
                 // The four Home cards open the matching screen (the sales and expense lists open on আজ,

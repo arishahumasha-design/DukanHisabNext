@@ -21,6 +21,23 @@ const val REMINDER_AFTER_MILLIS: Long = 7L * 24 * 60 * 60 * 1000
 fun shouldRemindBackup(now: Long, lastBackupAt: Long?, hasData: Boolean): Boolean =
     hasData && (lastBackupAt == null || now - lastBackupAt > REMINDER_AFTER_MILLIS)
 
+// ---- the one-time backup nudge (M9) ----
+
+/** The nudge can appear once this many sales have been saved. */
+const val NUDGE_AFTER_SALES: Long = 5
+
+/** It is shown at most this many times in all (a "পরে" counts as one). */
+const val MAX_NUDGE_SHOWS: Int = 2
+
+/**
+ * A one-time dialog on Home after the first 5 sales when no backup was EVER made: "ব্যাকআপ নিন" or
+ * "পরে". Never again once "ব্যাকআপ নিন" was used ([nudgeUsed]), after it was shown twice
+ * ([timesShown]), or when a backup exists. (The small Home line for a backup older than 7 days
+ * is separate and stays.)
+ */
+fun shouldShowBackupNudge(salesSaved: Long, lastBackupAt: Long?, nudgeUsed: Boolean, timesShown: Int): Boolean =
+    salesSaved >= NUDGE_AFTER_SALES && lastBackupAt == null && !nudgeUsed && timesShown < MAX_NUDGE_SHOWS
+
 /** At least one sale, customer or product exists (counts of those tables). */
 fun hasShopData(sales: Long, customers: Long, products: Long): Boolean = sales > 0 || customers > 0 || products > 0
 

@@ -29,7 +29,7 @@ interface ProductDao {
     @Query("SELECT COUNT(*) FROM categories WHERE name = :name COLLATE NOCASE")
     suspend fun countCategoriesNamed(name: String): Int
 
-    @Query("SELECT * FROM categories ORDER BY name")
+    @Query("SELECT * FROM categories ORDER BY name COLLATE NOCASE, name")
     fun observeCategories(): Flow<List<Category>>
 
     // ---- Products ----
@@ -76,7 +76,7 @@ interface ProductDao {
         WHERE p.isActive = :isActive
           AND p.name LIKE '%' || :query || '%'
           AND (:categoryId IS NULL OR p.categoryId = :categoryId)
-        ORDER BY p.name
+        ORDER BY p.name COLLATE NOCASE, p.name
         """
     )
     fun observeProducts(isActive: Boolean, query: String, categoryId: Long?): Flow<List<ProductWithStock>>

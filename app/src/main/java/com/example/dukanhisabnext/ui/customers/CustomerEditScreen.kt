@@ -32,6 +32,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.MobileField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.example.dukanhisabnext.ui.components.FormWithSaveBar
+import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.messageRes
 
@@ -68,14 +72,10 @@ fun CustomerEditScreen(
         title = stringResource(if (state.isNew) R.string.title_customer_new else R.string.title_customer_edit),
         onBack = onBack
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .imePadding() // lift the form above the keyboard
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // The Save button is pinned above the keyboard (FormWithSaveBar); the fields scroll.
+        FormWithSaveBar(
+            padding = padding,
+            saveBar = { SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading, viewModel::save) }
         ) {
             if (state.isNew) {
                 OutlinedButton(
@@ -99,6 +99,7 @@ fun CustomerEditScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_customer_name)) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 isError = state.errors.name != null,
                 supportingText = state.errors.name?.let { { Text(stringResource(it.messageRes())) } }
             )
@@ -126,13 +127,6 @@ fun CustomerEditScreen(
                 label = { Text(stringResource(R.string.field_note)) }
             )
 
-            Button(
-                onClick = viewModel::save,
-                enabled = !state.isSaving && !state.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.btn_save))
-            }
         }
     }
 }

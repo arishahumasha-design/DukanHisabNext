@@ -1,5 +1,8 @@
 package com.example.dukanhisabnext.ui.expense
 
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,7 +88,7 @@ fun CategoriesScreen(
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 val list = categories
                 when {
-                    list == null -> Unit
+                    list == null -> LoadingIndicator(Modifier.fillMaxSize())
                     list.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(stringResource(R.string.cat_empty), style = MaterialTheme.typography.bodyLarge)
                     }
@@ -171,6 +174,7 @@ private fun CategoryDialog(form: CategoryForm, ui: CategoriesUi, viewModel: Cate
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(R.string.cat_name_label)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     enabled = !ui.busy,
                     isError = nameError != null,
                     supportingText = nameError?.let { { Text(stringResource(it.messageRes())) } }

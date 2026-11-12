@@ -30,3 +30,10 @@ fun productEmptyKind(searching: Boolean, categoryChosen: Boolean, onlyLowStock: 
     showArchived -> ProductEmptyKind.NO_ARCHIVED
     else -> ProductEmptyKind.NO_PRODUCTS
 }
+
+/**
+ * The "সব" chip is selected only when NO filter is on: no category chosen and the "কম স্টক" chip off.
+ * (Before M9 it stayed selected while "কম স্টক" was on, which looked like two chips selected at once.)
+ */
+fun isAllChipSelected(selectedCategoryId: Long?, onlyLowStock: Boolean): Boolean =
+    selectedCategoryId == null && !onlyLowStock

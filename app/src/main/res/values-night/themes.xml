@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark mode: a DARK window, so there is no light flash when the app starts (Android 12+ shows its start screen on this same window colour). -->
+    <style name="Theme.DukanHisabNext" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:colorBackground">@color/window_background</item>
+    </style>
+</resources>

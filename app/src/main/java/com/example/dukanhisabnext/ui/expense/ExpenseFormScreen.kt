@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,7 +39,12 @@ import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.BengaliDigitsTransformation
 import com.example.dukanhisabnext.ui.components.DayField
 import com.example.dukanhisabnext.ui.components.DropdownField
+import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.needsMoneyConfirm
+import com.example.dukanhisabnext.util.formatTaka
+import com.example.dukanhisabnext.util.parseTakaToPaisa
+import com.example.dukanhisabnext.ui.components.EXPENSE_CONFIRM_PAISA
 import com.example.dukanhisabnext.ui.components.sanitizeNumberInput
 import com.example.dukanhisabnext.util.toBengaliDigits
 
@@ -65,12 +74,16 @@ fun ExpenseFormScreen(
         ui.deletedId?.let(onDeleted)
     }
 
+    // A big amount (৳5,000 or more) asks "ঠিক আছে?" before saving (ConfirmRules.kt).
+    var confirmOpen by rememberSaveable { mutableStateOf(false) }
+    val amountPaisa = parseTakaToPaisa(form.amountText)
+
     SubScreenScaffold(
         title = stringResource(if (ui.isEdit) R.string.title_expense_edit else R.string.title_expense_new),
         onBack = onBack
     ) { padding ->
         if (!ui.loaded) {
-            Box(modifier = Modifier.padding(padding).fillMaxSize()) // loading the expense to edit
+            LoadingIndicator(Modifier.padding(padding).fillMaxSize()) // loading the expense to edit
             return@SubScreenScaffold
         }
 
@@ -181,7 +194,9 @@ fun ExpenseFormScreen(
             // ---- The save button: disabled while saving, so a double tap cannot save twice ----
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = viewModel::onSave,
+                    onClick = {
+                        if (needsMoneyConfirm(amountPaisa, EXPENSE_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave()
+                    },
                     enabled = !ui.busy && !ui.saved && ui.deletedId == null && ui.problem != ExpenseProblem.NOT_FOUND,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
                 ) {
@@ -192,6 +207,17 @@ fun ExpenseFormScreen(
                 }
             }
         }
+    }
+
+    if (confirmOpen) {
+        ConfirmAmountDialog(
+            amountText = stringResource(R.string.price_format, formatTaka(amountPaisa ?: 0L)),
+            onFix = { confirmOpen = false },
+            onConfirm = {
+                confirmOpen = false
+                viewModel.onSave()
+            }
+        )
     }
 
     // ---- "খরচটি মুছবেন?" ----

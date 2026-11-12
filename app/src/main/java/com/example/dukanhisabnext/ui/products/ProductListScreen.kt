@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.products
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -97,9 +98,13 @@ fun ProductListScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
+                    // "সব" = no filter at all: it is selected only then, and tapping it clears the category AND "কম স্টক".
                     FilterChip(
-                        selected = selectedCategoryId == null,
-                        onClick = { viewModel.onCategorySelected(null) },
+                        selected = isAllChipSelected(selectedCategoryId, lowStockOnly),
+                        onClick = {
+                            viewModel.onCategorySelected(null)
+                            viewModel.onLowStockOnlyChange(false)
+                        },
                         label = { Text(stringResource(R.string.chip_all)) }
                     )
                 }
@@ -134,10 +139,10 @@ fun ProductListScreen(
             }
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
 
-            // The list itself. null = still loading (show nothing for that split second).
+            // The list itself. null = still loading (a quiet ring appears if it takes more than a moment).
             val list = products
             when {
-                list == null -> Unit
+                list == null -> LoadingIndicator(Modifier.fillMaxSize())
                 list.isEmpty() -> {
                     val message = when (productEmptyKind(query.isNotBlank(), selectedCategoryId != null, lowStockOnly, showArchived)) {
                         ProductEmptyKind.NO_MATCH -> R.string.empty_search

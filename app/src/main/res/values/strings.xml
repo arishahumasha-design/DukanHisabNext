@@ -11,7 +11,6 @@
     <!-- Screen titles -->
     <string name="title_home">হোম</string>
     <string name="title_sell">নতুন বিক্রি</string>
-    <string name="title_khata">বাকি খাতা</string>
     <string name="title_more">আরও</string>
 
     <!-- More screen -->
@@ -559,4 +558,15 @@
     <string name="restore_done_counts">এখন যা আছে:</string>
     <string name="restore_failed_note">ডেটা ফিরিয়ে আনা যায়নি। আপনার আগের ডেটা ঠিক আছে, কিছুই বদলায়নি।</string>
     <string name="home_backup_reminder">আপনি ৭ দিনের বেশি ব্যাকআপ নেননি — এখনই নিন</string>
+    <!-- M9 group B: confirm amount, below-cost warning, backup nudge, loading -->
+    <string name="confirm_amount_title">পরিমাণটি দেখে নিন</string>
+    <string name="confirm_amount_question">ঠিক আছে?</string>
+    <string name="btn_fix_amount">সংশোধন করুন</string>
+    <string name="btn_confirm_save">হ্যাঁ, সংরক্ষণ করুন</string>
+    <string name="below_cost_line">দাম ক্রয়মূল্যের (৳ %1$s) চেয়ে কম — এই বিক্রিতে লোকসান হবে</string>
+    <string name="backup_nudge_title">ব্যাকআপ নিন</string>
+    <string name="backup_nudge_text">আপনি কয়েকটি বিক্রি লিখে ফেলেছেন, কিন্তু এখনও ব্যাকআপ নেননি। ফোন হারালে বা নষ্ট হলে সব হিসাব চলে যেতে পারে। এখনই একটি ব্যাকআপ ফাইল রেখে দিন।</string>
+    <string name="btn_backup_now">ব্যাকআপ নিন</string>
+    <string name="btn_later">পরে</string>
+    <string name="loading">লোড হচ্ছে…</string>
 </resources>

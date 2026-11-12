@@ -22,6 +22,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.MobileField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.example.dukanhisabnext.ui.components.FormWithSaveBar
+import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 
 /**
@@ -36,21 +40,18 @@ fun OwnerScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     SubScreenScaffold(title = stringResource(R.string.title_owner), onBack = onBack) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .imePadding() // lift the form above the keyboard
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // The Save button is pinned above the keyboard (FormWithSaveBar); the fields scroll.
+        FormWithSaveBar(
+            padding = padding,
+            saveBar = { SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading, viewModel::save) }
         ) {
             OutlinedTextField(
                 value = state.ownerName,
                 onValueChange = viewModel::onOwnerNameChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_owner_name)) },
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             // The shared mobile box: it closes the keyboard once the number is complete. Optional.
@@ -61,14 +62,6 @@ fun OwnerScreen(
                 error = state.errors.phone,
                 prefix = stringResource(R.string.phone_country_prefix)
             )
-
-            Button(
-                onClick = viewModel::save,
-                enabled = !state.isSaving && !state.isLoading,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            ) {
-                Text(stringResource(R.string.btn_save), style = MaterialTheme.typography.titleMedium)
-            }
 
             // A clear "saved" message. It goes away as soon as something is edited again.
             if (state.saved) SavedMessage(stringResource(R.string.owner_saved))

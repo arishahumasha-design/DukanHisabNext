@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.screens
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,7 +41,13 @@ import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.window.DialogProperties
+import com.example.dukanhisabnext.backup.BackupPrefs
 import com.example.dukanhisabnext.backup.hasShopData
+import com.example.dukanhisabnext.backup.shouldShowBackupNudge
+import kotlinx.coroutines.launch
 import com.example.dukanhisabnext.backup.shouldRemindBackup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -60,9 +67,39 @@ import kotlinx.coroutines.flow.stateIn
 class HomeViewModel(
     reports: ReportRepository,
     private val clock: () -> Long = System::currentTimeMillis,
-    lastBackupAt: StateFlow<Long?> = MutableStateFlow(null),
-    private val rowCounts: suspend () -> Map<String, Long> = { emptyMap() }
+    private val lastBackupAt: StateFlow<Long?> = MutableStateFlow(null),
+    private val rowCounts: suspend () -> Map<String, Long> = { emptyMap() },
+    private val prefs: BackupPrefs? = null
 ) : ViewModel() {
+
+    private val _showBackupNudge = MutableStateFlow(false)
+
+    /** The one-time "ব্যাকআপ নিন" dialog (after 5 sales and no backup ever). Decided once when Home opens. */
+    val showBackupNudge: StateFlow<Boolean> = _showBackupNudge
+
+    init {
+        val p = prefs
+        if (p != null) {
+            viewModelScope.launch {
+                val sales = rowCounts()["sales"] ?: 0
+                if (shouldShowBackupNudge(sales, lastBackupAt.value, p.nudgeUsed, p.nudgeShownCount)) {
+                    p.nudgeShownCount += 1 // counted when shown, so a rotation never counts twice (the ViewModel stays)
+                    _showBackupNudge.value = true
+                }
+            }
+        }
+    }
+
+    /** "ব্যাকআপ নিন": the dialog never comes back. */
+    fun onNudgeBackupNow() {
+        prefs?.nudgeUsed = true
+        _showBackupNudge.value = false
+    }
+
+    /** "পরে": closes it; it may come once more. */
+    fun onNudgeLater() {
+        _showBackupNudge.value = false
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val dashboard: StateFlow<Dashboard?> = flow {
@@ -99,11 +136,33 @@ fun HomeScreen(
     onOpenBackup: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = appViewModel { app, _ ->
-        HomeViewModel(app.reportRepository, lastBackupAt = app.backupPrefs.lastBackupAt, rowCounts = app.backupManager::currentCounts)
+        HomeViewModel(
+            app.reportRepository,
+            lastBackupAt = app.backupPrefs.lastBackupAt,
+            rowCounts = app.backupManager::currentCounts,
+            prefs = app.backupPrefs
+        )
     }
 ) {
     val dashboard by viewModel.dashboard.collectAsStateWithLifecycle()
     val showBackupReminder by viewModel.showBackupReminder.collectAsStateWithLifecycle()
+    val showBackupNudge by viewModel.showBackupNudge.collectAsStateWithLifecycle()
+
+    if (showBackupNudge) {
+        AlertDialog(
+            properties = DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = viewModel::onNudgeLater,
+            title = { Text(stringResource(R.string.backup_nudge_title)) },
+            text = { Text(stringResource(R.string.backup_nudge_text), style = MaterialTheme.typography.bodyLarge) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onNudgeBackupNow()
+                    onOpenBackup()
+                }) { Text(stringResource(R.string.btn_backup_now)) }
+            },
+            dismissButton = { TextButton(onClick = viewModel::onNudgeLater) { Text(stringResource(R.string.btn_later)) } }
+        )
+    }
     val taka = stringResource(R.string.unit_taka)
 
     Column(
@@ -114,7 +173,7 @@ fun HomeScreen(
 
         val d = dashboard
         if (d == null) {
-            Box(modifier = Modifier.fillMaxWidth().padding(32.dp)) // still loading
+            LoadingIndicator(Modifier.fillMaxWidth().padding(32.dp)) // still loading
             return@Column
         }
 

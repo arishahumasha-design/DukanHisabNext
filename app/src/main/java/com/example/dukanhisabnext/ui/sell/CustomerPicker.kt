@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -250,7 +251,7 @@ private fun CustomerListDialog(viewModel: CheckoutViewModel, onAddCustomer: () -
                 val list = rows
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     when {
-                        list == null -> Unit
+                        list == null -> LoadingIndicator(Modifier.fillMaxSize())
                         list.isEmpty() -> Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                             val message = if (state.listQuery.isNotBlank()) R.string.empty_customer_search else R.string.empty_customers
                             Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)

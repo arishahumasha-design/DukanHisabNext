@@ -20,6 +20,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,7 +32,10 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.StockMovement
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.NumberField
+import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
+import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.needsStockConfirm
 import com.example.dukanhisabnext.ui.components.messageRes
 import com.example.dukanhisabnext.util.StockMath
 import com.example.dukanhisabnext.util.formatDate
@@ -51,9 +57,21 @@ fun StockAdjustScreen(
 
     val unitText = product?.let { stringResource(it.unit.labelRes()) }.orEmpty()
 
+    // A big change asks "ঠিক আছে?" first (ConfirmRules.kt).
+    var confirmOpen by rememberSaveable { mutableStateOf(false) }
+    val change: Long? = if (form.mode == StockMode.PURCHASE) {
+        parseQuantity(form.quantity)
+    } else {
+        val counted = parseQuantity(form.counted)
+        val current = stock
+        if (counted != null && current != null) StockMath.correctionDifference(counted, current) else null
+    }
+
     SubScreenScaffold(title = stringResource(R.string.title_stock), onBack = onBack) { padding ->
+      // The Save button is pinned above the keyboard; the form and the history scroll.
+      Column(modifier = Modifier.padding(padding).fillMaxSize().imePadding()) {
         LazyColumn(
-            modifier = Modifier.padding(padding).fillMaxSize().imePadding(),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -145,13 +163,6 @@ fun StockAdjustScreen(
                         modifier = Modifier.fillMaxWidth(),
                         label = { Text(stringResource(R.string.field_note)) }
                     )
-                    Button(
-                        onClick = viewModel::save,
-                        enabled = !form.isSaving && stock != null,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(R.string.btn_save))
-                    }
                 }
             }
 
@@ -172,6 +183,21 @@ fun StockAdjustScreen(
                 }
             }
         }
+        SaveBar(stringResource(R.string.btn_save), !form.isSaving && stock != null) {
+            if (needsStockConfirm(change, stock)) confirmOpen = true else viewModel.save()
+        }
+      }
+    }
+
+    if (confirmOpen) {
+        ConfirmAmountDialog(
+            amountText = formatSignedQuantity(change ?: 0L) + " " + unitText,
+            onFix = { confirmOpen = false },
+            onConfirm = {
+                confirmOpen = false
+                viewModel.save()
+            }
+        )
     }
 }
 

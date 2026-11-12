@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.khata
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -155,7 +156,7 @@ fun KhataScreen(
             }
 
             if (current == null) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) // still loading
+                LoadingIndicator(Modifier.weight(1f).fillMaxWidth()) // still loading
             } else {
                 // ---- The summary box ----
                 when (val body = current.body) {
@@ -545,7 +546,7 @@ private fun CustomerPickDialog(
                 )
                 Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                     when {
-                        shown == null -> Unit
+                        shown == null -> LoadingIndicator(Modifier.fillMaxSize())
                         shown.isEmpty() -> Box(Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                             val message = if (query.isNotBlank()) R.string.empty_customer_search else R.string.empty_customers
                             Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)

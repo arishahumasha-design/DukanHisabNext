@@ -33,7 +33,15 @@ import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.DropdownField
 import com.example.dukanhisabnext.ui.components.NumberField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
+import com.example.dukanhisabnext.ui.components.FormWithSaveBar
+import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.needsStockConfirm
+import com.example.dukanhisabnext.util.formatQuantity
+import com.example.dukanhisabnext.util.parseQuantity
 import com.example.dukanhisabnext.ui.components.messageRes
 
 /** Add a new product, or edit an existing one (when the route carries a product id). */
@@ -46,6 +54,7 @@ fun ProductEditScreen(
     val categories by viewModel.categories.collectAsStateWithLifecycle()
     // rememberSaveable keeps this answer when the phone is rotated.
     var showArchiveConfirm by rememberSaveable { mutableStateOf(false) }
+    var confirmStockOpen by rememberSaveable { mutableStateOf(false) }
 
     // After a successful save (or archive) the ViewModel sets finished = true: close the screen.
     LaunchedEffect(state.finished) {
@@ -56,14 +65,16 @@ fun ProductEditScreen(
         title = stringResource(if (state.isNew) R.string.title_product_new else R.string.title_product_edit),
         onBack = onBack
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .imePadding() // lift the form above the keyboard
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // The Save button is pinned above the keyboard (FormWithSaveBar); the fields scroll.
+        // A big opening stock (1,000 units or more) asks "ঠিক আছে?" first.
+        FormWithSaveBar(
+            padding = padding,
+            saveBar = {
+                SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading) {
+                    if (state.isNew && needsStockConfirm(parseQuantity(state.openingStock), null)) confirmStockOpen = true
+                    else viewModel.save()
+                }
+            }
         ) {
             // Name
             OutlinedTextField(
@@ -72,6 +83,7 @@ fun ProductEditScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_name)) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 isError = state.errors.name != null,
                 supportingText = {
                     val error = state.errors.name
@@ -154,14 +166,6 @@ fun ProductEditScreen(
                 error = state.errors.lowStockLevel
             )
 
-            Button(
-                onClick = viewModel::save,
-                enabled = !state.isSaving && !state.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.btn_save))
-            }
-
             if (!state.isNew) {
                 OutlinedButton(
                     onClick = { showArchiveConfirm = true },
@@ -172,6 +176,19 @@ fun ProductEditScreen(
                 }
             }
         }
+    }
+
+    // ---- Pop-up: "ঠিক আছে?" for a big opening stock ----
+    if (confirmStockOpen) {
+        val quantity = parseQuantity(state.openingStock) ?: 0L
+        ConfirmAmountDialog(
+            amountText = formatQuantity(quantity) + " " + stringResource(state.unit.labelRes()),
+            onFix = { confirmStockOpen = false },
+            onConfirm = {
+                confirmStockOpen = false
+                viewModel.save()
+            }
+        )
     }
 
     // ---- Pop-up: new category ----
@@ -185,6 +202,7 @@ fun ProductEditScreen(
                     onValueChange = viewModel::onCategoryNameChange,
                     label = { Text(stringResource(R.string.field_category_name)) },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                     isError = state.categoryError != null,
                     supportingText = state.categoryError?.let { { Text(stringResource(it.messageRes())) } }
                 )

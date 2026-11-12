@@ -42,10 +42,10 @@ interface ExpenseDao {
     suspend fun updateCategory(category: ExpenseCategory)
 
     /** Every category, also the hidden ones, by name. */
-    @Query("SELECT * FROM expense_categories ORDER BY name")
+    @Query("SELECT * FROM expense_categories ORDER BY name COLLATE NOCASE, name")
     fun observeCategories(): Flow<List<ExpenseCategory>>
 
-    @Query("SELECT * FROM expense_categories ORDER BY name")
+    @Query("SELECT * FROM expense_categories ORDER BY name COLLATE NOCASE, name")
     suspend fun getCategories(): List<ExpenseCategory>
 
     @Query("SELECT * FROM expense_categories WHERE id = :id")

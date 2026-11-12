@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.settings
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,7 +63,7 @@ fun SettingsScreen(
     SubScreenScaffold(title = stringResource(R.string.title_settings), onBack = onBack) { padding ->
         val current = ui
         if (current == null) {
-            Box(modifier = Modifier.padding(padding).fillMaxSize()) // still loading
+            LoadingIndicator(Modifier.padding(padding).fillMaxSize()) // still loading
         } else {
             Column(
                 modifier = Modifier

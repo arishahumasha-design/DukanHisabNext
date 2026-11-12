@@ -26,6 +26,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.MobileField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import com.example.dukanhisabnext.ui.components.FormWithSaveBar
+import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.messageRes
 
@@ -48,14 +52,10 @@ fun ShopScreen(
     }
 
     SubScreenScaffold(title = stringResource(R.string.title_shop), onBack = onBack) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .imePadding() // lift the form above the keyboard
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // The Save button is pinned above the keyboard (FormWithSaveBar); the fields scroll.
+        FormWithSaveBar(
+            padding = padding,
+            saveBar = { SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading, viewModel::save) }
         ) {
             OutlinedTextField(
                 value = state.name,
@@ -63,6 +63,7 @@ fun ShopScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_shop_name)) },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
                 isError = state.errors.name != null,
                 supportingText = state.errors.name?.let { { Text(stringResource(it.messageRes())) } }
             )
@@ -72,7 +73,8 @@ fun ShopScreen(
                 onValueChange = viewModel::onOwnerChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_owner_name)) },
-                singleLine = true
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words)
             )
 
             // The same shared mobile box as everywhere: it closes the keyboard once the number is complete.
@@ -90,14 +92,6 @@ fun ShopScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_address)) }
             )
-
-            Button(
-                onClick = viewModel::save,
-                enabled = !state.isSaving && !state.isLoading,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            ) {
-                Text(stringResource(R.string.btn_save), style = MaterialTheme.typography.titleMedium)
-            }
 
             // A clear "saved" message. It goes away as soon as something is edited again.
             if (state.saved) {

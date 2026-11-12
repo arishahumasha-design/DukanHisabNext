@@ -56,7 +56,12 @@ import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.BengaliDigitsTransformation
 import com.example.dukanhisabnext.ui.components.DayField
 import com.example.dukanhisabnext.ui.components.DropdownField
+import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.needsMoneyConfirm
+import com.example.dukanhisabnext.util.formatTaka
+import com.example.dukanhisabnext.util.parseTakaToPaisa
+import com.example.dukanhisabnext.ui.components.LEDGER_CONFIRM_PAISA
 import com.example.dukanhisabnext.ui.components.sanitizeNumberInput
 import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
@@ -84,6 +89,10 @@ fun LedgerFormScreen(
     LaunchedEffect(ui.saved) {
         if (ui.saved) onSaved()
     }
+
+    // A big amount (৳10,000 or more) asks "ঠিক আছে?" before saving (ConfirmRules.kt).
+    var confirmOpen by rememberSaveable { mutableStateOf(false) }
+    val amountPaisa = parseTakaToPaisa(form.amountText)
 
     SubScreenScaffold(title = stringResource(form.action.titleRes()), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().imePadding()) {
@@ -243,7 +252,9 @@ fun LedgerFormScreen(
             // ---- The save button: disabled while saving, so a double tap cannot save twice ----
             Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
                 Button(
-                    onClick = viewModel::onSave,
+                    onClick = {
+                        if (needsMoneyConfirm(amountPaisa, LEDGER_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave()
+                    },
                     enabled = !ui.saving && !ui.saved,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
                 ) {
@@ -254,5 +265,16 @@ fun LedgerFormScreen(
                 }
             }
         }
+    }
+
+    if (confirmOpen) {
+        ConfirmAmountDialog(
+            amountText = stringResource(R.string.price_format, formatTaka(amountPaisa ?: 0L)),
+            onFix = { confirmOpen = false },
+            onConfirm = {
+                confirmOpen = false
+                viewModel.onSave()
+            }
+        )
     }
 }

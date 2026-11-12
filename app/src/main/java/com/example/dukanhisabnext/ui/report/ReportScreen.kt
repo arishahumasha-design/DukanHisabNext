@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.report
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -118,7 +119,9 @@ fun ReportScreen(
             // ---- The body of the shown tab ----
             val current = ui
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                if (current != null) {
+                if (current == null) {
+                    LoadingIndicator(Modifier.fillMaxSize())
+                } else {
                     when (val body = current.body) {
                         ReportBody.PickDates -> Message(R.string.report_pick_dates)
                         is ReportBody.Sales -> SalesBody(body, onOpenReceipt)

@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -119,7 +120,7 @@ fun ExpenseListScreen(
             }
 
             if (current == null) {
-                Box(modifier = Modifier.weight(1f).fillMaxWidth()) // still loading
+                LoadingIndicator(Modifier.weight(1f).fillMaxWidth()) // still loading
             } else {
                 // ---- The summary of the whole period ----
                 if (current.rangeReady) SummaryCard(current.summary, taka)

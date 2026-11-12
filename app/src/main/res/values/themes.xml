@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.DukanHisabNext" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        The window of the app before and behind Compose (shown for a moment at start). Its background
+        is the same colour the Compose theme uses (Theme.kt: the Material 3 "background"), so the start
+        looks like the app, not a different screen. The dark twin is in values-night/themes.xml.
+    -->
+    <style name="Theme.DukanHisabNext" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:colorBackground">@color/window_background</item>
+    </style>
 </resources>

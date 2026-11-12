@@ -38,6 +38,10 @@ before guessing.
 - ViewModel + StateFlow, Navigation Compose
 - Minimum SDK: API 26 (Android 8.0)
 - Package: use the existing package of the project
+- Orientation (v1): the app is locked to portrait (`screenOrientation="portrait"`).
+- Dark mode follows the phone. The window theme has a dark twin (`values-night/themes.xml`)
+  and its background colour equals the Compose theme's "background" (a PC test compares
+  them), so a cold start in dark mode shows no light flash.
 - Release builds (M9): R8 shrinks and optimizes the WHOLE app
   (`optimization { enable = true }` in `app/build.gradle.kts`). Never add
   `packageScope`: optimizing only the library packages produced a broken
@@ -576,6 +580,40 @@ built on the shared conditions above:
   the same sales). The count and total line comes from a separate aggregate
   query over the WHOLE window and search (with `NOT_CANCELLED_SQL`), never
   from the loaded rows.
+- Forms (M9 group B): every form keeps its main Save button in a bar pinned at the bottom,
+  ABOVE the keyboard; the fields scroll (`FormWithSaveBar` + `SaveBar`, ui/components).
+  The app frame drops its own bottom padding while the keyboard is open, so the bar sits
+  directly on the keyboard (the navigation-bar inset is not counted twice).
+- "ঠিক আছে?" before saving a big amount (`ui/components/ConfirmRules.kt`; dialog
+  "পরিমাণটি দেখে নিন", big amount in Bengali digits, buttons "সংশোধন করুন" /
+  "হ্যাঁ, সংরক্ষণ করুন"; a tap outside does not close it). Thresholds, and why:
+  - khata entries (every ledger form): ৳10,000 or more — a small shop's usual entry is
+    hundreds to a few thousand taka, so one extra zero lands above it;
+  - expenses: ৳5,000 or more — lower, because an expense is rarely that big (rent and pay
+    are worth a second look);
+  - stock (the stock screen, and the opening stock of a new product): a change of 1,000
+    units or more of any unit, OR (stock now above 0) a change of at least 100 units that is
+    at least 10 times the stock now (stock 20, typed 200). A new product's small first
+    purchase never asks. The sign does not matter.
+  An empty or unreadable amount never asks (the normal error shows).
+- Cart warning: a unit price typed BELOW the product's buying price shows an amber line
+  "দাম ক্রয়মূল্যের (৳ X) চেয়ে কম — এই বিক্রিতে লোকসান হবে" under that line. It never blocks
+  the sale. No warning when the price box is unreadable or the product has no buying price.
+- Backup nudge (M9): a one-time dialog on Home once at least 5 sales were saved and no backup
+  was EVER made ("ব্যাকআপ নিন" opens the backup screen, "পরে" closes it). It is counted when it
+  is shown (`nudgeShownCount` in `backup_prefs.xml`) and never appears after "ব্যাকআপ নিন"
+  was used (`nudgeUsed`), after it was shown twice, or when a backup exists. The Home line
+  for a backup older than 7 days is separate and stays.
+- Product list: the "সব" chip is selected only when NO filter is on (no category, "কম স্টক"
+  off); tapping it clears the category and "কম স্টক".
+- Names (M9): lists of products, customers, contacts and categories are sorted without regard
+  to capital letters (`ORDER BY name COLLATE NOCASE, name`; the Kotlin twin is `NAME_ORDER`,
+  phone-tested to agree). Stored names are NEVER rewritten. Name fields (product, customer,
+  owner, shop, categories) ask the keyboard for a capital letter at the start of each word
+  (`KeyboardCapitalization.Words`, only a hint).
+- Loading (M9): a screen with nothing to show yet because its data is loading shows a small
+  quiet progress ring (`LoadingIndicator`) after a quarter of a second, never an empty page;
+  a fast load shows nothing extra. The empty-list messages are unchanged.
 - A sale with a due requires a customer.
 - Stock may go negative (shopkeepers often sell before updating stock), but the
   product shows a warning.
@@ -747,7 +785,7 @@ built on the shared conditions above:
 
 ## 6. Screens and navigation
 
-Bottom navigation: **Home**, **Sell** (new sale), **Khata** ("বাকির খাতা"),
+Bottom navigation: **Home**, **Sell** (new sale), **Khata** (the tab is "খাতা", the screen heading "বাকির খাতা"; no other name),
 **More** (products, contacts, sales list, expenses, reports, settings).
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
