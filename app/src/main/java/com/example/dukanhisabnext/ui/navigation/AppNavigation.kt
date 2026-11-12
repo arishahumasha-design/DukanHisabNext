@@ -8,6 +8,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -23,7 +24,9 @@ import androidx.navigation.navArgument
 import com.example.dukanhisabnext.ui.components.rememberImeVisible
 import com.example.dukanhisabnext.ui.customers.CustomerDetailScreen
 import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
-import com.example.dukanhisabnext.ui.customers.CustomerListScreen
+import com.example.dukanhisabnext.ui.khata.ContactsScreen
+import com.example.dukanhisabnext.ui.khata.KhataScreen
+import com.example.dukanhisabnext.ledger.LedgerAction
 import com.example.dukanhisabnext.ui.customers.LedgerFormScreen
 import com.example.dukanhisabnext.ui.products.ProductEditScreen
 import com.example.dukanhisabnext.ui.products.ProductListScreen
@@ -33,6 +36,7 @@ import com.example.dukanhisabnext.ui.screens.MoreScreen
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
@@ -51,6 +55,10 @@ import com.example.dukanhisabnext.ui.sell.SellScreen
 /** A note passed back from "দোকানের তথ্য" to Settings: the shop was just saved. */
 private const val SHOP_SAVED_KEY = "shop_saved"
 private const val LEDGER_SAVED_KEY = "ledger_saved"
+
+/** A note passed back from the add-customer form to the Khata tab: this new customer needs a বাকি. */
+private const val NEW_DUE_CUSTOMER_KEY = "new_due_customer"
+private const val NO_CUSTOMER = -1L
 
 // The whole app frame: bottom bar (the buttons) + NavHost (the picture frame
 // that shows whichever screen is selected).
@@ -167,70 +175,39 @@ fun AppNavigation() {
                 }
             }
 
-            // The Khata tab is a small group of screens that start at the customer list.
+            // The Khata tab: the বাকির খাতা screen, and the customer screens opened from it.
             navigation(route = Screen.Khata.route, startDestination = Routes.KHATA) {
-                composable(Routes.KHATA) {
-                    CustomerListScreen(
-                        onAddCustomer = { navController.navigate(Routes.customerEdit(null)) },
-                        onOpenCustomer = { id -> navController.navigate(Routes.customerDetail(id)) }
-                    )
-                }
-                composable(
-                    route = Routes.CUSTOMER_DETAIL,
-                    arguments = listOf(navArgument("customerId") { type = NavType.LongType })
-                ) { entry ->
-                    // The entry form leaves a "saved" note here when it closes after saving.
-                    val ledgerSaved by entry.savedStateHandle
-                        .getStateFlow(LEDGER_SAVED_KEY, false)
+                composable(Routes.KHATA) { entry ->
+                    // The add-customer form (opened from the "নতুন বাকি" picker) leaves the new
+                    // customer's id here; then the বাকি দিলাম form opens for that customer.
+                    val newDueCustomer by entry.savedStateHandle
+                        .getStateFlow(NEW_DUE_CUSTOMER_KEY, NO_CUSTOMER)
                         .collectAsStateWithLifecycle()
-                    CustomerDetailScreen(
-                        onBack = { navController.popBackStack() },
-                        onEdit = { id -> navController.navigate(Routes.customerEdit(id)) },
-                        onAction = { id, action ->
-                            entry.savedStateHandle[LEDGER_SAVED_KEY] = false
-                            navController.navigate(Routes.ledgerEntry(id, action.name))
+                    LaunchedEffect(newDueCustomer) {
+                        if (newDueCustomer != NO_CUSTOMER) {
+                            entry.savedStateHandle[NEW_DUE_CUSTOMER_KEY] = NO_CUSTOMER
+                            navController.navigate(KHATA_CUSTOMER_ROUTES.entryOf(newDueCustomer, LedgerAction.MANUAL_DUE.name))
+                        }
+                    }
+                    KhataScreen(
+                        onOpenCustomer = { id -> navController.navigate(KHATA_CUSTOMER_ROUTES.detailOf(id)) },
+                        onOpenReceipt = { saleId -> navController.navigate(KHATA_CUSTOMER_ROUTES.receiptOf(saleId)) },
+                        // "নতুন বাকি": the picked customer goes straight to the বাকি দিলাম form.
+                        onNewDue = { id ->
+                            navController.navigate(KHATA_CUSTOMER_ROUTES.entryOf(id, LedgerAction.MANUAL_DUE.name))
                         },
-                        onOpenReceipt = { saleId -> navController.navigate(Routes.khataReceipt(saleId)) },
-                        justSaved = ledgerSaved,
-                        onSavedShown = { entry.savedStateHandle[LEDGER_SAVED_KEY] = false }
+                        onAddCustomer = { navController.navigate(Routes.KHATA_ADD_CUSTOMER) }
                     )
                 }
-                composable(
-                    route = Routes.LEDGER_ENTRY,
-                    arguments = listOf(
-                        navArgument("customerId") { type = NavType.LongType },
-                        navArgument("action") { type = NavType.StringType }
-                    )
-                ) {
-                    LedgerFormScreen(
+                composable(Routes.KHATA_ADD_CUSTOMER) {
+                    CustomerEditScreen(
                         onBack = { navController.popBackStack() },
-                        // After saving, go back to the customer (it shows a short saved message).
-                        onSaved = {
-                            navController.previousBackStackEntry?.savedStateHandle?.set(LEDGER_SAVED_KEY, true)
-                            navController.popBackStack()
+                        onSaved = { id ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(NEW_DUE_CUSTOMER_KEY, id)
                         }
                     )
                 }
-                composable(
-                    route = Routes.KHATA_RECEIPT,
-                    arguments = listOf(navArgument("saleId") { type = NavType.LongType })
-                ) {
-                    // The same receipt screen, opened from a customer's history. Back returns to the customer.
-                    ReceiptScreen(
-                        onBack = { navController.popBackStack() },
-                        onNewSale = { navController.openNewSale() }
-                    )
-                }
-                composable(
-                    route = Routes.CUSTOMER_EDIT,
-                    // -1 means "no customer given" = add a new one.
-                    arguments = listOf(navArgument("customerId") {
-                        type = NavType.LongType
-                        defaultValue = -1L
-                    })
-                ) {
-                    CustomerEditScreen(onBack = { navController.popBackStack() })
-                }
+                customerScreens(navController, KHATA_CUSTOMER_ROUTES)
             }
 
             // The More tab is a small group ("graph") of screens that start at the More list.
@@ -238,6 +215,7 @@ fun AppNavigation() {
                 composable(Routes.MORE) {
                     MoreScreen(
                         onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
+                        onOpenContacts = { navController.navigate(Routes.CONTACTS) },
                         onOpenSales = { navController.navigate(Routes.SALES_LIST) },
                         onOpenSettings = { navController.navigate(Routes.SETTINGS) }
                     )
@@ -293,6 +271,15 @@ fun AppNavigation() {
                         }
                     )
                 }
+                composable(Routes.CONTACTS) {
+                    // The address book. Its customer screens are registered next, inside this More group.
+                    ContactsScreen(
+                        onBack = { navController.popBackStack() },
+                        onAddCustomer = { navController.navigate(CONTACT_CUSTOMER_ROUTES.editOf(null)) },
+                        onOpenCustomer = { id -> navController.navigate(CONTACT_CUSTOMER_ROUTES.detailOf(id)) }
+                    )
+                }
+                customerScreens(navController, CONTACT_CUSTOMER_ROUTES)
                 composable(Routes.PRODUCTS) {
                     ProductListScreen(
                         onBack = { navController.popBackStack() },
@@ -319,6 +306,70 @@ fun AppNavigation() {
                 }
             }
         }
+    }
+}
+
+/**
+ * The customer screens of one tab: detail (info, balance, buttons, history), edit, the entry form and
+ * the receipt of a sale. Called once for the Khata tab and once for যোগাযোগ, with different route
+ * names, so each tab keeps its own back stack and stays highlighted.
+ */
+private fun NavGraphBuilder.customerScreens(navController: NavController, r: CustomerRoutes) {
+    composable(
+        route = r.detail,
+        arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+    ) { entry ->
+        // The entry form leaves a "saved" note here when it closes after saving.
+        val ledgerSaved by entry.savedStateHandle
+            .getStateFlow(LEDGER_SAVED_KEY, false)
+            .collectAsStateWithLifecycle()
+        CustomerDetailScreen(
+            onBack = { navController.popBackStack() },
+            onEdit = { id -> navController.navigate(r.editOf(id)) },
+            onAction = { id, action ->
+                entry.savedStateHandle[LEDGER_SAVED_KEY] = false
+                navController.navigate(r.entryOf(id, action.name))
+            },
+            onOpenReceipt = { saleId -> navController.navigate(r.receiptOf(saleId)) },
+            justSaved = ledgerSaved,
+            onSavedShown = { entry.savedStateHandle[LEDGER_SAVED_KEY] = false }
+        )
+    }
+    composable(
+        route = r.edit,
+        // -1 means "no customer given" = add a new one.
+        arguments = listOf(navArgument("customerId") {
+            type = NavType.LongType
+            defaultValue = -1L
+        })
+    ) {
+        CustomerEditScreen(onBack = { navController.popBackStack() })
+    }
+    composable(
+        route = r.entry,
+        arguments = listOf(
+            navArgument("customerId") { type = NavType.LongType },
+            navArgument("action") { type = NavType.StringType }
+        )
+    ) {
+        LedgerFormScreen(
+            onBack = { navController.popBackStack() },
+            // After saving, go back to the customer (it shows a short saved message).
+            onSaved = {
+                navController.previousBackStackEntry?.savedStateHandle?.set(LEDGER_SAVED_KEY, true)
+                navController.popBackStack()
+            }
+        )
+    }
+    composable(
+        route = r.receipt,
+        arguments = listOf(navArgument("saleId") { type = NavType.LongType })
+    ) {
+        // The same receipt screen, with only the sale id (no change line). Back returns to the customer.
+        ReceiptScreen(
+            onBack = { navController.popBackStack() },
+            onNewSale = { navController.openNewSale() }
+        )
     }
 }
 

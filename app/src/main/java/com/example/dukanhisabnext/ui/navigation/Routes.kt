@@ -15,6 +15,12 @@ object Routes {
     /** A receipt opened from the sales list: only the sale id, so there is no change line. */
     const val SALE_RECEIPT = "sale_receipt/{saleId}"
     const val SETTINGS = "settings"
+    // ---- More tab: যোগাযোগ (address book) and its own copies of the customer screens ----
+    const val CONTACTS = "contacts"
+    const val CONTACT_DETAIL = "contact_detail/{customerId}"
+    const val CONTACT_EDIT = "contact_edit?customerId={customerId}"
+    const val CONTACT_ENTRY = "contact_ledger_entry/{customerId}/{action}"
+    const val CONTACT_RECEIPT = "contact_receipt/{saleId}"
     const val OWNER = "owner_info"
     const val SHOP = "shop_profile"
 
@@ -29,6 +35,8 @@ object Routes {
 
     // ---- Khata tab ----
     const val KHATA = "khata"
+    /** The add-customer form opened from the "নতুন বাকি" picker. The new customer then gets the বাকি দিলাম form. */
+    const val KHATA_ADD_CUSTOMER = "khata_add_customer"
     const val CUSTOMER_EDIT = "customer_edit?customerId={customerId}"
     const val CUSTOMER_DETAIL = "customer_detail/{customerId}"
     /** The ONE khata entry form. {action} is a LedgerAction name (PAYMENT, MANUAL_DUE, ...). */
@@ -64,5 +72,44 @@ object Routes {
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
             route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER ||
-            route == SHOP || route == OWNER || route == LEDGER_ENTRY
+            route == SHOP || route == OWNER || route == LEDGER_ENTRY ||
+            route == KHATA_ADD_CUSTOMER || route == CONTACT_EDIT || route == CONTACT_ENTRY
 }
+
+/**
+ * The route names of one copy of the customer screens (detail, edit, entry form, receipt).
+ * The Khata tab and the More tab (যোগাযোগ) each have their own copy, so each tab stays highlighted
+ * and Back returns inside the same tab. The screens themselves are the same.
+ */
+class CustomerRoutes(
+    val detail: String,
+    val edit: String,
+    val entry: String,
+    val receipt: String,
+    val detailOf: (customerId: Long) -> String,
+    val editOf: (customerId: Long?) -> String,
+    val entryOf: (customerId: Long, action: String) -> String,
+    val receiptOf: (saleId: Long) -> String
+)
+
+val KHATA_CUSTOMER_ROUTES = CustomerRoutes(
+    detail = Routes.CUSTOMER_DETAIL,
+    edit = Routes.CUSTOMER_EDIT,
+    entry = Routes.LEDGER_ENTRY,
+    receipt = Routes.KHATA_RECEIPT,
+    detailOf = Routes::customerDetail,
+    editOf = Routes::customerEdit,
+    entryOf = Routes::ledgerEntry,
+    receiptOf = Routes::khataReceipt
+)
+
+val CONTACT_CUSTOMER_ROUTES = CustomerRoutes(
+    detail = Routes.CONTACT_DETAIL,
+    edit = Routes.CONTACT_EDIT,
+    entry = Routes.CONTACT_ENTRY,
+    receipt = Routes.CONTACT_RECEIPT,
+    detailOf = { "contact_detail/$it" },
+    editOf = { if (it == null) "contact_edit" else "contact_edit?customerId=$it" },
+    entryOf = { id, action -> "contact_ledger_entry/$id/$action" },
+    receiptOf = { "contact_receipt/$it" }
+)

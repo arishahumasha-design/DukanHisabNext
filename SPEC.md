@@ -524,21 +524,61 @@ saleId?, note?, entryDate, createdAt.
 
 ## 6. Screens and navigation
 
-Bottom navigation: **Home**, **Sell** (new sale), **Khata** (customers/due),
-**More** (products, expenses, reports, settings).
+Bottom navigation: **Home**, **Sell** (new sale), **Khata** ("বাকির খাতা"),
+**More** (products, contacts, sales list, settings; expenses and reports
+later).
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
 ("নতুন বাকি"), Customer list dialog, Add customer (from a sale, with phonebook
-import), Receipt (with the cancel button, confirm dialog and banner); Khata:
-Customer list (with the "সবাই" / "যাদের বাকি আছে" chips), Customer detail (info,
-balance, action buttons and the history grouped by Dhaka day; a sale row opens
-its receipt), and the ONE shared Entry form ("ledger_entry") for টাকা পেলাম,
-বাকি দিলাম, পুরনো বাকি, সংশোধন and অগ্রিম ফেরত দিলাম, Sales list (বিক্রির তালিকা, read-only; cancelled
-sales tagged "বাতিল"), Expense
-list, Add expense, Reports,
-Settings (owner card and shop button), Owner info (small form), Shop info
-("দোকানের তথ্য", opened from Settings).
+import), Receipt (with the cancel button, confirm dialog and banner); Sales
+list (বিক্রির তালিকা, read-only; cancelled sales tagged "বাতিল"); Expense list,
+Add expense, Reports, Settings (owner card and shop button), Owner info (small
+form), Shop info ("দোকানের তথ্য", opened from Settings).
+
+Khata tab ("বাকির খাতা", M5b):
+- One screen, "KhataScreen": a horizontally scrollable chip row সব | আজ | ৭ দিন
+  | এই মাস | এই বছর | তারিখ বাছুন (see section 3.3 for what each shows). "সব"
+  is first and the default. "তারিখ বাছুন" opens a "from" date picker
+  ("কোন তারিখ থেকে?", button "পরের ধাপ"), then a "to" picker ("কোন তারিখ
+  পর্যন্ত?"); neither offers a future day and "to" cannot be before "from". The
+  chosen range is shown on the chip ("০১/১১/২০২৬ – ১২/১১/২০২৬").
+- সব: the summary box (পাবো / অগ্রিম / নিট, whole shop), the search box, a
+  "যাদের বাকি আছে" toggle and a "সাজান" button that opens a dialog with the 4
+  sort options (newest transaction first is the default). Rows: name, mobile,
+  balance (amber / green "অগ্রিম" / "বাকি নেই") and "… পর্যন্ত". A tap opens the
+  customer detail.
+- Period chips: the summary box (বাকি দিলাম with "বিক্রিতে ৳X · হাতে ৳Y", টাকা
+  পেলাম, the other lines only when not 0, নিট পরিবর্তন), the search box, then
+  the entries grouped by Dhaka day. Each row has the customer's name, the same
+  labels as the customer detail, and the amount with + or −. A tap opens that
+  customer; a sale row opens its receipt.
+- The bottom button "নতুন বাকি" opens the customer picker ("কাস্টমার তালিকা": search,
+  A to Z, "বন্ধ করুন" and "কাস্টমার যুক্ত করুন"). Choosing a customer opens the
+  entry form on বাকি দিলাম. "কাস্টমার যুক্ত করুন" opens the normal add form
+  (with the phonebook button); after saving, the বাকি দিলাম form opens for the
+  new customer. The old "+" new-customer button is gone from this tab.
+- Empty states (Bengali): no customers, no match, no entries in the period, and
+  "pick the dates" for "তারিখ বাছুন" before a range is chosen.
+- The chip, the custom days, the sort, the toggle and the search text live in
+  the ViewModel with a SavedStateHandle: they survive rotation, Back and the
+  app being closed in the background.
+- Back: Khata → customer → (receipt / entry form) → Back → customer → Back →
+  Khata. The customer detail, edit, entry form and receipt are registered in
+  the Khata group (routes customer_detail, customer_edit, ledger_entry,
+  khata_receipt), so the Khata tab stays highlighted.
+
+More tab → "যোগাযোগ" (M5b), in this order: পণ্য, যোগাযোগ, বিক্রির তালিকা, সেটিংস:
+- A plain address book: every customer (with or without due) A to Z, the
+  balance in small text, a search box (name or mobile) and a "নতুন কাস্টমার"
+  button that opens the normal add form (with the phonebook button); after
+  saving, back to the list. A tap opens the customer detail. No supplier and no
+  employee tabs.
+- Its customer detail, edit, entry form and receipt are registered in the More
+  group too (routes contact_detail, contact_edit, contact_ledger_entry,
+  contact_receipt), so More stays highlighted. Back: More → যোগাযোগ → customer
+  → (receipt / entry form) → Back → customer → Back → যোগাযোগ → Back → More.
+  The add and entry forms hide the bottom bar.
 
 ## 7. Out of scope for the MVP
 

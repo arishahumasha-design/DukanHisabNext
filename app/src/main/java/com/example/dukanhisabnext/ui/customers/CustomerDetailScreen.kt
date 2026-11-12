@@ -263,30 +263,40 @@ private fun DayHeader(text: String) {
  * row open the receipt; a cancelled sale shows a grey "বাতিল" tag. The opening due is highlighted.
  */
 @Composable
-private fun HistoryRow(
+internal fun HistoryRow(
     row: LedgerHistoryRow,
     labels: HistoryLabels,
     methodName: (com.example.dukanhisabnext.data.entity.PaymentMethod) -> String,
     timeText: (Long) -> String,
     writtenOn: (com.example.dukanhisabnext.data.entity.LedgerEntry) -> String?,
-    onOpenReceipt: (Long) -> Unit
+    onOpenReceipt: (Long) -> Unit,
+    // Used by the Khata time chips: the customer's name is the first line, and a tap can open the customer.
+    customerName: String? = null,
+    onClick: (() -> Unit)? = null
 ) {
     val entry = row.entry
     val clickable = opensReceipt(row)
     val saleId = entry.saleId
 
     ListItem(
-        modifier = if (clickable && saleId != null) Modifier.clickable { onOpenReceipt(saleId) } else Modifier,
+        modifier = when {
+            onClick != null -> Modifier.clickable(onClick = onClick)
+            clickable && saleId != null -> Modifier.clickable { onOpenReceipt(saleId) }
+            else -> Modifier
+        },
         colors = if (isHighlighted(entry)) {
             ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
         } else {
             ListItemDefaults.colors()
         },
         headlineContent = {
-            Text(historyTitle(row, labels, methodName), style = MaterialTheme.typography.titleMedium)
+            Text(customerName ?: historyTitle(row, labels, methodName), style = MaterialTheme.typography.titleMedium)
         },
         supportingContent = {
             Column {
+                if (customerName != null) {
+                    Text(historyTitle(row, labels, methodName), style = MaterialTheme.typography.bodyMedium)
+                }
                 historyNote(row)?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
                 val small = MaterialTheme.typography.bodySmall
                 val grey = MaterialTheme.colorScheme.onSurfaceVariant

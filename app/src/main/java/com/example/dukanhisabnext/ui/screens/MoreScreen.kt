@@ -18,12 +18,13 @@ import androidx.compose.ui.unit.dp
 import com.example.dukanhisabnext.R
 
 /**
- * The More tab: a list of places to go. Products, the sales list and Settings exist so far.
+ * The More tab: a list of places to go. Products, contacts (যোগাযোগ), the sales list and Settings exist so far.
  * Expenses and Reports are added in their own milestones (no dead buttons).
  */
 @Composable
 fun MoreScreen(
     onOpenProducts: () -> Unit,
+    onOpenContacts: () -> Unit,
     onOpenSales: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
@@ -35,6 +36,7 @@ fun MoreScreen(
             modifier = Modifier.padding(16.dp)
         )
         MoreItem(label = stringResource(R.string.more_products), onClick = onOpenProducts)
+        MoreItem(label = stringResource(R.string.more_contacts), onClick = onOpenContacts)
         MoreItem(label = stringResource(R.string.more_sales), onClick = onOpenSales)
         MoreItem(label = stringResource(R.string.more_settings), onClick = onOpenSettings)
     }

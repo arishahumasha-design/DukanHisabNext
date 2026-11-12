@@ -276,6 +276,45 @@
     <string name="khata_filter_owing">যাদের বাকি আছে</string>
     <string name="empty_customers_owing">বাকি আছে এমন কোনো কাস্টমার নেই।</string>
 
+    <!-- Khata tab: বাকির খাতা (chips, summaries, sort, empty states) -->
+    <string name="khata_title">বাকির খাতা</string>
+    <string name="khata_chip_all">সব</string>
+    <string name="khata_chip_today">আজ</string>
+    <string name="khata_chip_7days">৭ দিন</string>
+    <string name="khata_chip_month">এই মাস</string>
+    <string name="khata_chip_year">এই বছর</string>
+    <string name="khata_chip_custom">তারিখ বাছুন</string>
+    <string name="khata_pick_from_title">কোন তারিখ থেকে?</string>
+    <string name="khata_pick_to_title">কোন তারিখ পর্যন্ত?</string>
+    <string name="khata_pick_next">পরের ধাপ</string>
+    <string name="khata_sum_receivable">পাবো</string>
+    <string name="khata_sum_advance">অগ্রিম</string>
+    <string name="khata_sum_net">নিট</string>
+    <string name="khata_line_due_given">বাকি দিলাম</string>
+    <string name="khata_line_due_breakdown">বিক্রিতে %1$s · হাতে %2$s</string>
+    <string name="khata_line_received">টাকা পেলাম</string>
+    <string name="khata_line_opening">পুরনো বাকি</string>
+    <string name="khata_line_advance_returned">অগ্রিম ফেরত দিলাম</string>
+    <string name="khata_line_correction">সংশোধন (নিট)</string>
+    <string name="khata_line_sale_cancel">বিক্রি বাতিল</string>
+    <string name="khata_line_net">নিট পরিবর্তন</string>
+    <string name="khata_sort_button">সাজান</string>
+    <string name="khata_sort_title">কীভাবে সাজাবেন?</string>
+    <string name="khata_sort_newest">সর্বশেষ লেনদেন আগে</string>
+    <string name="khata_sort_oldest">পুরনো লেনদেন আগে</string>
+    <string name="khata_sort_low">টাকা কম থেকে বেশি</string>
+    <string name="khata_sort_high">টাকা বেশি থেকে কম</string>
+    <string name="khata_until">%1$s পর্যন্ত</string>
+    <string name="khata_new_due">নতুন বাকি</string>
+    <string name="khata_empty_customers">এখনও কোনো কাস্টমার নেই। "নতুন বাকি" বাটন থেকে কাস্টমার যুক্ত করুন।</string>
+    <string name="khata_empty_entries">এই সময়ে কোনো লেনদেন নেই।</string>
+    <string name="khata_empty_entries_match">এই খোঁজার সাথে মেলে এমন কোনো লেনদেন নেই।</string>
+    <string name="khata_empty_pick_dates">উপরের "তারিখ বাছুন" চাপ দিয়ে শুরু ও শেষ তারিখ বাছুন।</string>
+
+    <!-- More tab: যোগাযোগ (address book) -->
+    <string name="more_contacts">যোগাযোগ</string>
+    <string name="title_contacts">যোগাযোগ</string>
+
     <!-- Khata: customer detail buttons and history -->
     <string name="ledger_btn_payment">টাকা পেলাম</string>
     <string name="ledger_btn_manual_due">বাকি দিলাম</string>
