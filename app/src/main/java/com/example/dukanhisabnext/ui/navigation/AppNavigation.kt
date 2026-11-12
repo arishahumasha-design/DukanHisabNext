@@ -24,6 +24,10 @@ import androidx.navigation.navArgument
 import com.example.dukanhisabnext.ui.components.rememberImeVisible
 import com.example.dukanhisabnext.ui.customers.CustomerDetailScreen
 import com.example.dukanhisabnext.ui.customers.CustomerEditScreen
+import com.example.dukanhisabnext.ui.expense.CategoriesScreen
+import com.example.dukanhisabnext.ui.expense.ExpenseFormScreen
+import com.example.dukanhisabnext.ui.expense.ExpenseListScreen
+import com.example.dukanhisabnext.ui.expense.NO_DELETED_EXPENSE
 import com.example.dukanhisabnext.ui.khata.ContactsScreen
 import com.example.dukanhisabnext.ui.khata.KhataScreen
 import com.example.dukanhisabnext.ledger.LedgerAction
@@ -55,6 +59,9 @@ import com.example.dukanhisabnext.ui.sell.SellScreen
 /** A note passed back from "দোকানের তথ্য" to Settings: the shop was just saved. */
 private const val SHOP_SAVED_KEY = "shop_saved"
 private const val LEDGER_SAVED_KEY = "ledger_saved"
+
+/** A note passed back from the expense form to the expense list: this expense was just deleted (offer the undo). */
+private const val EXPENSE_DELETED_KEY = "expense_deleted_id"
 
 /** A note passed back from the add-customer form to the Khata tab: this new customer needs a বাকি. */
 private const val NEW_DUE_CUSTOMER_KEY = "new_due_customer"
@@ -217,6 +224,7 @@ fun AppNavigation() {
                         onOpenProducts = { navController.navigate(Routes.PRODUCTS) },
                         onOpenContacts = { navController.navigate(Routes.CONTACTS) },
                         onOpenSales = { navController.navigate(Routes.SALES_LIST) },
+                        onOpenExpenses = { navController.navigate(Routes.EXPENSES) },
                         onOpenSettings = { navController.navigate(Routes.SETTINGS) }
                     )
                 }
@@ -270,6 +278,41 @@ fun AppNavigation() {
                             navController.popBackStack()
                         }
                     )
+                }
+                composable(Routes.EXPENSES) { entry ->
+                    // The expense form leaves the id of a just-deleted expense here, so the list can offer the undo.
+                    val deletedId by entry.savedStateHandle
+                        .getStateFlow(EXPENSE_DELETED_KEY, NO_DELETED_EXPENSE)
+                        .collectAsStateWithLifecycle()
+                    ExpenseListScreen(
+                        onBack = { navController.popBackStack() },
+                        onNewExpense = { navController.navigate(Routes.expenseForm(null)) },
+                        onEditExpense = { id -> navController.navigate(Routes.expenseForm(id)) },
+                        onOpenCategories = { navController.navigate(Routes.EXPENSE_CATEGORIES) },
+                        deletedId = deletedId,
+                        onDeletedShown = { entry.savedStateHandle[EXPENSE_DELETED_KEY] = NO_DELETED_EXPENSE }
+                    )
+                }
+                composable(
+                    route = Routes.EXPENSE_FORM,
+                    // -1 means "no expense given" = add a new one.
+                    arguments = listOf(navArgument("expenseId") {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    })
+                ) {
+                    ExpenseFormScreen(
+                        onBack = { navController.popBackStack() },
+                        onSaved = { navController.popBackStack() },
+                        // After a delete, go back to the list; it shows the "ফিরিয়ে আনুন" undo bar.
+                        onDeleted = { id ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(EXPENSE_DELETED_KEY, id)
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(Routes.EXPENSE_CATEGORIES) {
+                    CategoriesScreen(onBack = { navController.popBackStack() })
                 }
                 composable(Routes.CONTACTS) {
                     // The address book. Its customer screens are registered next, inside this More group.

@@ -25,9 +25,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -37,14 +34,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -71,6 +65,8 @@ import com.example.dukanhisabnext.ledger.shownSummaryLines
 import com.example.dukanhisabnext.ledger.showsDueBreakdown
 import com.example.dukanhisabnext.ledger.writtenOnText
 import com.example.dukanhisabnext.ui.appViewModel
+import com.example.dukanhisabnext.ui.components.DateRangePickerFlow
+import com.example.dukanhisabnext.ui.components.customRangeText
 import com.example.dukanhisabnext.ui.customers.BalanceStatus
 import com.example.dukanhisabnext.ui.customers.BalanceText
 import com.example.dukanhisabnext.ui.customers.HistoryRow
@@ -82,7 +78,6 @@ import com.example.dukanhisabnext.ui.sales.saleTimeText
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
-import java.time.LocalDate
 import kotlin.math.abs
 
 /**
@@ -108,8 +103,7 @@ fun KhataScreen(
     // Dialog and picker steps survive rotation too.
     var sortOpen by rememberSaveable { mutableStateOf(false) }
     var pickerOpen by rememberSaveable { mutableStateOf(false) }
-    var pickStage by rememberSaveable { mutableStateOf(0) }          // 0 = none, 1 = "from", 2 = "to"
-    var pickedFrom by rememberSaveable { mutableLongStateOf(NO_DAY) } // the "from" day while the second picker is open
+    var rangePickerOpen by rememberSaveable { mutableStateOf(false) } // the two-step "তারিখ বাছুন" picker
 
     // The words from strings.xml, handed to the plain functions.
     val monthNames = stringArrayResource(R.array.months_bn).toList()
@@ -146,7 +140,7 @@ fun KhataScreen(
                     FilterChip(
                         selected = controls.period == period,
                         onClick = {
-                            if (period == KhataPeriod.CUSTOM) pickStage = 1 else viewModel.onPeriodChange(period)
+                            if (period == KhataPeriod.CUSTOM) rangePickerOpen = true else viewModel.onPeriodChange(period)
                         },
                         label = {
                             val text = if (period == KhataPeriod.CUSTOM) {
@@ -312,41 +306,18 @@ fun KhataScreen(
         )
     }
 
-    // ---- "তারিখ বাছুন": the first picker, then the second ----
-    val today = viewModel.today()
-    when (pickStage) {
-        1 -> DayPickerDialog(
-            title = stringResource(R.string.khata_pick_from_title),
-            confirmText = stringResource(R.string.khata_pick_next),
-            initial = ui?.controls?.customFrom ?: today,
-            selectable = { isSelectableFromDay(it, today) },
-            lastYear = today.year,
-            onConfirm = {
-                pickedFrom = it.toEpochDay()
-                pickStage = 2
+    // ---- "তারিখ বাছুন": the first picker, then the second (shared with the expense list) ----
+    if (rangePickerOpen) {
+        DateRangePickerFlow(
+            today = viewModel.today(),
+            initialFrom = ui?.controls?.customFrom,
+            initialTo = ui?.controls?.customTo,
+            onConfirm = { from, to ->
+                viewModel.onCustomRange(from, to)
+                rangePickerOpen = false
             },
-            onDismiss = { pickStage = 0 }
+            onDismiss = { rangePickerOpen = false }
         )
-
-        2 -> {
-            val from = dayOrNull(pickedFrom)
-            if (from == null) {
-                pickStage = 0
-            } else {
-                DayPickerDialog(
-                    title = stringResource(R.string.khata_pick_to_title),
-                    confirmText = stringResource(R.string.ledger_date_ok),
-                    initial = (ui?.controls?.customTo ?: from).let { if (it.isBefore(from)) from else it },
-                    selectable = { isSelectableToDay(it, from, today) },
-                    lastYear = today.year,
-                    onConfirm = {
-                        viewModel.onCustomRange(from, it)
-                        pickStage = 0
-                    },
-                    onDismiss = { pickStage = 0 }
-                )
-            }
-        }
     }
 }
 
@@ -609,40 +580,5 @@ private fun CustomerPickDialog(
                 }
             }
         }
-    }
-}
-
-/** A date picker in a dialog. [selectable] decides which days can be chosen (never a future day). */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DayPickerDialog(
-    title: String,
-    confirmText: String,
-    initial: LocalDate,
-    selectable: (Long) -> Boolean,
-    lastYear: Int,
-    onConfirm: (LocalDate) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = pickerStartFor(initial),
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean = selectable(utcTimeMillis)
-            override fun isSelectableYear(year: Int): Boolean = year <= lastYear
-        }
-    )
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                state.selectedDateMillis?.let { onConfirm(com.example.dukanhisabnext.ledger.pickerMillisToDate(it)) }
-            }) { Text(confirmText) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel)) } }
-    ) {
-        DatePicker(
-            state = state,
-            title = { Text(title, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 16.dp), style = MaterialTheme.typography.titleMedium) }
-        )
     }
 }

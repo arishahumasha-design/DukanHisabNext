@@ -248,6 +248,7 @@
 
     <!-- Shop info -->
     <string name="more_sales">বিক্রির তালিকা</string>
+    <string name="more_expenses">খরচ</string>
     <string name="more_settings">সেটিংস</string>
     <string name="title_settings">সেটিংস</string>
     <string name="owner_label">মালিক</string>
@@ -322,6 +323,55 @@
         <item>পরিবার</item>
         <item>অন্যান্য</item>
     </string-array>
+
+    <!-- Expenses: list -->
+    <string name="title_expenses">খরচ</string>
+    <string name="expense_search_hint">কারণ বা ক্যাটাগরি দিয়ে খুঁজুন</string>
+    <string name="expense_sum_shop">দোকানের খরচ</string>
+    <string name="expense_sum_personal">ব্যক্তিগত</string>
+    <string name="expense_sum_total">মোট</string>
+    <string name="expense_by_category">ক্যাটাগরি অনুযায়ী</string>
+    <string name="expense_personal_tag">ব্যক্তিগত</string>
+    <string name="expense_count">%1$s টি</string>
+    <string name="expense_btn_new">নতুন খরচ</string>
+    <string name="expense_btn_categories">ক্যাটাগরি</string>
+    <string name="expense_empty">এই সময়ে কোনো খরচ নেই।</string>
+    <string name="expense_empty_match">এই খোঁজার সাথে মেলে এমন কোনো খরচ নেই।</string>
+    <string name="expense_deleted">খরচটি মুছে ফেলা হয়েছে।</string>
+    <string name="expense_undo">ফিরিয়ে আনুন</string>
+
+    <!-- Expenses: form -->
+    <string name="title_expense_new">নতুন খরচ</string>
+    <string name="title_expense_edit">খরচ সম্পাদনা</string>
+    <string name="expense_category_label">ক্যাটাগরি</string>
+    <string name="expense_amount_label">টাকার পরিমাণ</string>
+    <string name="expense_reason_label">কারণ (না লিখলেও চলবে)</string>
+    <string name="expense_btn_delete">মুছুন</string>
+    <string name="expense_delete_title">খরচটি মুছবেন?</string>
+    <string name="expense_delete_text">এটি তালিকা ও হিসাব থেকে সরে যাবে। মুছার পর কয়েক সেকেন্ড ফিরিয়ে আনা যাবে।</string>
+    <string name="expense_delete_yes">হ্যাঁ, মুছুন</string>
+    <string name="err_expense_category_missing">একটি ক্যাটাগরি বেছে নিন।</string>
+    <string name="err_expense_category_hidden">এই ক্যাটাগরিটি লুকানো আছে। অন্য ক্যাটাগরি বেছে নিন।</string>
+    <string name="err_expense_reason_long">কারণ সর্বোচ্চ ২০০ অক্ষরের হতে পারে।</string>
+    <string name="err_expense_not_found">এই খরচটি পাওয়া যায়নি, হয়তো মুছে গেছে। কিছুই সংরক্ষিত হয়নি।</string>
+
+    <!-- Expenses: categories -->
+    <string name="title_expense_categories">খরচের ক্যাটাগরি</string>
+    <string name="cat_btn_add">নতুন ক্যাটাগরি</string>
+    <string name="cat_title_add">নতুন ক্যাটাগরি</string>
+    <string name="cat_title_edit">ক্যাটাগরি বদলান</string>
+    <string name="cat_name_label">ক্যাটাগরির নাম</string>
+    <string name="cat_personal_checkbox">দোকানের খরচ নয় (ব্যক্তিগত)</string>
+    <string name="cat_hide">লুকান</string>
+    <string name="cat_show">দেখান</string>
+    <string name="cat_tag_hidden">লুকানো</string>
+    <string name="cat_tag_personal">ব্যক্তিগত</string>
+    <string name="cat_empty">কোনো ক্যাটাগরি নেই।</string>
+    <string name="err_cat_name_missing">ক্যাটাগরির নাম লিখুন।</string>
+    <string name="err_cat_name_long">নাম সর্বোচ্চ ৪০ অক্ষরের হতে পারে।</string>
+    <string name="err_cat_name_duplicate">এই নামে আগে থেকেই একটি ক্যাটাগরি আছে (লুকানোগুলোও ধরে)।</string>
+    <string name="err_cat_last_visible">অন্তত একটি ক্যাটাগরি দেখানো থাকতে হবে, তাই এটি লুকানো যাবে না।</string>
+    <string name="err_cat_not_found">ক্যাটাগরিটি পাওয়া যায়নি। কিছুই বদলানো হয়নি।</string>
 
     <!-- More tab: যোগাযোগ (address book) -->
     <string name="more_contacts">যোগাযোগ</string>

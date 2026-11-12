@@ -327,7 +327,7 @@ before guessing.
 - List with the chips আজ (default) / ৭ দিন / এই মাস / এই বছর / তারিখ বাছুন, a
   summary for the chosen period (দোকানের খরচ, ব্যক্তিগত, মোট, and the total of
   each category, biggest first), the expenses grouped by Dhaka day, a search
-  by reason or category, and a "নতুন খরচ" button. (Screens: M6 part 2.)
+  by reason or category, and a "নতুন খরচ" button. (The screens are in section 6.)
 - Out of scope: receipts or photos, recurring expenses, budgets, export.
 
 ### 3.5 Reports
@@ -586,8 +586,7 @@ SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY, OTHER).
 ## 6. Screens and navigation
 
 Bottom navigation: **Home**, **Sell** (new sale), **Khata** ("বাকির খাতা"),
-**More** (products, contacts, sales list, settings; expenses and reports
-later).
+**More** (products, contacts, sales list, expenses, settings; reports later).
 
 Screens: Home dashboard, Product list, Product add/edit, Stock adjust,
 Sell: Product picker, Cart, Payment ("পেমেন্ট কনফার্ম করুন"), New due
@@ -640,6 +639,47 @@ More tab → "যোগাযোগ" (M5b), in this order: পণ্য, যো�
   contact_receipt), so More stays highlighted. Back: More → যোগাযোগ → customer
   → (receipt / entry form) → Back → customer → Back → যোগাযোগ → Back → More.
   The add and entry forms hide the bottom bar.
+
+More tab → "খরচ" (M6), after "বিক্রির তালিকা" (order: পণ্য, যোগাযোগ, বিক্রির
+তালিকা, খরচ, সেটিংস). Its screens are registered in the More group, so More
+stays highlighted (routes `expenses`, `expense_form`, `expense_categories`).
+Every expense screen calls `ensureDefaultCategories` when it opens (safe to
+repeat; each default is made once).
+- Expense list ("খরচ"): the chips আজ (default) | ৭ দিন | এই মাস | এই বছর |
+  তারিখ বাছুন, using the same Dhaka windows as the Khata chips. A summary box
+  for the WHOLE period (it ignores the search): দোকানের খরচ, ব্যক্তিগত and মোট,
+  then each category (largest first, with its count; personal categories get a
+  "ব্যক্তিগত" mark). A search box (reason or category) that filters only the
+  rows. The rows are grouped by Dhaka day with Bengali day headers and show the
+  category (with the personal mark), the reason, the amount, and "লেখা হয়েছে
+  <date>" for a back-dated expense. A tap opens the edit form. The bottom buttons
+  are "ক্যাটাগরি" (the categories screen) and "নতুন খরচ". Bengali empty states:
+  no expense in the period, no match, and "pick the dates" for তারিখ বাছুন. The
+  chip, the custom days and the search text live in the ViewModel with a
+  SavedStateHandle (rotation, Back, the app closed in the background).
+- The two-step "তারিখ বাছুন" date picker ("কোন তারিখ থেকে?" then "কোন তারিখ
+  পর্যন্ত?") is ONE shared component (`DateRangePickerFlow`, with its rules in
+  `ui/components/DateRangeLogic.kt`), used by the Khata tab and the expense list,
+  and behaves exactly the same in both (no future day; "to" not before "from";
+  the chosen range shows on the chip). The single-day date box of the forms is
+  the shared `DayField`.
+- Expense form (add and edit, ONE screen, hides the bottom bar): the category
+  (shown categories, plus the edited expense's own even if hidden; a new form
+  preselects the first shown one), the amount, the date (today by default; a
+  calendar that offers no future day), and the optional reason (200 characters,
+  with a counter). A form id is made when the form opens and the save button is
+  disabled while saving (double tap saves once). Every failed check has its own
+  Bengali message under the right box; an unexpected error says nothing was
+  saved. After saving, back to the list. In edit mode there is also a red
+  "মুছুন" button with the confirm dialog "খরচটি মুছবেন?". After a delete the app
+  goes back to the list and shows a bar "খরচটি মুছে ফেলা হয়েছে।" with a
+  "ফিরিয়ে আনুন" button for 5 seconds that undoes the delete.
+- Categories screen ("খরচের ক্যাটাগরি"): every category (shown first, then the
+  hidden ones, each A to Z) with the marks "ব্যক্তিগত" and "লুকানো", a
+  "লুকান" / "দেখান" button on each row, and "নতুন ক্যাটাগরি". Tapping a row
+  renames it. The add / rename dialog has the name and the checkbox "দোকানের খরচ
+  নয় (ব্যক্তিগত)". Duplicate names are refused with a message, the last shown
+  category cannot be hidden (a message says so), and there is no real delete.
 
 ## 7. Out of scope for the MVP
 

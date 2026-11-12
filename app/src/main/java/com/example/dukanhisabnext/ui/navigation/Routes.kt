@@ -15,6 +15,11 @@ object Routes {
     /** A receipt opened from the sales list: only the sale id, so there is no change line. */
     const val SALE_RECEIPT = "sale_receipt/{saleId}"
     const val SETTINGS = "settings"
+    // ---- More tab: খরচ (expenses) ----
+    const val EXPENSES = "expenses"
+    /** The ONE expense form. No expenseId = a new expense; with an id = edit that expense. */
+    const val EXPENSE_FORM = "expense_form?expenseId={expenseId}"
+    const val EXPENSE_CATEGORIES = "expense_categories"
     // ---- More tab: যোগাযোগ (address book) and its own copies of the customer screens ----
     const val CONTACTS = "contacts"
     const val CONTACT_DETAIL = "contact_detail/{customerId}"
@@ -60,6 +65,10 @@ object Routes {
 
     fun khataReceipt(saleId: Long): String = "khata_receipt/$saleId"
 
+    /** [expenseId] = null opens the form empty, to add a new expense. */
+    fun expenseForm(expenseId: Long?): String =
+        if (expenseId == null) "expense_form" else "expense_form?expenseId=$expenseId"
+
     fun saleReceipt(saleId: Long): String = "sale_receipt/$saleId"
 
     /** [change] is the ফেরত given back (paisa). It is not stored in the database, so it travels here. */
@@ -73,7 +82,8 @@ object Routes {
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
             route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER ||
             route == SHOP || route == OWNER || route == LEDGER_ENTRY ||
-            route == KHATA_ADD_CUSTOMER || route == CONTACT_EDIT || route == CONTACT_ENTRY
+            route == KHATA_ADD_CUSTOMER || route == CONTACT_EDIT || route == CONTACT_ENTRY ||
+            route == EXPENSE_FORM
 }
 
 /**

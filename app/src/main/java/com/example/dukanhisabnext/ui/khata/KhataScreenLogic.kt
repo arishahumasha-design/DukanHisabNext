@@ -6,11 +6,7 @@ import com.example.dukanhisabnext.ledger.KhataPeriod
 import com.example.dukanhisabnext.ledger.KhataSort
 import com.example.dukanhisabnext.ledger.PeriodSummary
 import com.example.dukanhisabnext.ledger.SummaryLine
-import com.example.dukanhisabnext.ledger.dateToPickerMillis
-import com.example.dukanhisabnext.ledger.dayText
-import com.example.dukanhisabnext.ledger.isSelectableDay
 import com.example.dukanhisabnext.ledger.matchesKhataSearch
-import com.example.dukanhisabnext.ledger.pickerMillisToDate
 import com.example.dukanhisabnext.util.DhakaTime
 import java.time.LocalDate
 
@@ -42,30 +38,6 @@ data class KhataControls(
     val searching: Boolean get() = query.isNotBlank()
     val isAll: Boolean get() = period == KhataPeriod.ALL
 }
-
-// =========================================================================================
-// The "তারিখ বাছুন" chip and its two pickers
-// =========================================================================================
-
-/**
- * The text on the "তারিখ বাছুন" chip once a range is chosen: "০১/১১/২০২৬ – ১২/১১/২০২৬", or one date
- * when both days are the same. null while no range is chosen (the chip then says "তারিখ বাছুন").
- */
-fun customRangeText(from: LocalDate?, to: LocalDate?): String? {
-    if (from == null || to == null) return null
-    return if (from == to) dayText(from) else dayText(from) + " – " + dayText(to)
-}
-
-/** The first picker ("from"): any day up to today. */
-fun isSelectableFromDay(pickerMillis: Long, today: LocalDate): Boolean = isSelectableDay(pickerMillis, today)
-
-/** The second picker ("to"): from the "from" day up to today (not before "from", not in the future). */
-fun isSelectableToDay(pickerMillis: Long, from: LocalDate, today: LocalDate): Boolean {
-    val day = pickerMillisToDate(pickerMillis)
-    return !day.isBefore(from) && !day.isAfter(today)
-}
-
-fun pickerStartFor(date: LocalDate): Long = dateToPickerMillis(date)
 
 // =========================================================================================
 // The customers (the "সব" list, the customer picker and the address book)

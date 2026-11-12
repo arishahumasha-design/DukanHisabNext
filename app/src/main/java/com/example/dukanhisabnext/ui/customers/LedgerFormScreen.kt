@@ -54,6 +54,7 @@ import com.example.dukanhisabnext.ledger.noteLength
 import com.example.dukanhisabnext.ledger.pickerMillisToDate
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.BengaliDigitsTransformation
+import com.example.dukanhisabnext.ui.components.DayField
 import com.example.dukanhisabnext.ui.components.DropdownField
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.sanitizeNumberInput
@@ -169,11 +170,11 @@ fun LedgerFormScreen(
                 }
 
                 // ---- Date ----
-                DateBox(
+                DayField(
                     date = form.date,
                     today = viewModel.today,
                     enabled = !ui.saving,
-                    error = errorsFor(FormField.DATE, ui.errors).firstOrNull(),
+                    errorText = errorsFor(FormField.DATE, ui.errors).firstOrNull()?.let { stringResource(it.messageRes()) },
                     onDateChange = viewModel::onDateChange
                 )
 
@@ -252,55 +253,6 @@ fun LedgerFormScreen(
                     )
                 }
             }
-        }
-    }
-}
-
-/** The date box: shows the day (Bengali digits); tapping it opens a calendar that offers no future day. */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DateBox(
-    date: java.time.LocalDate,
-    today: java.time.LocalDate,
-    enabled: Boolean,
-    error: com.example.dukanhisabnext.ledger.LedgerError?,
-    onDateChange: (java.time.LocalDate) -> Unit
-) {
-    var open by rememberSaveable { mutableStateOf(false) }
-
-    Column {
-        Text(stringResource(R.string.ledger_date_label), style = MaterialTheme.typography.labelLarge)
-        OutlinedButton(
-            onClick = { open = true },
-            enabled = enabled,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-        ) {
-            Text(dayText(date), style = MaterialTheme.typography.titleMedium)
-        }
-        error?.let { Text(stringResource(it.messageRes()), color = MaterialTheme.colorScheme.error) }
-    }
-
-    if (open) {
-        val state = rememberDatePickerState(
-            initialSelectedDateMillis = dateToPickerMillis(date),
-            selectableDates = object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean = isSelectableDay(utcTimeMillis, today)
-                override fun isSelectableYear(year: Int): Boolean = year <= today.year
-            }
-        )
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    state.selectedDateMillis?.let { onDateChange(pickerMillisToDate(it)) }
-                    open = false
-                }) { Text(stringResource(R.string.ledger_date_ok)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { open = false }) { Text(stringResource(R.string.btn_cancel)) }
-            }
-        ) {
-            DatePicker(state = state)
         }
     }
 }
