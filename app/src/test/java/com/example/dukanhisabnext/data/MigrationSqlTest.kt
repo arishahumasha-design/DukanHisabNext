@@ -77,12 +77,74 @@ class MigrationSqlTest {
     }
 
     @Test
-    fun theMigrationsFormOneUnbrokenChainUpToVersion2() {
+    fun theMigrationsFormOneUnbrokenChainUpToVersion3() {
         assertEquals(1, ALL_MIGRATIONS.first().startVersion)
         ALL_MIGRATIONS.toList().zipWithNext { a, b -> assertEquals(a.endVersion, b.startVersion) }
-        assertEquals(2, ALL_MIGRATIONS.last().endVersion)
+        assertEquals(3, ALL_MIGRATIONS.last().endVersion)
         // The newest schema file must be the version the last migration reaches.
         val newest = schemaDir.listFiles()!!.mapNotNull { it.nameWithoutExtension.toIntOrNull() }.max()
         assertEquals(newest, ALL_MIGRATIONS.last().endVersion)
+        // And there is a schema file for every version on the way.
+        for (v in 1..3) assertTrue("$v.json", File(schemaDir, "$v.json").exists())
+    }
+
+    // =====================================================================================
+    // Version 2 -> 3 (M6, expenses): three added columns and two added indexes
+    // =====================================================================================
+
+    private fun tableNames(version: Int): List<String> =
+        Regex("\"tableName\": \"(\\w+)\"").findAll(File(schemaDir, "$version.json").readText()).map { it.groupValues[1] }.toList()
+
+    @Test
+    fun migration2To3OnlyAddsColumnsAndIndexes() {
+        val sql = sqlOf(MIGRATION_2_3)
+        assertEquals(5, sql.size)
+        for (statement in sql) {
+            assertTrue(statement, statement.startsWith("ALTER TABLE") && statement.contains(" ADD COLUMN ") || statement.startsWith("CREATE"))
+            assertTrue(statement, !statement.contains("DROP", ignoreCase = true))
+            assertTrue(statement, !statement.contains("RENAME", ignoreCase = true))
+        }
+    }
+
+    @Test
+    fun theAddedColumnsGiveExactlyTheVersion3ExpenseCategoriesTable() {
+        // The v2 table plus the ALTER-added columns must be the v3 table, character for character.
+        val v2Table = createSqlOf(2, "expense_categories").first()
+        val v3Table = createSqlOf(3, "expense_categories").first()
+        val added = sqlOf(MIGRATION_2_3)
+            .filter { it.startsWith("ALTER TABLE `expense_categories` ADD COLUMN ") }
+            .map { it.removePrefix("ALTER TABLE `expense_categories` ADD COLUMN ") }
+        assertEquals(
+            listOf("`isPersonal` INTEGER NOT NULL DEFAULT 0", "`isActive` INTEGER NOT NULL DEFAULT 1", "`systemKey` TEXT"),
+            added
+        )
+        assertTrue(v2Table, v2Table.endsWith(")"))
+        assertEquals(v3Table, v2Table.dropLast(1) + ", " + added.joinToString(", ") + ")")
+    }
+
+    @Test
+    fun theTwoNewIndexesAreExactlyTheOnesInTheVersion3Schema() {
+        val sql = sqlOf(MIGRATION_2_3)
+        val systemKeyIndex = createSqlOf(3, "expense_categories").single { it.contains("index_expense_categories_systemKey") }
+        val dateIndex = createSqlOf(3, "expenses").single { it.contains("index_expenses_expenseDate") }
+        assertTrue(systemKeyIndex.startsWith("CREATE UNIQUE INDEX"))
+        assertTrue(sql.contains(systemKeyIndex))
+        assertTrue(sql.contains(dateIndex))
+        // Neither index existed in version 2.
+        assertTrue(createSqlOf(2, "expense_categories").none { it.contains("systemKey") })
+        assertTrue(createSqlOf(2, "expenses").none { it.contains("expenseDate`)") })
+    }
+
+    @Test
+    fun theExpensesTableItselfIsUnchangedFromVersion2() {
+        assertEquals(createSqlOf(2, "expenses").first(), createSqlOf(3, "expenses").first())
+    }
+
+    @Test
+    fun everyOtherTableIsExactlyTheSameInVersion2And3() {
+        assertEquals(tableNames(2).sorted(), tableNames(3).sorted()) // no table added or removed
+        for (table in tableNames(3) - setOf("expense_categories", "expenses")) {
+            assertEquals(table, createSqlOf(2, table), createSqlOf(3, table))
+        }
     }
 }

@@ -297,13 +297,38 @@ before guessing.
   due" filter would later be one more filter there (out of scope now).
 
 ### 3.4 Expenses
-- Expense categories (default: salary, rent, bill, tea/snacks, transport,
-  family, other). The user can add more.
-- Add an expense: category, amount, reason, date.
-- List with date filter (today, this month, this year, custom) and total.
-- Expenses can be edited. A wrong expense is removed by "delete", which only
-  marks it as deleted (soft delete) and hides it from totals. No separate
-  edit-history table in the MVP; every record keeps an `updatedAt`.
+- Expense categories. The defaults are বেতন, ভাড়া, বিল, চা-নাস্তা, যাতায়াত,
+  পরিবার and অন্যান্য (names in strings.xml). They are made by
+  `ExpenseRepository.ensureDefaultCategories()` when the expense screens open,
+  exactly once each (by a fixed `systemKey`), on a new install and after an
+  upgrade alike; a renamed or hidden default is never made again, and a
+  category the user already made with the same name is adopted instead of
+  doubled.
+- The user can add categories, rename them (old expenses then show the new
+  name; meant for typos) and hide or show them again. Names are unique
+  (trimmed, spaces squeezed, case ignored, hidden ones included), at most 40
+  characters. Categories are NEVER deleted, so old expenses never break; a
+  hidden category is not offered for new expenses, but old expenses keep it.
+  The last shown category cannot be hidden.
+- Personal spending: a category can be marked "দোকানের খরচ নয় (ব্যক্তিগত)"
+  (`isPersonal`). পরিবার is personal by default. Personal expenses are listed
+  and counted in the expense total, but shown apart from the shop costs, and
+  the profit report (M7) leaves them out of the shop's costs (it shows them on
+  their own line).
+- Add an expense: category, amount (above 0, at most ৳1 crore), reason
+  (optional, at most 200 characters), date (default today in Dhaka; past days
+  allowed; no future day).
+- Expenses can be edited (category, amount, date, reason; `createdAt` stays,
+  `updatedAt` becomes now; a deleted expense cannot be edited). A wrong
+  expense is removed by "delete", which only marks it as deleted (soft
+  delete) and hides it from every list and total. Right after a delete, a
+  "ফিরিয়ে আনুন" (undo) button is shown for 5 seconds. No separate
+  edit-history table and no restore screen in the MVP.
+- List with the chips আজ (default) / ৭ দিন / এই মাস / এই বছর / তারিখ বাছুন, a
+  summary for the chosen period (দোকানের খরচ, ব্যক্তিগত, মোট, and the total of
+  each category, biggest first), the expenses grouped by Dhaka day, a search
+  by reason or category, and a "নতুন খরচ" button. (Screens: M6 part 2.)
+- Out of scope: receipts or photos, recurring expenses, budgets, export.
 
 ### 3.5 Reports
 - Date filter: today, this month, this year, custom range.
@@ -417,13 +442,21 @@ saleId?, note?, entryDate, createdAt.
 - Ledger entries are never edited or deleted. Mistakes are fixed with a
   correction entry.
 
-**ExpenseCategory**: id, name.
+**ExpenseCategory**: id, name, isPersonal (default false), isActive (default
+true = shown), systemKey? (unique; set only on the default categories:
+SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY, OTHER).
+- There is no delete for categories (hide with isActive = false instead).
 
 **Expense**: id, expenseCategoryId, amount, reason?, expenseDate, isDeleted
 (soft delete), createdAt, updatedAt.
 - `expenseDate` is the date the user picks for the expense. `createdAt` is
   the real time the row was saved. Lists, filters and reports use
   `expenseDate`.
+- Every query that lists or adds up expenses must use the shared conditions
+  in `ExpenseDao.kt`, never its own copy: `ACTIVE_EXPENSE_SQL`
+  (`e.isDeleted = 0`, alias `e` for expenses) for "this expense counts", and
+  `SHOP_EXPENSE_SQL` (that plus `c.isPersonal = 0`, alias `c` for the joined
+  expense_categories) for "this is a cost of running the shop" (M7 profit).
 
 ### Indexes and integrity
 
@@ -432,11 +465,19 @@ saleId?, note?, entryDate, createdAt.
 - Indexes on the foreign-key columns (`saleId`, `productId`, `customerId`).
 - Use real foreign keys. Use transactions for every multi-table write.
 - Unique index on `SaleCancellation.saleId` (a sale is cancelled only once).
+- Unique index on `ExpenseCategory.systemKey` (each default category once);
+  index on `Expense.expenseDate` (lists and reports cut by it).
 
 ### Database version and migrations
 
-- The database is version 2. Version 1 → 2 only adds the `sale_cancellations`
+- The database is version 3. Version 1 → 2 only adds the `sale_cancellations`
   table and its unique index (`MIGRATION_1_2` in `data/Migrations.kt`).
+  Version 2 → 3 (M6) only adds: the columns isPersonal (default 0), isActive
+  (default 1) and systemKey (null) to `expense_categories`, a unique index on
+  systemKey, and an index on `expenses.expenseDate` (`MIGRATION_2_3`).
+- `MigrationTest` (phone) upgrades a version 1 file through 1 → 2 → 3 in one
+  go and a version 2 file through 2 → 3, built from the saved 1.json / 2.json
+  with data, and checks every old row is unchanged.
 - The schema of every version is exported to `app/schemas` and committed.
   Every version change needs a Migration plus a migration test (PC: the SQL
   equals the exported schema; phone: `MigrationTest` upgrades a real old
@@ -521,6 +562,26 @@ saleId?, note?, entryDate, createdAt.
   (tested, also with random data). বাকি দিলাম and টাকা পেলাম are always
   shown; the others only when not 0. A cancelled sale's due still counts in
   বাকি দিলাম on its own day; its reversal is in বিক্রি বাতিল.
+- Expenses (M6): every write goes through `ExpenseRepository`, behind one
+  lock, in **one database transaction**, with the rules of
+  `expense/ExpenseRules.kt` checked inside it. Adding or editing an expense
+  and adding a category carry a form id made when the form opens: saving the
+  same form again (double tap, retry) returns the first result and saves
+  nothing new; a refused form can be fixed and saved.
+  - Amount above 0 and at most ৳1 crore; reason trimmed, at most 200
+    characters; a category must exist and be shown (an edited expense may
+    keep its own hidden category, but no expense is moved INTO a hidden one).
+  - Date: today or an earlier Dhaka day, never a future day. Today is saved
+    as the real moment; an earlier day as that Dhaka day at the current Dhaka
+    time of day (the same rule as the khata). An edit that keeps the day keeps
+    the exact expenseDate. A back-dated expense shows "লেখা হয়েছে <date>".
+  - Delete only sets isDeleted (twice changes nothing); undo sets it back.
+    A deleted expense never appears in any list or total.
+  - The period summary (`expenseSummary()`): দোকানের খরচ (not personal),
+    ব্যক্তিগত (personal), মোট = both, and each category's total, biggest
+    first. The lines always add up (tested, also with random data). Like the
+    khata, the summary covers the whole period; the search only filters the
+    rows.
 
 ## 6. Screens and navigation
 

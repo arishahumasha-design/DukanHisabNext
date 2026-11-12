@@ -311,6 +311,18 @@
     <string name="khata_empty_entries_match">এই খোঁজার সাথে মেলে এমন কোনো লেনদেন নেই।</string>
     <string name="khata_empty_pick_dates">উপরের "তারিখ বাছুন" চাপ দিয়ে শুরু ও শেষ তারিখ বাছুন।</string>
 
+    <!-- Expenses: the default categories, in the order of DefaultCategory (ExpenseRules.kt):
+         SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY (personal), OTHER. -->
+    <string-array name="expense_default_categories">
+        <item>বেতন</item>
+        <item>ভাড়া</item>
+        <item>বিল</item>
+        <item>চা-নাস্তা</item>
+        <item>যাতায়াত</item>
+        <item>পরিবার</item>
+        <item>অন্যান্য</item>
+    </string-array>
+
     <!-- More tab: যোগাযোগ (address book) -->
     <string name="more_contacts">যোগাযোগ</string>
     <string name="title_contacts">যোগাযোগ</string>

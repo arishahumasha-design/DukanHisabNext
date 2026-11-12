@@ -43,9 +43,9 @@ import com.example.dukanhisabnext.data.entity.StockMovement
         LedgerEntry::class,
         ExpenseCategory::class,
         Expense::class,
-        SaleCancellation::class // added in version 2 (see Migrations.kt)
+        SaleCancellation::class // added in version 2; version 3 changed the expense tables (see Migrations.kt)
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
