@@ -253,9 +253,48 @@ before guessing.
   keeps them. Every failed check has its own Bengali message under the right
   box; an unexpected error says nothing was saved. After a successful save the
   app goes back to the customer, which shows a short "সংরক্ষিত হয়েছে" message.
-- Khata tab: "মোট পাবো" stays (it ignores advances), a "যাদের বাকি আছে" chip
-  next to "সবাই" shows only customers who owe, the list is still sorted by
-  the biggest due, and advances are shown in green.
+- Khata tab (M5, replaced in M5b by the screen below): "মোট পাবো", a
+  "যাদের বাকি আছে" chip next to "সবাই", sorted by the biggest due.
+- "বাকির খাতা" (the Khata tab, M5b) is ONE screen with a horizontally
+  scrollable chip row: সব | আজ | ৭ দিন | এই মাস | এই বছর | তারিখ বাছুন.
+  - সব (first chip, the default): EVERY customer (also those with no entry
+    yet), with name, mobile, balance (amber = due, green = advance,
+    "বাকি নেই" = 0) and the Dhaka date of the newest ledger entry by
+    `entryDate`, as "১১ নভেম্বর ২০২৬ পর্যন্ত" (no line when there is no
+    entry). A "যাদের বাকি আছে" filter (balance above 0) and a sort with 4
+    options: last transaction newest first (default), oldest first, amount
+    low to high, amount high to low. Ties: by name, then id. For the two date
+    sorts, customers with no entry come last. The summary box is ALWAYS for
+    the whole shop (it ignores the search and the filter): পাবো (balances
+    above 0), অগ্রিম (balances below 0, as a positive amount) and নিট
+    (পাবো − অগ্রিম = the sum of every balance).
+  - The time chips show the LEDGER ENTRIES of all customers in that window,
+    newest first, with the customer's name on each row and the same labels
+    as the customer detail. আজ = the Dhaka day; ৭ দিন = today plus the 6
+    Dhaka days before; এই মাস / এই বছর = the Dhaka month / year; তারিখ
+    বাছুন = from the start of the first day to the end of the second (no
+    future day; a backwards pair is swapped). Tapping a row opens that
+    customer (a sale row opens its receipt). The summary box covers the
+    whole window (it ignores the search), see section 5 "Khata period
+    summary".
+  - Search by customer name or mobile (Bengali digits, +88, spaces and
+    dashes accepted) works in every chip.
+  - The bottom button "নতুন বাকি" opens the customer picker (with "add
+    customer"), then the entry form on বাকি দিলাম. Adding customers in
+    general moves to যোগাযোগ.
+  - The chip, the sort, the filter, the custom days and the search text
+    survive rotation and Back.
+- "যোগাযোগ" (More tab): a plain address book of all customers (with or
+  without due), search, add (the normal form with the phonebook button; after
+  saving, back to the list), tap to open the customer detail. The balance is
+  shown small. No supplier and no employee tabs.
+- Data for the Khata tab: two read-only queries, no schema change.
+  `CustomerDao.observeKhataCustomers()` (every customer with the balance from
+  BALANCE_SUM_SQL and MAX(entryDate), one query, no query per customer) and
+  `LedgerDao.observeEntriesInRange(start, end)` (the entries of a window with
+  name, mobile, receipt number and the cancelled flag). Search, filter, sort
+  and the summaries are plain Kotlin in `ledger/KhataRules.kt`. An "age of
+  due" filter would later be one more filter there (out of scope now).
 
 ### 3.4 Expenses
 - Expense categories (default: salary, rent, bill, tea/snacks, transport,
@@ -464,6 +503,24 @@ saleId?, note?, entryDate, createdAt.
   grouped by Dhaka day. No running balance on the rows; the current balance is
   shown at the top. A sale due and a cancel-sale reversal open the receipt; a
   sale due of a cancelled sale gets a grey "বাতিল" tag.
+- Khata period summary (every Khata chip except সব): `periodSummary()` in
+  `ledger/KhataRules.kt`. Each entry falls into exactly ONE line, and each
+  line is the sum of `signedAmount()` of its entries (no second formula):
+
+  | Line | Ledger entries | Direction |
+  |---|---|---|
+  | বাকি দিলাম | SALE_DUE + MANUAL_DUE, with the small breakdown "বিক্রিতে ৳X (SALE_DUE) · হাতে ৳Y (MANUAL_DUE)" | + |
+  | টাকা পেলাম | PAYMENT_RECEIVED | − |
+  | পুরনো বাকি | OPENING_DUE | + |
+  | অগ্রিম ফেরত দিলাম | ADVANCE_RETURNED | + |
+  | সংশোধন (নিট) | CORRECTION_PLUS − CORRECTION_MINUS without a sale | ± |
+  | বিক্রি বাতিল | CORRECTION_MINUS linked to a sale | − |
+  | নিট পরিবর্তন | the sum of signedAmount() of every entry in the window | ± |
+
+  The lines with their directions always add up exactly to নিট পরিবর্তন
+  (tested, also with random data). বাকি দিলাম and টাকা পেলাম are always
+  shown; the others only when not 0. A cancelled sale's due still counts in
+  বাকি দিলাম on its own day; its reversal is in বিক্রি বাতিল.
 
 ## 6. Screens and navigation
 

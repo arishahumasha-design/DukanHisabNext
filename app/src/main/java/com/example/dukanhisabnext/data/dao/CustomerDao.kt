@@ -63,4 +63,30 @@ interface CustomerDao {
         """
     )
     fun observeWithBalance(query: String): Flow<List<CustomerWithBalance>>
+
+    /**
+     * Every customer (also those with no ledger entry yet) with the balance and the entry date of
+     * the newest ledger entry, in ONE query (no query per customer). The balance uses the shared
+     * BALANCE_SUM_SQL; a customer with no entries gets 0 and lastEntryDate = null.
+     * No order here: the Khata screen sorts with sortKhataCustomers() (KhataRules.kt).
+     */
+    @Query(
+        """
+        SELECT c.*,
+               $BALANCE_SUM_SQL AS balance,
+               MAX(l.entryDate) AS lastEntryDate
+        FROM customers c
+        LEFT JOIN ledger_entries l ON l.customerId = c.id
+        GROUP BY c.id
+        """
+    )
+    fun observeKhataCustomers(): Flow<List<KhataCustomerRow>>
 }
+
+/** One row of the "সব" list: the customer, the balance, and the date of their newest ledger entry. */
+data class KhataCustomerRow(
+    @Embedded val customer: Customer,
+    val balance: Long,
+    /** entryDate (UTC millis) of the newest ledger entry; null when the customer has none. */
+    val lastEntryDate: Long?
+)

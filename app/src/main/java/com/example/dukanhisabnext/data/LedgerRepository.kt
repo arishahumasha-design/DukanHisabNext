@@ -1,6 +1,8 @@
 package com.example.dukanhisabnext.data
 
 import androidx.room.withTransaction
+import com.example.dukanhisabnext.data.dao.KhataCustomerRow
+import com.example.dukanhisabnext.data.dao.KhataEntryRow
 import com.example.dukanhisabnext.data.dao.LedgerHistoryRow
 import com.example.dukanhisabnext.data.entity.LedgerEntry
 import com.example.dukanhisabnext.ledger.LedgerError
@@ -51,6 +53,13 @@ class LedgerRepository(
     fun observeHistory(customerId: Long): Flow<List<LedgerHistoryRow>> = ledgerDao.observeHistory(customerId)
 
     fun observeBalance(customerId: Long): Flow<Long> = ledgerDao.observeBalance(customerId)
+
+    /** The "সব" list of the Khata tab: every customer with balance and newest entry date (one query). */
+    fun observeKhataCustomers(): Flow<List<KhataCustomerRow>> = customerDao.observeKhataCustomers()
+
+    /** The ledger entries of all customers in a time window, newest first (one query). */
+    fun observeEntriesInRange(range: DhakaTime.TimeRange): Flow<List<KhataEntryRow>> =
+        ledgerDao.observeEntriesInRange(range.startMillis, range.endMillisExclusive)
 
     fun observeHasOpeningDue(customerId: Long): Flow<Boolean> =
         ledgerDao.observeOpeningDueCount(customerId).map { it > 0 }

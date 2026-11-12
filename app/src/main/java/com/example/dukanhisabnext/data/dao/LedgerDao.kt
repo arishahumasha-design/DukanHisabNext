@@ -33,6 +33,18 @@ data class LedgerHistoryRow(
     val saleCancelled: Boolean
 )
 
+/** One row of a Khata time chip: a ledger entry plus who it belongs to (and its sale, if any). */
+data class KhataEntryRow(
+    @Embedded val entry: LedgerEntry,
+    val customerName: String,
+    val customerPhone: String?,
+    val receiptNo: String?,
+    val saleCancelled: Boolean
+) {
+    /** The same shape as a customer-history row, so the same labels and rules apply. */
+    fun asHistoryRow(): LedgerHistoryRow = LedgerHistoryRow(entry, receiptNo, saleCancelled)
+}
+
 // On purpose there is NO update and NO delete here: ledger entries are never
 // changed. A mistake is fixed by inserting a correction entry.
 @Dao
@@ -59,6 +71,25 @@ interface LedgerDao {
         """
     )
     fun observeHistory(customerId: Long): Flow<List<LedgerHistoryRow>>
+
+    /**
+     * Every ledger entry of ALL customers in a time window (start included, end excluded), newest
+     * first, with the customer's name and mobile, and (for entries linked to a sale) the receipt
+     * number and whether that sale was cancelled. Used by the Khata time chips.
+     */
+    @Query(
+        """
+        SELECT l.*, c.name AS customerName, c.phone AS customerPhone,
+               s.receiptNo AS receiptNo, (sc.id IS NOT NULL) AS saleCancelled
+        FROM ledger_entries l
+        JOIN customers c ON c.id = l.customerId
+        LEFT JOIN sales s ON s.id = l.saleId
+        LEFT JOIN sale_cancellations sc ON sc.saleId = l.saleId
+        WHERE l.entryDate >= :start AND l.entryDate < :end
+        ORDER BY l.entryDate DESC, l.createdAt DESC, l.id DESC
+        """
+    )
+    fun observeEntriesInRange(start: Long, end: Long): Flow<List<KhataEntryRow>>
 
     /** How much this customer owes (paisa). Negative = shop owes the customer (advance). */
     @Query("SELECT $BALANCE_SUM_SQL FROM ledger_entries WHERE customerId = :customerId")
