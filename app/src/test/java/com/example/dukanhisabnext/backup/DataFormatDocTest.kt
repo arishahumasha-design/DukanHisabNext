@@ -6,7 +6,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * docs/DATA_FORMAT.md must describe every table and column of the current schema (3.json), and
+ * docs/DATA_FORMAT.md must describe every table and column of the current schema (CURRENT_SCHEMA_VERSION.json), and
  * its backup section must match the code. Fails as soon as the database changes without the doc.
  */
 class DataFormatDocTest {

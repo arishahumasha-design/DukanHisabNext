@@ -1,6 +1,8 @@
 package com.example.dukanhisabnext.ui.sales
 
 import com.example.dukanhisabnext.data.dao.SaleListRow
+import com.example.dukanhisabnext.data.dao.SalesListSummaryRow
+import com.example.dukanhisabnext.data.dao.SalesSearchParams
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.dayPeriod
@@ -79,6 +81,54 @@ fun matchesSalesQuery(row: SaleListRow, query: String): Boolean {
 
 fun filterSales(rows: List<SaleListRow>, query: String): List<SaleListRow> =
     rows.filter { matchesSalesQuery(it, query) }
+
+/** Makes %, _ and \ plain characters in a SQL LIKE pattern (used with ESCAPE '\'). */
+fun likeEscape(text: String): String = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+/**
+ * The typed search as the four SQL parameters of SALES_SEARCH_SQL (SaleDao.kt), following exactly
+ * the rules of [matchesSalesQuery]: Bengali digits allowed, receipt number with or without the
+ * dash, partial name, partial mobile digits, also typed with +88. A blank query searches nothing.
+ */
+fun salesSearchParams(rawQuery: String): SalesSearchParams {
+    val q = toLatinDigits(rawQuery).trim()
+    if (q.isEmpty()) return SalesSearchParams("", "", "", "")
+    val digits = q.filter { it in '0'..'9' }
+    return SalesSearchParams(
+        query = likeEscape(q),
+        compactQuery = likeEscape(compact(q)),
+        digits = digits,
+        digitsWithout88 = if (digits.startsWith("88") && digits.length > 2) digits.removePrefix("88") else ""
+    )
+}
+
+// =========================================================================================
+// The capped list ("আরও দেখান")
+// =========================================================================================
+
+/** The sales list shows the newest this many rows; each "আরও দেখান" adds this many more. */
+const val SALES_PAGE_SIZE = 300
+
+/** The database summary row as the screen's [SalesSummary]. */
+fun SalesListSummaryRow.toSalesSummary(): SalesSummary = SalesSummary(count, total, cancelledExcluded)
+
+/**
+ * The screen from ONE page of rows (already searched and capped by the database) and the summary of
+ * the WHOLE window and search ([summary], from the aggregate query, never from [rows]).
+ * "আরও দেখান" shows when the window has more sales than the rows loaded.
+ */
+fun buildSalesPageUi(rows: List<SaleListRow>, summary: SalesSummary, totalSalesInDb: Int): SalesListUi {
+    val matching = summary.count + summary.cancelledExcluded
+    val items = groupByDhakaDay(rows).flatMap { group ->
+        listOf<SalesListItem>(SalesListItem.Header(group.date)) + group.rows.map { SalesListItem.Entry(it) }
+    }
+    return SalesListUi(
+        items = items,
+        summary = summary,
+        empty = emptyKind(totalSalesInDb, matching),
+        hasMore = matching > rows.size
+    )
+}
 
 // =========================================================================================
 // The line above the list: how many sales and their total
@@ -178,7 +228,9 @@ fun emptyKind(totalSalesInDb: Int, visibleCount: Int): EmptyKind? = when {
 data class SalesListUi(
     val items: List<SalesListItem>,
     val summary: SalesSummary,
-    val empty: EmptyKind?
+    val empty: EmptyKind?,
+    /** More sales than the rows shown: the "আরও দেখান" button. */
+    val hasMore: Boolean = false
 )
 
 /**

@@ -35,6 +35,8 @@ class BackupManager(
     private val isLiveOpen: () -> Boolean,
     private val restartApp: () -> Unit,
     startup: StartupNote?,
+    /** Called after a restore or an undo replaced the data, just before the restart (the cart is emptied). */
+    private val onDataReplaced: () -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
@@ -269,6 +271,7 @@ class BackupManager(
         when (val result = engine.restore(prepared)) {
             is RestoreResult.Done -> {
                 _state.value = BackupJobState.Restarting
+                onDataReplaced()
                 delay(RESTART_DELAY_MS) // let the "রিস্টোর হচ্ছে…" screen show
                 restartApp()
             }

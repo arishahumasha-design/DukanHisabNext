@@ -51,5 +51,19 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
     }
 }
 
+/**
+ * Version 3 -> 4 (M9, speed): only ADDS one index, nothing else changes. The stock of a product is
+ * SUM(quantity) of its movements; with this "covering" index SQLite reads productId and quantity
+ * from the index alone. No row, table or other index is touched.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_movements_productId_quantity` " +
+                "ON `stock_movements` (`productId`, `quantity`)"
+        )
+    }
+}
+
 /** Every migration, in order. AppDatabase passes them to Room. */
-val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
+val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)

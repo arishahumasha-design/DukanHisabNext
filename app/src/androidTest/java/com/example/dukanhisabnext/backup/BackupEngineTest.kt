@@ -273,7 +273,7 @@ class BackupEngineTest {
         val ready = e.prepareRestore(zip)
         assertTrue("expected Ready, got $ready", ready is PrepareResult.Ready)
         ready as PrepareResult.Ready
-        assertEquals(3, ready.restore.fromSchemaVersion)
+        assertEquals(CURRENT_SCHEMA_VERSION, ready.restore.fromSchemaVersion)
         assertEquals(a.mapValues { it.value.size.toLong() }, ready.restore.counts)
         assertEquals(RestoreResult.Done(ready.restore.counts), e.restore(ready.restore))
 
@@ -287,7 +287,7 @@ class BackupEngineTest {
 
         val result = e.readRestoreResult()!!
         assertEquals("false", result["undo"])
-        assertEquals("3", result["fromSchemaVersion"])
+        assertEquals(CURRENT_SCHEMA_VERSION.toString(), result["fromSchemaVersion"])
         assertEquals(now.toString(), result["backupCreatedAt"])
         assertEquals("2", result["count.sales"])
         e.clearRestoreResult()
@@ -442,6 +442,11 @@ class BackupEngineTest {
         }
         assertEquals(if (version >= 2) 1L else 0L, liveCount("sale_cancellations"))
         assertEquals(3L, liveCount("expenses"))
+        // Every backup ends up with the version 4 stock index.
+        val hasStockIndex = db.openHelper.readableDatabase.query(
+            "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'index_stock_movements_productId_quantity'"
+        ).use { it.moveToFirst() }
+        assertTrue(hasStockIndex)
     }
 
     @Test
@@ -449,6 +454,15 @@ class BackupEngineTest {
 
     @Test
     fun aVersion2BackupIsBroughtUpToDate() = runBlocking { restoreOld(2) }
+
+    @Test
+    fun aVersion3BackupIsBroughtUpToDate() = runBlocking { restoreOld(3) }
+
+    @Test
+    fun aVersion4BackupIsAcceptedAsItIs() = runBlocking {
+        assertEquals(4, CURRENT_SCHEMA_VERSION)
+        restoreOld(4)
+    }
 
     // =====================================================================================
     // Every refusal leaves the live data alone
@@ -488,19 +502,21 @@ class BackupEngineTest {
         val (zip, _) = backup()
         assertRefused(rebuild(zip, "f2.zip", editManifest = { setKey(it, "formatVersion", "2") }), BackupProblem.FORMAT_TOO_NEW)
         assertRefused(rebuild(zip, "enc.zip", editManifest = { setKey(it, "encryption", "aes") }), BackupProblem.FORMAT_TOO_NEW)
-        assertRefused(rebuild(zip, "s4.zip", editManifest = { setKey(it, "dbSchemaVersion", "4") }), BackupProblem.SCHEMA_TOO_NEW)
+        val newer = (CURRENT_SCHEMA_VERSION + 1).toString()
+        assertRefused(rebuild(zip, "newer.zip", editManifest = { setKey(it, "dbSchemaVersion", newer) }), BackupProblem.SCHEMA_TOO_NEW)
     }
 
     @Test
     fun aDatabaseNewerThanItsManifestSaysIsRefused() = runBlocking {
-        // The manifest says 3, the file inside says 4 (user_version): never trust the manifest alone.
+        // The manifest says the current version, the file inside says one newer (user_version):
+        // never trust the manifest alone.
         fillA()
         val (zip, _) = backup()
-        val db4 = File(files, "v4.db")
-        entriesOf(zip).getValue(DATABASE_ENTRY).let(db4::writeBytes)
-        SQLiteDatabase.openDatabase(db4.path, null, SQLiteDatabase.OPEN_READWRITE).use { it.version = 4 }
-        val bytes = db4.readBytes()
-        assertRefused(rebuild(zip, "v4.zip", fixHash = true) { bytes }, BackupProblem.SCHEMA_TOO_NEW)
+        val newerDb = File(files, "newer.db")
+        entriesOf(zip).getValue(DATABASE_ENTRY).let(newerDb::writeBytes)
+        SQLiteDatabase.openDatabase(newerDb.path, null, SQLiteDatabase.OPEN_READWRITE).use { it.version = CURRENT_SCHEMA_VERSION + 1 }
+        val bytes = newerDb.readBytes()
+        assertRefused(rebuild(zip, "newer-inside.zip", fixHash = true) { bytes }, BackupProblem.SCHEMA_TOO_NEW)
     }
 
     @Test

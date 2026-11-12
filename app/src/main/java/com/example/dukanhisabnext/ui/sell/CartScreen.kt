@@ -66,6 +66,7 @@ fun CartScreen(
 
     SubScreenScaffold(title = stringResource(R.string.cart_title), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().imePadding()) {
+            CartRestoreNote()
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),

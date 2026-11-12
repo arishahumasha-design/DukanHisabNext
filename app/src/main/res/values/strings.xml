@@ -96,6 +96,7 @@
     <!-- Sell screen -->
     <string name="in_cart">কার্টে: %1$s</string>
     <string name="cart_title">কার্ট</string>
+    <string name="cart_removed_on_restart">অ্যাপ বন্ধ থাকার সময় এই পণ্যগুলো আর বিক্রি করা যায় না (আর্কাইভ বা মুছে ফেলা হয়েছে), তাই কার্ট থেকে সরানো হয়েছে: %1$s</string>
     <string name="cart_empty_screen">কার্ট খালি। পেছনে গিয়ে পণ্য বেছে নিন।</string>
     <string name="btn_open_cart">কার্ট দেখুন</string>
     <string name="field_line_quantity">পরিমাণ</string>
@@ -228,6 +229,7 @@
     <string name="sale_due_tag">বাকি ৳ %1$s</string>
     <string name="sale_cancelled_tag">বাতিল</string>
     <string name="sales_summary_cancelled_note">(বাতিল %1$s টি বাদ)</string>
+    <string name="sales_show_more">আরও দেখান</string>
     <string name="empty_sales_none">এখনও কোনো বিক্রি করা হয়নি।</string>
     <string name="empty_sales_match">এই খোঁজা বা ফিল্টারের সাথে মেলে এমন কোনো বিক্রি নেই।</string>
     <!-- The 12 month names, January first (used in the sales list day headers) -->

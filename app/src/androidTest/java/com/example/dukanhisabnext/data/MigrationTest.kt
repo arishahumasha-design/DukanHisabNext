@@ -24,8 +24,8 @@ import org.junit.runner.RunWith
 
 /**
  * Phone test: an OLD database file is upgraded to the newest version, the way the app does after
- * an update. Your real phone still has a version 1 file and the emulator a version 2 file, so both
- * paths are tested: 1 -> 2 -> 3 in one go, and 2 -> 3.
+ * an update. A phone may hold a version 1, 2 or 3 file, so every path is tested: 1 -> 2 -> 3 -> 4 in
+ * one go, 2 -> 3 -> 4, and 3 -> 4.
  *
  * The old database is built from the SAVED schema file (app/schemas/.../N.json, packed into the test
  * APK), not from today's code, and filled with shop data. Then it is opened with the real
@@ -104,11 +104,11 @@ class MigrationTest {
         }
 
     // =====================================================================================
-    // 1 -> 2 -> 3 in one go (your real phone)
+    // 1 -> 2 -> 3 -> 4 in one go (your real phone)
     // =====================================================================================
 
     @Test
-    fun version1To3InOneGoKeepsEveryRowAndEverythingNewWorks() = runBlocking {
+    fun version1To4InOneGoKeepsEveryRowAndEverythingNewWorks() = runBlocking {
         val before = createSchema(1).let { db ->
             db.insertShopData()
             assertFalse("v1 has no sale_cancellations", hasTable(db, "sale_cancellations"))
@@ -117,10 +117,11 @@ class MigrationTest {
 
         val room = openUpgraded()
         try {
-            // Opening runs 1 -> 2 -> 3 and Room's full check against version 3.
+            // Opening runs 1 -> 2 -> 3 -> 4 and Room's full check against version 4.
             val db = room.openHelper.writableDatabase
-            assertEquals(3, db.version)
+            assertEquals(4, db.version)
             assertSameRows(before, db)
+            assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
 
             // The new columns have sane defaults on the old categories.
             db.query("SELECT id, isPersonal, isActive, systemKey FROM expense_categories ORDER BY id").use {
@@ -183,11 +184,11 @@ class MigrationTest {
     }
 
     // =====================================================================================
-    // 2 -> 3 (the emulator)
+    // 2 -> 3 -> 4
     // =====================================================================================
 
     @Test
-    fun version2To3KeepsEveryRowAndAddsTheExpenseColumns() = runBlocking {
+    fun version2To4KeepsEveryRowAndAddsTheExpenseColumns() = runBlocking {
         val before = createSchema(2).let { db ->
             db.insertShopData()
             db.execSQL("INSERT INTO sale_cancellations (id, saleId, reason, createdAt) VALUES (1, 1, 'ভুল', 6)")
@@ -197,8 +198,9 @@ class MigrationTest {
         val room = openUpgraded()
         try {
             val db = room.openHelper.writableDatabase
-            assertEquals(3, db.version)
+            assertEquals(4, db.version)
             assertSameRows(before, db)
+            assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
             assertEquals(1, db.count("sale_cancellations"))
 
             db.query("SELECT isPersonal, isActive, systemKey FROM expense_categories").use {
@@ -234,7 +236,7 @@ class MigrationTest {
             override fun migrate(db: SupportSQLiteDatabase) {}
         }
 
-        val room = openUpgraded(doesNothing, MIGRATION_2_3)
+        val room = openUpgraded(doesNothing, MIGRATION_2_3, MIGRATION_3_4)
         try {
             room.openHelper.writableDatabase
             fail("Room must refuse a database without the sale_cancellations table")
@@ -256,10 +258,10 @@ class MigrationTest {
             }
         }
 
-        val room = openUpgraded(MIGRATION_1_2, forgetsSystemKey)
+        val room = openUpgraded(MIGRATION_1_2, forgetsSystemKey, MIGRATION_3_4)
         try {
             room.openHelper.writableDatabase
-            fail("Room must refuse a version 3 database without the systemKey column")
+            fail("Room must refuse a database without the systemKey column")
         } catch (expected: IllegalStateException) {
             assertTrue(expected.message.orEmpty(), expected.message.orEmpty().contains("expense_categories"))
         } finally {
@@ -267,7 +269,63 @@ class MigrationTest {
         }
     }
 
+    // =====================================================================================
+    // 3 -> 4 (M9: the stock index)
+    // =====================================================================================
+
+    @Test
+    fun version3To4KeepsEveryRowAndAddsTheCoveringStockIndex() = runBlocking {
+        val before = createSchema(3).let { db ->
+            db.insertShopData()
+            db.execSQL("INSERT INTO sale_cancellations (id, saleId, reason, createdAt) VALUES (1, 1, 'ভুল', 6)")
+            assertFalse("v3 has no stock index yet", hasIndex(db, STOCK_INDEX))
+            snapshot(db).also { db.close() }
+        }
+
+        val room = openUpgraded()
+        try {
+            val db = room.openHelper.writableDatabase
+            assertEquals(4, db.version)
+            assertSameRows(before, db)
+            assertEquals(1, db.count("sale_cancellations"))
+            assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
+            // The old productId index is still there too.
+            assertEquals(false, db.indexIsUnique("stock_movements", "index_stock_movements_productId"))
+
+            // The stock is the same number, and SQLite now reads it from the covering index.
+            assertEquals(7_000L, room.stockMovementDao().getStock(1))
+            val plan = db.query(
+                "EXPLAIN QUERY PLAN SELECT p.id, COALESCE((SELECT SUM(m.quantity) FROM stock_movements m WHERE m.productId = p.id), 0) FROM products p"
+            ).use { c -> buildList { while (c.moveToNext()) add(c.getString(c.getColumnIndexOrThrow("detail"))) } }
+            assertTrue(plan.toString(), plan.any { it.contains("COVERING INDEX $STOCK_INDEX") })
+        } finally {
+            room.close()
+        }
+    }
+
+    @Test
+    fun a3To4MigrationThatForgetsTheIndexIsRefused() {
+        // Proves Room checks indexes too: a 3 -> 4 "migration" that does nothing must fail to open.
+        createSchema(3).apply { insertShopData(); close() }
+        val doesNothing = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {}
+        }
+
+        val room = openUpgraded(MIGRATION_1_2, MIGRATION_2_3, doesNothing)
+        try {
+            room.openHelper.writableDatabase
+            fail("Room must refuse a version 4 database without the stock index")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message.orEmpty(), expected.message.orEmpty().contains("stock_movements"))
+        } finally {
+            room.close()
+        }
+    }
+
     // ---- small helpers ----
+
+    private fun hasIndex(db: SQLiteDatabase, name: String): Boolean =
+        db.rawQuery("SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = ?", arrayOf(name)).use { it.moveToFirst() }
 
     private fun hasTable(db: SQLiteDatabase, name: String): Boolean =
         db.rawQuery("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", arrayOf(name)).use { it.moveToFirst() }
@@ -284,3 +342,6 @@ class MigrationTest {
     /** Every moment (start included, end excluded). */
     private val DhakaRangeAll = 0L to Long.MAX_VALUE
 }
+
+/** The covering index added in version 4. */
+private const val STOCK_INDEX = "index_stock_movements_productId_quantity"

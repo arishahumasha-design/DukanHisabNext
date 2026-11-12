@@ -38,6 +38,11 @@ before guessing.
 - ViewModel + StateFlow, Navigation Compose
 - Minimum SDK: API 26 (Android 8.0)
 - Package: use the existing package of the project
+- Release builds (M9): R8 shrinks and optimizes the WHOLE app
+  (`optimization { enable = true }` in `app/build.gradle.kts`). Never add
+  `packageScope`: optimizing only the library packages produced a broken
+  Kotlin class hierarchy and the release app crashed at start
+  (IllegalAccessError). Every release is smoke-tested on the emulator.
 - Later (NOT in MVP): cloud backup/sync (Firebase or Supabase)
 
 ## 3. MVP features
@@ -523,17 +528,26 @@ built on the shared conditions above:
 - Unique index on `SaleCancellation.saleId` (a sale is cancelled only once).
 - Unique index on `ExpenseCategory.systemKey` (each default category once);
   index on `Expense.expenseDate` (lists and reports cut by it).
+- Covering index on `StockMovement (productId, quantity)` (version 4): every
+  stock number is SUM(quantity) per product, and SQLite reads it from this
+  index alone. Measured on a year of a busy shop (44k sales, 130k movements):
+  the product list / low-stock query went from ~240 ms to ~5 ms on a PC.
 
 ### Database version and migrations
 
-- The database is version 3. Version 1 → 2 only adds the `sale_cancellations`
+- The database is version 4. Version 1 → 2 only adds the `sale_cancellations`
   table and its unique index (`MIGRATION_1_2` in `data/Migrations.kt`).
   Version 2 → 3 (M6) only adds: the columns isPersonal (default 0), isActive
   (default 1) and systemKey (null) to `expense_categories`, a unique index on
   systemKey, and an index on `expenses.expenseDate` (`MIGRATION_2_3`).
-- `MigrationTest` (phone) upgrades a version 1 file through 1 → 2 → 3 in one
-  go and a version 2 file through 2 → 3, built from the saved 1.json / 2.json
-  with data, and checks every old row is unchanged.
+  Version 3 → 4 (M9) only adds the index
+  `index_stock_movements_productId_quantity` (`MIGRATION_3_4`); nothing is
+  dropped or renamed.
+- `MigrationTest` (phone) upgrades a version 1 file through 1 → 2 → 3 → 4 in
+  one go, a version 2 file through 2 → 3 → 4 and a version 3 file through
+  3 → 4, built from the saved 1.json / 2.json / 3.json with data, and checks
+  every old row is unchanged. Backups of versions 1 to 4 are all accepted and
+  brought up to version 4 (`BackupEngineTest`).
 - The schema of every version is exported to `app/schemas` and committed.
   Every version change needs a Migration plus a migration test (PC: the SQL
   equals the exported schema; phone: `MigrationTest` upgrades a real old
@@ -544,6 +558,24 @@ built on the shared conditions above:
 - Completing a sale runs in **one database transaction**: insert Sale, insert
   SaleItems, insert StockMovements (negative), insert LedgerEntry if due > 0.
   If any step fails, nothing is saved.
+- The sale in progress survives Android closing the app (M9): the cart (lines
+  with the typed quantity and price, discount, delivery, chosen customer and
+  the draftId) is written to a small versioned JSON file in the app's files
+  folder (`files/cart/cart.json`, not in the database, not in the backup) on
+  every change, and read back at start. Lines whose product was archived or
+  removed meanwhile are taken out with a Bengali note naming them; a customer
+  who no longer exists is unset. The cart file is emptied after a completed
+  sale and after a restore or an undo (the product ids belong to other data).
+- The same cart is never saved twice, also across a restart: before the save
+  transaction, the cart's draftId and the exact createdAt it will use are
+  written (fsync) to `files/cart/sale-attempts.txt`. A retry with that draftId
+  first looks for a sale saved at that moment with that total and returns it.
+- The sales list (বিক্রির তালিকা) loads only the newest 300 sales of the chosen
+  window; "আরও দেখান" loads 300 more. The search runs in SQL
+  (`SALES_SEARCH_SQL`, the twin of `matchesSalesQuery()`, phone-tested to find
+  the same sales). The count and total line comes from a separate aggregate
+  query over the WHOLE window and search (with `NOT_CANCELLED_SQL`), never
+  from the loaded rows.
 - A sale with a due requires a customer.
 - Stock may go negative (shopkeepers often sell before updating stock), but the
   product shows a warning.

@@ -6,8 +6,8 @@ version of the app (web, iOS) should be able to read and write a backup file wit
 it alone.
 
 - The table and column lists below are generated from the exported Room schema
-  `app/schemas/com.example.dukanhisabnext.data.AppDatabase/3.json` (database
-  version 3). A PC test (`DataFormatDocTest`) fails when a table or column of
+  `app/schemas/com.example.dukanhisabnext.data.AppDatabase/4.json` (database
+  version 4). A PC test (`DataFormatDocTest`) fails when a table or column of
   that file is missing here, so this file cannot silently fall behind.
 - The words "must" and "never" are rules the Android app keeps. Another app that
   writes this data must keep them too, or the Android app will show wrong numbers.
@@ -101,7 +101,7 @@ the keys in this order; a reader must not depend on the order.
 | `format` | yes | Always `dokanhisab-backup`. Anything else: not a DokanHisab backup. |
 | `formatVersion` | yes | `1`. A reader refuses a higher number ("update the app"). |
 | `platform` | no | Who wrote it: `android` (later `web`, `ios`). For information only. |
-| `dbSchemaVersion` | yes | The database version inside (`PRAGMA user_version`): 1, 2 or 3. |
+| `dbSchemaVersion` | yes | The database version inside (`PRAGMA user_version`): 1, 2, 3 or 4. |
 | `appVersionCode` | no | The app's build number that wrote it. Information only. |
 | `appVersionName` | no | The app's version name that wrote it. Information only. |
 | `createdAt` | yes | When the backup was made, UTC epoch millis. |
@@ -175,11 +175,12 @@ INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES (42, '<hash>
 | 1 | `4a150112da92ffebcb69bef2389dc153` |
 | 2 | `a0199054f2b523abb52d42a994cdb47d` |
 | 3 | `30f220f802126321712bf3fb6261abb3` |
+| 4 | `6ab4148f4da5d9eeecf6eecd00107348` |
 
 The Android app also has a table `android_metadata` (one column `locale`); it is
 not part of the data and a reader may ignore it.
 
-## 3. Tables (database version 3)
+## 3. Tables (database version 4)
 
 Every table below, with its exact `CREATE` statement. "null" means the column may
 be empty (`NULL`).
@@ -257,12 +258,13 @@ Every change of stock. Append-only. Stock of a product = the sum of its `quantit
 
 Foreign keys: `productId` → `products.id`; `referenceSaleId` → `sales.id`.
 
-Indexes: `productId`; `referenceSaleId`.
+Indexes: `productId`; `referenceSaleId`; `productId, quantity`.
 
 ```sql
 CREATE TABLE IF NOT EXISTS `stock_movements` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `productId` INTEGER NOT NULL, `type` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unitCost` INTEGER, `referenceSaleId` INTEGER, `note` TEXT, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`referenceSaleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION );
 CREATE INDEX IF NOT EXISTS `index_stock_movements_productId` ON `stock_movements` (`productId`);
 CREATE INDEX IF NOT EXISTS `index_stock_movements_referenceSaleId` ON `stock_movements` (`referenceSaleId`);
+CREATE INDEX IF NOT EXISTS `index_stock_movements_productId_quantity` ON `stock_movements` (`productId`, `quantity`);
 ```
 
 ### `customers`
@@ -441,8 +443,11 @@ migrations (`data/Migrations.kt`); another reader can do the same:
 - **Version 2 → 3**: adds to `expense_categories` the columns `isPersonal`
   (default 0), `isActive` (default 1) and `systemKey` (null), a unique index on
   `systemKey`, and an index on `expenses.expenseDate`. Nothing else changes.
+- **Version 3 → 4**: adds one index, `index_stock_movements_productId_quantity`
+  on `stock_movements (productId, quantity)`, so the stock sum is read from the
+  index alone. No table, column, row or other index changes.
 
-The full schemas of versions 1 and 2 are in `app/schemas/.../1.json` and `2.json`.
+The full schemas of versions 1, 2 and 3 are in `app/schemas/.../1.json`, `2.json` and `3.json`.
 
 ## 5. Reading a backup on another platform (summary)
 

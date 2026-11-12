@@ -6,6 +6,8 @@ import com.example.dukanhisabnext.cancel.CancelReasonCheck
 import com.example.dukanhisabnext.cancel.checkCancelReason
 import com.example.dukanhisabnext.cancel.dueReversalEntry
 import com.example.dukanhisabnext.cancel.stockBackMovements
+import com.example.dukanhisabnext.data.dao.SalesListSummaryRow
+import com.example.dukanhisabnext.data.dao.SalesSearchParams
 import com.example.dukanhisabnext.data.dao.SalesTotalsRow
 import com.example.dukanhisabnext.data.entity.SaleCancellation
 import com.example.dukanhisabnext.data.entity.LedgerEntry
@@ -23,9 +25,11 @@ import com.example.dukanhisabnext.util.SaleAmounts
 import com.example.dukanhisabnext.util.SaleCalculator
 import com.example.dukanhisabnext.util.SaleCheck
 import com.example.dukanhisabnext.util.SaleError
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /** One cart line as the cart holds it. [unitPrice] may differ from the product's price (edited). */
 data class SaleDraftLine(
@@ -98,7 +102,8 @@ class SaleRepository(
     private val db: AppDatabase,
     private val clock: () -> Long = System::currentTimeMillis,
     private val afterStep: (SaveStep) -> Unit = {},
-    private val afterCancelStep: (CancelStep) -> Unit = {}
+    private val afterCancelStep: (CancelStep) -> Unit = {},
+    private val journal: SaleDraftJournal = InMemorySaleDraftJournal()
 ) {
     private val saleDao = db.saleDao()
     private val productDao = db.productDao()
@@ -119,6 +124,20 @@ class SaleRepository(
     /** The sales list for a time window, newest first, with customer name and mobile. Read-only. */
     fun observeSalesList(range: DhakaTime.TimeRange): Flow<List<SaleListRow>> =
         saleDao.observeList(range.startMillis, range.endMillisExclusive)
+
+    /** One page of the sales list screen (search done by the database), newest first, at most [limit] rows. */
+    fun observeSalesPage(range: DhakaTime.TimeRange, search: SalesSearchParams, limit: Int): Flow<List<SaleListRow>> =
+        saleDao.observeListPage(
+            range.startMillis, range.endMillisExclusive,
+            search.query, search.compactQuery, search.digits, search.digitsWithout88, limit
+        )
+
+    /** The count and total line of the sales list for the WHOLE window and search. */
+    fun observeSalesPageSummary(range: DhakaTime.TimeRange, search: SalesSearchParams): Flow<SalesListSummaryRow> =
+        saleDao.observeListSummary(
+            range.startMillis, range.endMillisExclusive,
+            search.query, search.compactQuery, search.digits, search.digitsWithout88
+        )
 
     /** The number of saved sales (all time). */
     fun observeSalesCount(): Flow<Int> = saleDao.observeCount()
@@ -197,17 +216,45 @@ class SaleRepository(
     suspend fun completeSale(draft: SaleDraft): SaleResult = saveLock.withLock {
         // Double tap: this cart was already saved -> give back the same result, save nothing.
         savedDrafts[draft.draftId]?.let { return@withLock it }
+        // After a restart the memory above is empty, but the journal file remembers the moment of
+        // this cart's last attempt: if a sale was saved at that moment, it is this cart's sale.
+        findEarlierSave(draft)?.let { saved ->
+            savedDrafts[draft.draftId] = saved
+            return@withLock saved
+        }
 
-        val result = db.withTransaction { saveInsideTransaction(draft) }
+        // The moment of THIS attempt is written to the disk before anything is saved.
+        val now = clock()
+        withContext(Dispatchers.IO) { journal.recordAttempt(draft.draftId, now) }
+
+        val result = db.withTransaction { saveInsideTransaction(draft, now) }
         if (result is SaleResult.Saved) savedDrafts[draft.draftId] = result
         result
+    }
+
+    /**
+     * The sale an earlier attempt of this cart saved (the app was killed before the cart was
+     * emptied), or null. It must have been saved at exactly the recorded moment AND have the total
+     * this cart adds up to.
+     */
+    private suspend fun findEarlierSave(draft: SaleDraft): SaleResult.Saved? {
+        val at = journal.attemptOf(draft.draftId) ?: return null
+        val check = SaleCalculator.check(
+            lines = draft.lines.map { CartLine(it.quantity, it.unitPrice) },
+            discount = draft.discount,
+            deliveryCharge = draft.deliveryCharge,
+            received = draft.received,
+            hasCustomer = draft.customerId != null
+        ) as? SaleCheck.Valid ?: return null
+        val sale = saleDao.findSaleAt(at, check.amounts.total) ?: return null
+        return SaleResult.Saved(sale.id, sale.receiptNo, check.amounts)
     }
 
     /**
      * Runs inside the transaction. Returning a refusal before the first insert writes nothing.
      * Throwing at any point makes SQLite undo every insert made so far.
      */
-    private suspend fun saveInsideTransaction(draft: SaleDraft): SaleResult {
+    private suspend fun saveInsideTransaction(draft: SaleDraft, now: Long): SaleResult {
         // 1. Read the products again, now. Archived or missing ones are refused.
         val productIds = draft.lines.map { it.productId }.distinct()
         val products = productDao.getProducts(productIds).associateBy { it.id }
@@ -233,8 +280,8 @@ class SaleRepository(
         }
         check(amounts.isConsistent()) { "Sale amounts do not add up: $amounts" } // never expected
 
-        // 4. The receipt number: today's highest counter + 1 (as a number).
-        val now = clock()
+        // 4. The receipt number: today's highest counter + 1 (as a number). [now] was recorded in
+        //    the journal before the transaction, so a retry after a crash can find this sale.
         val receiptNo = nextFreeReceiptNo(now)
 
         // 5. The sale itself.

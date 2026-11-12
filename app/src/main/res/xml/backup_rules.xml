@@ -11,6 +11,7 @@
       - files/backup-work/       the restore work folder
       - files/restore-safety/    the safety copy from before the last restore
       - files/restore.state, files/restore.result, databases/dokan_hisab.db.restore-prepared
+      - files/cart/ (the sale in progress and its save journal; they belong to this phone only)
       - the cache folder (never backed up by Android)
 -->
 <full-backup-content>

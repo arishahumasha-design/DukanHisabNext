@@ -19,8 +19,15 @@ import com.example.dukanhisabnext.data.ReportRepository
 import com.example.dukanhisabnext.data.ReceiptRepository
 import com.example.dukanhisabnext.data.SaleRepository
 import com.example.dukanhisabnext.data.ShopRepository
+import com.example.dukanhisabnext.data.FileSaleDraftJournal
+import com.example.dukanhisabnext.ui.sell.CartStorage
 import com.example.dukanhisabnext.ui.sell.CartStore
+import com.example.dukanhisabnext.ui.sell.FileCartStorage
+import java.io.File
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
@@ -45,7 +52,23 @@ class DokanHisabApp : Application() {
             // Files could not be moved back: leave the marker so the next start tries again.
             RecoveryOutcome.NOTHING
         }
+        // A restore finished while the app was closed: the saved cart belongs to the old data
+        // (product ids differ), so it goes before anything reads it.
+        if (startupRecovery == RecoveryOutcome.FINISHED) cartStorage.delete()
+        // The saved cart came back: take out what can no longer be sold (in the background).
+        appScope.launch {
+            cartStore.dropWhatCannotBeSold(
+                sellableIds = { ids -> database.productDao().getProducts(ids).filter { it.isActive }.map { it.id }.toSet() },
+                customerExists = { id -> database.customerDao().getById(id) != null }
+            )
+        }
     }
+
+    /** Small background work that belongs to the app, not to a screen. */
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** The sale in progress on the disk (app files, not the database and not the backup). */
+    private val cartStorage: CartStorage by lazy { FileCartStorage(File(filesDir, "cart/cart.json")) }
 
     val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
 
@@ -77,6 +100,8 @@ class DokanHisabApp : Application() {
             countRows = ::countShopRows,
             isLiveOpen = { database.isOpen },
             restartApp = ::restartProcess,
+            // A restore or an undo replaced the data: the cart's product ids no longer fit.
+            onDataReplaced = { cartStore.clear() },
             startup = startupNote(backupEngine.readRestoreResult(), startupRecovery, backupPrefs.restoreFailedNote)
         )
     }
@@ -102,7 +127,11 @@ class DokanHisabApp : Application() {
 
     // One shared SaleRepository for the whole app: its lock and double-tap memory only
     // work if every screen uses the same one.
-    val saleRepository: SaleRepository by lazy { SaleRepository(database) }
+    // Its journal file remembers each cart's last save attempt, so a cart that comes back after
+    // Android closed the app is never saved twice.
+    val saleRepository: SaleRepository by lazy {
+        SaleRepository(database, journal = FileSaleDraftJournal(File(filesDir, "cart/sale-attempts.txt")))
+    }
 
     // One shared LedgerRepository too, for the same reason (lock and double-tap memory).
     val ledgerRepository: LedgerRepository by lazy { LedgerRepository(database) }
@@ -112,6 +141,8 @@ class DokanHisabApp : Application() {
     val shopRepository: ShopRepository by lazy { ShopRepository(database) }
     val receiptRepository: ReceiptRepository by lazy { ReceiptRepository(database) }
 
-    // The cart of the sale in progress. Held here so it survives rotation and tab switching.
-    val cartStore: CartStore = CartStore()
+    // The cart of the sale in progress. Held here so it survives rotation and tab switching, and
+    // kept in a file so it survives Android closing the app. Lazy: it is read only after onCreate's
+    // start-up check (a finished restore deletes the old cart first).
+    val cartStore: CartStore by lazy { CartStore(storage = cartStorage) }
 }

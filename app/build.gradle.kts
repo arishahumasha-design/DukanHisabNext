@@ -28,9 +28,13 @@ android {
 
     buildTypes {
         release {
+            // R8 shrinks and optimizes the WHOLE app (our code and the libraries together).
+            // Do NOT add "packageScope" here: optimizing only the library packages moved one
+            // Kotlin class (CollectionsKt__MutableCollectionsJVMKt) to another package while its
+            // package-private parent stayed behind, and the release app crashed at start with
+            // IllegalAccessError (M9 group A).
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
         }
     }

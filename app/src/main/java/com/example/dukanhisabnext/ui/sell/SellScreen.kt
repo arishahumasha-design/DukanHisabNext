@@ -67,6 +67,8 @@ fun SellScreen(
     val summary by viewModel.summary.collectAsStateWithLifecycle()
 
     Column(modifier = Modifier.fillMaxSize().imePadding()) {
+        // The cart came back after a restart, but some products can no longer be sold.
+        CartRestoreNote()
         // ---- Search ----
         OutlinedTextField(
             value = query,

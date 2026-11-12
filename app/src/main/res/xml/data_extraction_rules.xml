@@ -8,7 +8,7 @@
       - the small backup settings file: backup_prefs.xml
     Left out, because nothing includes them: files/backup-work/ (restore work folder),
     files/restore-safety/ (safety copy), files/restore.state, files/restore.result,
-    databases/dokan_hisab.db.restore-prepared, and the cache folder.
+    databases/dokan_hisab.db.restore-prepared, files/cart/ (the sale in progress), and the cache folder.
 -->
 <data-extraction-rules>
     <cloud-backup>

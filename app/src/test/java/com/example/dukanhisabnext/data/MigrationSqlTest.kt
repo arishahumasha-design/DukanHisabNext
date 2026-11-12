@@ -77,15 +77,15 @@ class MigrationSqlTest {
     }
 
     @Test
-    fun theMigrationsFormOneUnbrokenChainUpToVersion3() {
+    fun theMigrationsFormOneUnbrokenChainUpToVersion4() {
         assertEquals(1, ALL_MIGRATIONS.first().startVersion)
         ALL_MIGRATIONS.toList().zipWithNext { a, b -> assertEquals(a.endVersion, b.startVersion) }
-        assertEquals(3, ALL_MIGRATIONS.last().endVersion)
+        assertEquals(4, ALL_MIGRATIONS.last().endVersion)
         // The newest schema file must be the version the last migration reaches.
         val newest = schemaDir.listFiles()!!.mapNotNull { it.nameWithoutExtension.toIntOrNull() }.max()
         assertEquals(newest, ALL_MIGRATIONS.last().endVersion)
         // And there is a schema file for every version on the way.
-        for (v in 1..3) assertTrue("$v.json", File(schemaDir, "$v.json").exists())
+        for (v in 1..4) assertTrue("$v.json", File(schemaDir, "$v.json").exists())
     }
 
     // =====================================================================================
@@ -138,6 +138,51 @@ class MigrationSqlTest {
     @Test
     fun theExpensesTableItselfIsUnchangedFromVersion2() {
         assertEquals(createSqlOf(2, "expenses").first(), createSqlOf(3, "expenses").first())
+    }
+
+    // =====================================================================================
+    // Version 3 -> 4 (M9, speed): one added index, nothing else
+    // =====================================================================================
+
+    @Test
+    fun migration3To4RunsExactlyTheNewIndexSqlFromTheVersion4Schema() {
+        val index = createSqlOf(4, "stock_movements").single { it.contains("index_stock_movements_productId_quantity") }
+        assertEquals(
+            "CREATE INDEX IF NOT EXISTS `index_stock_movements_productId_quantity` ON `stock_movements` (`productId`, `quantity`)",
+            index
+        )
+        assertEquals(listOf(index), sqlOf(MIGRATION_3_4))
+    }
+
+    @Test
+    fun migration3To4NeverDropsRenamesOrAltersAnything() {
+        for (sql in sqlOf(MIGRATION_3_4)) {
+            assertTrue(sql, sql.startsWith("CREATE INDEX"))
+            assertTrue(sql, !sql.contains("DROP", ignoreCase = true))
+            assertTrue(sql, !sql.contains("RENAME", ignoreCase = true))
+            assertTrue(sql, !sql.contains("ALTER", ignoreCase = true))
+        }
+    }
+
+    @Test
+    fun version4IsVersion3PlusExactlyOneIndex() {
+        assertEquals(tableNames(3), tableNames(4)) // the same tables in the same order
+        for (table in tableNames(4)) {
+            val v3 = createSqlOf(3, table)
+            val v4 = createSqlOf(4, table)
+            if (table == "stock_movements") {
+                // The table and its old indexes are unchanged; one index is added at the end.
+                assertEquals(v3, v4.dropLast(1))
+                assertEquals(sqlOf(MIGRATION_3_4), listOf(v4.last()))
+            } else {
+                assertEquals(table, v3, v4)
+            }
+        }
+    }
+
+    @Test
+    fun theOldProductIdIndexIsKept() {
+        assertTrue(createSqlOf(4, "stock_movements").any { it.contains("`index_stock_movements_productId` ") })
     }
 
     @Test

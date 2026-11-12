@@ -24,7 +24,7 @@ const val DATABASE_ENTRY = "database/dokan_hisab.db"
 const val ENCRYPTION_NONE = "none"
 
 /** The database schema version this app writes (AppDatabase.version). */
-const val CURRENT_SCHEMA_VERSION = 3
+const val CURRENT_SCHEMA_VERSION = 4
 
 /**
  * Room's identity hash of every schema version this app can read (from app/schemas/.../N.json;
@@ -33,7 +33,8 @@ const val CURRENT_SCHEMA_VERSION = 3
 val KNOWN_SCHEMA_HASHES: Map<Int, String> = mapOf(
     1 to "4a150112da92ffebcb69bef2389dc153",
     2 to "a0199054f2b523abb52d42a994cdb47d",
-    3 to "30f220f802126321712bf3fb6261abb3"
+    3 to "30f220f802126321712bf3fb6261abb3",
+    4 to "6ab4148f4da5d9eeecf6eecd00107348"
 )
 
 /** The small settings file that remembers the last backup time (outside the database, so a restore keeps it). */

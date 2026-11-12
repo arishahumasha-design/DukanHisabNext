@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -147,6 +149,17 @@ fun SalesListScreen(
                                     customer = customerLabel(item.row.customerName, walkIn),
                                     onClick = { onOpenSale(item.row.id) }
                                 )
+                            }
+                        }
+                        // Only the newest sales are loaded; older ones come one page at a time.
+                        if (current.hasMore) {
+                            item(key = "show-more") {
+                                OutlinedButton(
+                                    onClick = viewModel::onShowMore,
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 48.dp)
+                                ) {
+                                    Text(stringResource(R.string.sales_show_more), style = MaterialTheme.typography.titleMedium)
+                                }
                             }
                         }
                     }
