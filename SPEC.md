@@ -1092,6 +1092,40 @@ Backup and restore screens (M8 part 2; the engine is section 5):
   was one, a small line under the cards "আপনি ৭ দিনের বেশি ব্যাকআপ নেননি — এখনই
   নিন" opens the backup screen. No notification.
 
+### PDF export (read-only; no database change, no new library)
+
+Four documents, each started by a small "PDF" button in the screen's top bar (own icon `ic_pdf`),
+a confirm dialog and then the system share sheet:
+
+1. **Due list** (Khata): every customer whose balance is above 0, biggest amount first: serial, name,
+   mobile, amount due; "মোট বাকি" at the bottom and, only when someone has an advance, one more line
+   "মোট অগ্রিম". The screen's period chip, filter and search are NOT applied ("as of now"), and it uses
+   the same rules as the Khata filter (`visibleKhataCustomers`, `khataAllSummary`).
+2. **Product list** (Products): name, category, unit, selling price, current stock; archived products
+   left out; the confirm dialog has the switch "ক্রয়মূল্য দেখান" (default off) which adds a cost-price
+   column.
+3. **Report** (Reports): the tab that is shown, for the period that is shown, with the same lines as the
+   screen (the screen's own `ReportBody`, `salesLineAmount`, `profitLines`, `shownSummaryLines`,
+   `expenseSummary`...). Cancelled sales are not in it; the "আনুমানিক" note appears when the screen shows it.
+4. **Customer statement** (Customer detail): name, mobile, every entry oldest first with description,
+   signed amount and running balance (the sum of `signedAmount`, so the last one equals the balance), and
+   the current balance at the end.
+
+Layout: A4 portrait, 16 mm margins. Every page has the shop name, address and mobile, the document title,
+the period (or "তৈরির তারিখ", Dhaka time, Bengali digits) and a green line; the footer is "পাতা ১ / ৩".
+Tables repeat their header row on every page, use thin row separators, right-aligned amounts, a bold
+total row, and wrap a long name onto a second line (then "…"). 1,000+ rows work. The text is Noto Sans
+Bengali (regular and semibold from the one variable font in `res/font`), drawn with `PdfDocument`.
+Where things go on a page is decided by pure functions (`pdf/PdfLayout.kt`, `pdf/PdfDocumentLayout.kt`,
+`pdf/PdfBuilders.kt`) with PC tests; `PdfWriter.kt` only draws.
+
+Privacy: the file is written to `cache/pdf/` (never backed up, shared through the existing FileProvider
+with its own `cache-path`), with an ASCII name such as `due-list-2026-11-13.pdf` (a statement carries the
+customer's number, never name or phone). Older PDFs are deleted at each export and at app start. The
+confirm dialog says "এই PDF-তে কাস্টমারের নাম, মোবাইল নম্বর ও টাকার হিসাব থাকে। শুধু বিশ্বস্ত কাউকে
+পাঠান।" (the product list has only the cost-price switch). When there is nothing to export a short
+message is shown instead of an empty PDF. The PDF is built on a background thread with a loading dialog.
+
 ## 7. Out of scope for the MVP
 
 Bluetooth/thermal printing, bKash/Nagad QR, SMS, subscriptions, online shop,

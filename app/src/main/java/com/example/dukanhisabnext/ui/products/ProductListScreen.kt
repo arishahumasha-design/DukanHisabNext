@@ -1,5 +1,12 @@
 package com.example.dukanhisabnext.ui.products
 
+import com.example.dukanhisabnext.ui.components.PdfTopBarButton
+import com.example.dukanhisabnext.ui.components.PdfExportDialogs
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -62,9 +69,17 @@ fun ProductListScreen(
     val lowStockOnly by viewModel.lowStockOnly.collectAsStateWithLifecycle()
     val products by viewModel.products.collectAsStateWithLifecycle()
 
+    var pdfOpen by rememberSaveable { mutableStateOf(false) }
+    val pdfService = (LocalContext.current.applicationContext as DokanHisabApp).pdfService
+    PdfExportDialogs(
+        open = pdfOpen, onClose = { pdfOpen = false }, make = { showCost -> pdfService.productList(showCost) },
+        textRes = R.string.pdf_products_text, withCostSwitch = true
+    )
+
     SubScreenScaffold(
         title = stringResource(R.string.title_products),
         onBack = onBack,
+        actions = { PdfTopBarButton(onClick = { pdfOpen = true }) },
         floatingActionButton = {
             if (!showArchived) {
                 FloatingActionButton(onClick = onAddProduct) {

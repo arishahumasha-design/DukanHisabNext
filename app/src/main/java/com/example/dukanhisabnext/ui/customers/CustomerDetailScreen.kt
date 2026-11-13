@@ -1,5 +1,11 @@
 package com.example.dukanhisabnext.ui.customers
 
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.example.dukanhisabnext.ui.components.PdfTopBarButton
+import com.example.dukanhisabnext.ui.components.PdfExportDialogs
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import android.content.ActivityNotFoundException
@@ -96,6 +102,9 @@ fun CustomerDetailScreen(
     val history by viewModel.history.collectAsStateWithLifecycle()
     val actions by viewModel.actions.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var pdfOpen by rememberSaveable { mutableStateOf(false) }
+    val pdfService = (context.applicationContext as DokanHisabApp).pdfService
+    PdfExportDialogs(open = pdfOpen, onClose = { pdfOpen = false }, make = { customer?.let { c -> pdfService.statement(c.id) } ?: com.example.dukanhisabnext.pdf.PdfResult.Failed })
 
     // The words from strings.xml, handed to the plain functions.
     val labels = historyLabels()
@@ -118,7 +127,11 @@ fun CustomerDetailScreen(
         }
     }
 
-    SubScreenScaffold(title = stringResource(R.string.title_customer_detail), onBack = onBack) { padding ->
+    SubScreenScaffold(
+        title = stringResource(R.string.title_customer_detail),
+        onBack = onBack,
+        actions = { if (customer != null) PdfTopBarButton(onClick = { pdfOpen = true }) }
+    ) { padding ->
         val c = customer ?: run {
             LoadingIndicator(Modifier.padding(padding).fillMaxSize())
             return@SubScreenScaffold

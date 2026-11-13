@@ -15,10 +15,11 @@ fun SubScreenScaffold(
     title: String,
     onBack: () -> Unit,
     floatingActionButton: @Composable () -> Unit = {},
+    actions: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
-        topBar = { TopBar(title = title, onBack = onBack) },
+        topBar = { TopBar(title = title, onBack = onBack, actions = actions) },
         floatingActionButton = floatingActionButton,
         contentWindowInsets = WindowInsets(0),
         content = content

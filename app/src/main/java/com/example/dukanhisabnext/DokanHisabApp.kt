@@ -55,6 +55,8 @@ class DokanHisabApp : Application() {
         // A restore finished while the app was closed: the saved cart belongs to the old data
         // (product ids differ), so it goes before anything reads it.
         if (startupRecovery == RecoveryOutcome.FINISHED) cartStorage.delete()
+        // PDFs made earlier hold names and amounts: none stays on the phone after the app was closed.
+        appScope.launch { com.example.dukanhisabnext.pdf.clearPdfFolder(cacheDir) }
         // The saved cart came back: take out what can no longer be sold (in the background).
         appScope.launch {
             cartStore.dropWhatCannotBeSold(
@@ -139,6 +141,11 @@ class DokanHisabApp : Application() {
     val reportRepository: ReportRepository by lazy { ReportRepository(database) }
 
     val shopRepository: ShopRepository by lazy { ShopRepository(database) }
+
+    /** Makes the PDF documents (read-only) into cache/pdf/. */
+    val pdfService: com.example.dukanhisabnext.pdf.PdfExportService by lazy {
+        com.example.dukanhisabnext.pdf.PdfExportService(this, shopRepository, ledgerRepository, customerRepository, productRepository)
+    }
     val receiptRepository: ReceiptRepository by lazy { ReceiptRepository(database) }
 
     // The cart of the sale in progress. Held here so it survives rotation and tab switching, and

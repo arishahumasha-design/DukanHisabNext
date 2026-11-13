@@ -1,5 +1,13 @@
 package com.example.dukanhisabnext.ui.report
 
+import com.example.dukanhisabnext.ui.expense.expenseRange
+import com.example.dukanhisabnext.util.formatDate
+import com.example.dukanhisabnext.pdf.reportPeriodText
+import com.example.dukanhisabnext.pdf.PdfResult
+import com.example.dukanhisabnext.ui.components.PdfTopBarButton
+import com.example.dukanhisabnext.ui.components.PdfExportDialogs
+import androidx.compose.ui.platform.LocalContext
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
@@ -95,7 +103,23 @@ fun ReportScreen(
     var rangePickerOpen by rememberSaveable { mutableStateOf(false) }
     val controls = ui?.controls ?: ReportControls()
 
-    SubScreenScaffold(title = stringResource(R.string.title_reports), onBack = onBack) { padding ->
+    // PDF of the shown tab and period: the same result the screen shows, written by the PDF service.
+    var pdfOpen by rememberSaveable { mutableStateOf(false) }
+    val pdfService = (LocalContext.current.applicationContext as DokanHisabApp).pdfService
+    val chipLabel = if (controls.period == ReportPeriod.CUSTOM) null else stringResource(controls.period.labelRes())
+    PdfExportDialogs(open = pdfOpen, onClose = { pdfOpen = false }, make = {
+        val shown = ui
+        if (shown == null) PdfResult.Failed else {
+            val range = expenseRange(shown.controls.period, System.currentTimeMillis(), shown.controls.customFrom, shown.controls.customTo)
+            pdfService.report(shown.controls.tab, reportPeriodText(chipLabel, range, ::formatDate), shown.body)
+        }
+    })
+
+    SubScreenScaffold(
+        title = stringResource(R.string.title_reports),
+        onBack = onBack,
+        actions = { PdfTopBarButton(onClick = { pdfOpen = true }) }
+    ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             // ---- The four tabs ----
             PrimaryTabRow(

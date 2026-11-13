@@ -1,5 +1,9 @@
 package com.example.dukanhisabnext.ui.khata
 
+import com.example.dukanhisabnext.ui.components.PdfTopBarButton
+import com.example.dukanhisabnext.ui.components.PdfExportDialogs
+import androidx.compose.ui.platform.LocalContext
+import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
@@ -115,6 +119,9 @@ fun KhataScreen(
     var sortOpen by rememberSaveable { mutableStateOf(false) }
     var pickerOpen by rememberSaveable { mutableStateOf(false) }
     var rangePickerOpen by rememberSaveable { mutableStateOf(false) } // the two-step "তারিখ বাছুন" picker
+    var pdfOpen by rememberSaveable { mutableStateOf(false) }
+    val pdfService = (LocalContext.current.applicationContext as DokanHisabApp).pdfService
+    PdfExportDialogs(open = pdfOpen, onClose = { pdfOpen = false }, make = { pdfService.dueList() })
 
     // The words from strings.xml, handed to the plain functions.
     val monthNames = stringArrayResource(R.array.months_bn).toList()
@@ -133,7 +140,7 @@ fun KhataScreen(
     // This tab sits inside the app frame, which already keeps clear of the system bars.
     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            TopBar(title = stringResource(R.string.khata_title))
+            TopBar(title = stringResource(R.string.khata_title), actions = { PdfTopBarButton(onClick = { pdfOpen = true }) })
 
             val current = ui
             val controls = current?.controls ?: KhataControls()

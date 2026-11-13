@@ -600,4 +600,59 @@
     <string name="line_warranty_title">ওয়ারেন্টি</string>
     <string name="payment_sale_date">বিক্রির তারিখ: %1$s</string>
     <string name="receipt_warranty">ওয়ারেন্টি: %1$s (%2$s)</string>
+
+    <!-- PDF export: the button, the confirm dialog, messages -->
+    <string name="pdf_button">PDF</string>
+    <string name="pdf_button_desc">PDF তৈরি করুন</string>
+    <string name="pdf_confirm_title">PDF তৈরি করবেন?</string>
+    <string name="pdf_privacy">এই PDF-তে কাস্টমারের নাম, মোবাইল নম্বর ও টাকার হিসাব থাকে। শুধু বিশ্বস্ত কাউকে পাঠান।</string>
+    <string name="pdf_products_text">পণ্যের তালিকার একটি PDF তৈরি হবে।</string>
+    <string name="pdf_show_cost">ক্রয়মূল্য দেখান</string>
+    <string name="pdf_create">PDF তৈরি করুন</string>
+    <string name="pdf_creating">PDF তৈরি হচ্ছে…</string>
+    <string name="pdf_share_title">PDF পাঠান</string>
+    <string name="pdf_failed">PDF তৈরি করা যায়নি। আবার চেষ্টা করুন।</string>
+    <string name="pdf_empty_due">এখন কারও বাকি নেই, তাই PDF-এ কিছু নেই।</string>
+    <string name="pdf_empty_products">কোনো পণ্য নেই, তাই PDF-এ কিছু নেই।</string>
+    <string name="pdf_empty_report">এই সময়ে দেখানোর মতো কিছু নেই, তাই PDF তৈরি হয়নি।</string>
+    <string name="pdf_empty_pick_dates">আগে তারিখ বাছুন, তারপর PDF তৈরি করুন।</string>
+    <string name="pdf_empty_statement">এই কাস্টমারের কোনো লেনদেন নেই, তাই PDF-এ কিছু নেই।</string>
+
+    <!-- PDF export: words inside the documents -->
+    <string name="pdf_shop_placeholder">দোকান হিসাব</string>
+    <string name="pdf_mobile">মোবাইল</string>
+    <string name="pdf_footer">পাতা %1$s / %2$s</string>
+    <string name="pdf_generated_on">তৈরির তারিখ: %1$s</string>
+    <string name="pdf_period_line">সময়: %1$s</string>
+    <string name="pdf_col_serial">ক্রম</string>
+    <string name="pdf_col_name">নাম</string>
+    <string name="pdf_col_phone">মোবাইল</string>
+    <string name="pdf_col_due">বাকি</string>
+    <string name="pdf_col_category">ক্যাটাগরি</string>
+    <string name="pdf_col_unit">একক</string>
+    <string name="pdf_col_sell">বিক্রয়মূল্য</string>
+    <string name="pdf_col_cost">ক্রয়মূল্য</string>
+    <string name="pdf_col_stock">স্টক</string>
+    <string name="pdf_col_receipt">রসিদ নম্বর</string>
+    <string name="pdf_col_date">তারিখ</string>
+    <string name="pdf_col_customer">কাস্টমার</string>
+    <string name="pdf_col_total">মোট</string>
+    <string name="pdf_col_count">সংখ্যা</string>
+    <string name="pdf_col_description">বিবরণ</string>
+    <string name="pdf_col_amount">টাকা</string>
+    <string name="pdf_col_balance">জের</string>
+    <string name="pdf_title_due_list">বাকির তালিকা</string>
+    <string name="pdf_total_due">মোট বাকি</string>
+    <string name="pdf_total_advance">মোট অগ্রিম</string>
+    <string name="pdf_title_products">পণ্যের তালিকা</string>
+    <string name="pdf_total_products">মোট পণ্য</string>
+    <string name="pdf_title_report_sales">বিক্রির রিপোর্ট</string>
+    <string name="pdf_title_report_due">বাকির রিপোর্ট</string>
+    <string name="pdf_title_report_expenses">খরচের রিপোর্ট</string>
+    <string name="pdf_title_report_profit">লাভ-ক্ষতির রিপোর্ট</string>
+    <string name="pdf_title_statement">কাস্টমারের হিসাব</string>
+    <string name="pdf_customer_line">কাস্টমার: %1$s</string>
+    <string name="pdf_current_due">এখন বাকি</string>
+    <string name="pdf_current_advance">এখন অগ্রিম</string>
+    <string name="pdf_current_clear">এখন বাকি নেই</string>
 </resources>
