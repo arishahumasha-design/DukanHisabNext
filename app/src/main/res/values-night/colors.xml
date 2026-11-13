@@ -2,4 +2,6 @@
 <resources>
     <!-- The dark "background" of Theme.kt. -->
     <color name="window_background">#FF0E1411</color>
+    <!-- Dark mode start screen: the dark primary container. -->
+    <color name="splash_background">#FF123D2A</color>
 </resources>

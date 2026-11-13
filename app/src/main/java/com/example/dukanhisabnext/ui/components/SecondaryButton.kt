@@ -3,6 +3,7 @@ package com.example.dukanhisabnext.ui.components
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -30,6 +31,7 @@ fun SecondaryButton(
         modifier = modifier.heightIn(min = 52.dp),
         enabled = enabled,
         shape = ButtonShape,
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
         border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.primary else AppTheme.colors.border)
     ) {
         if (icon != null) {
@@ -48,6 +50,7 @@ fun SmallOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = 
         modifier = modifier.heightIn(min = 48.dp),
         enabled = enabled,
         shape = ButtonShape,
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
         border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.primary else AppTheme.colors.border)
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
@@ -64,6 +67,25 @@ fun DestructiveOutlinedButton(text: String, onClick: () -> Unit, modifier: Modif
         shape = ButtonShape,
         colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
         border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.error else AppTheme.colors.border)
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/**
+ * A small pill-shaped outlined button for a list row (for example "স্টক"): green border, green text,
+ * 40dp high. Material still gives it a 48dp touch area, so it is easy to hit.
+ */
+@Composable
+fun PillOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(40.dp),
+        enabled = enabled,
+        shape = androidx.compose.foundation.shape.CircleShape,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+        border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.primary else AppTheme.colors.border)
     ) {
         Text(text, style = MaterialTheme.typography.labelLarge)
     }

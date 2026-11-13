@@ -38,6 +38,7 @@ import com.example.dukanhisabnext.ui.components.EmptyState
 import com.example.dukanhisabnext.ui.components.PillVariant
 import com.example.dukanhisabnext.ui.components.ProductTile
 import com.example.dukanhisabnext.ui.components.SmallOutlinedButton
+import com.example.dukanhisabnext.ui.components.PillOutlinedButton
 import com.example.dukanhisabnext.ui.components.StatusPill
 import com.example.dukanhisabnext.ui.theme.Spacing
 import androidx.compose.foundation.layout.heightIn
@@ -217,7 +218,7 @@ private fun ProductRow(
         if (archived) {
             SmallOutlinedButton(stringResource(R.string.btn_restore), onRestore)
         } else {
-            TextButton(onClick = onStock, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.btn_stock)) }
+            PillOutlinedButton(stringResource(R.string.btn_stock), onStock)
         }
     }
     HorizontalDivider(modifier = Modifier.padding(start = 72.dp))

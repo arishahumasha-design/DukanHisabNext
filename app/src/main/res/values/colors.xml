@@ -9,4 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <!-- The light "background" of Theme.kt (warm off-white). -->
     <color name="window_background">#FFF6F8F7</color>
+    <!-- The Android 12+ start screen: the primary green (the white notebook icon is drawn on it). -->
+    <color name="splash_background">#FF0F7B4F</color>
 </resources>
