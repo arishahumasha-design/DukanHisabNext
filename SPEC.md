@@ -346,7 +346,7 @@ before guessing.
   screens). (The screens come in M7 part 2; the numbers and rules are below.)
 - Sales report: the count, net sales (subtotal - discount), the delivery
   charge as its own line, the total, and the paid and due parts, plus the list
-  of sales. A sale belongs to the Dhaka day of its createdAt. A cancelled sale
+  of sales. A sale belongs to the Dhaka day of its saleDate (version 5; before that, of its createdAt). A cancelled sale
   is left out of EVERY number of every period (whenever it was cancelled);
   "(বাতিল N টি বাদ)" says how many were left out, and the cancelled sales stay
   visible in the sales list with their tag.
@@ -435,19 +435,36 @@ Editable tables (Product, Customer, Expense) also have `updatedAt`.
 **Category**: id, name.
 
 **Product**: id, name, categoryId?, unit, sellPrice, costPrice?, lowStockLevel?,
-isActive, createdAt, updatedAt.
+isActive, createdAt, updatedAt, warrantyValue?, warrantyUnit? (version 5).
+- The warranty is the default for new sales: both null = no warranty, or both
+  set (unit DAY, MONTH or YEAR; see "Warranty" in section 5). Changing it never
+  changes an old sale.
 
 **StockMovement**: id, productId, type (OPENING, PURCHASE, SALE, ADJUSTMENT,
 SALE_CANCEL),
 quantity (positive = stock in, negative = stock out), unitCost? (buying price
 per unit, filled for PURCHASE), referenceSaleId?, note?, createdAt.
 - Current stock of a product = sum of its movements.
+- A SALE movement's createdAt is the sale's saleDate (version 5), so a
+  back-dated sale shows on its own day in the stock history; the real moment
+  of saving is the sale's createdAt (through referenceSaleId). No column was
+  added for this.
 
 **Customer**: id, name, phone?, address?, note?, createdAt, updatedAt.
 
 **Sale**: id, receiptNo, customerId?, subtotal, discount, deliveryCharge,
 total, paidAmount, paymentMethod (CASH, BKASH, NAGAD, BANK, OTHER),
-dueAmount, note?, createdAt.
+dueAmount, note?, createdAt, saleDate (version 5).
+- `saleDate` is the date the sale belongs to (picked in the cart, default
+  today; the rules are in section 5, "Sale date"). `createdAt` is the real
+  moment the row was saved, never editable; the crash recovery finds a sale by
+  it. Every list, total, report, receipt number, SALE stock movement and
+  SALE_DUE entry uses `saleDate`.
+- Every query that cuts or sorts sales by time uses the one shared condition
+  `SALE_PERIOD_SQL` in `SaleDao.kt` (`s.saleDate >= :start AND s.saleDate <
+  :end`) and sorts by `s.saleDate`. A PC source-scan test
+  (`SalePeriodGuardTest`) fails if a sales query filters or sorts by
+  `createdAt`.
 - Invariant: `total = subtotal - discount + deliveryCharge` and
   `dueAmount = total - paidAmount` (never negative; `paidAmount` never
   exceeds `total`).
@@ -456,8 +473,13 @@ dueAmount, note?, createdAt.
   ignore it.
 
 **SaleItem**: id, saleId, productId, productNameSnapshot, quantity, unitPrice,
-costPriceSnapshot?, lineTotal.
+costPriceSnapshot?, lineTotal, warrantyValue?, warrantyUnit?, warrantyUntil?
+(version 5).
 - Snapshots keep old receipts correct even if the product changes later.
+- The warranty is this line's own copy: all three null (no warranty) or all
+  three set. `warrantyUntil` is the last day covered, a Dhaka calendar date
+  stored as an epoch day, worked out when saving from the sale day (never
+  taken from the screen).
 
 **SaleCancellation**: id, saleId (unique, foreign key to Sale), reason?
 (trimmed, at most 200 characters), createdAt.
@@ -520,12 +542,13 @@ built on the shared conditions above:
 - `observeLowStockCount()`: active products with `LOW_STOCK_SQL` = stock < 0,
   or an alert level is set and stock ≤ it (the same rule as `stockStatus()`
   for the product tags). Stock is the sum of the product's movements.
-- No index was added: `sales.createdAt` has none (a year of a small shop
-  scans fast); add one later with a migration only if it gets slow.
+- All of them cut sales by `saleDate` (version 5), with the index
+  `index_sales_saleDate`.
 
 ### Indexes and integrity
 
-- Unique index on `Sale.receiptNo`.
+- Unique index on `Sale.receiptNo`; index on `Sale.saleDate` (version 5: every
+  list and report cuts sales by it).
 - Indexes on `Product.name`, `Customer.name` and `Customer.phone` for search.
 - Indexes on the foreign-key columns (`saleId`, `productId`, `customerId`).
 - Use real foreign keys. Use transactions for every multi-table write.
@@ -539,25 +562,74 @@ built on the shared conditions above:
 
 ### Database version and migrations
 
-- The database is version 4. Version 1 → 2 only adds the `sale_cancellations`
+- The database is version 5. Version 1 → 2 only adds the `sale_cancellations`
   table and its unique index (`MIGRATION_1_2` in `data/Migrations.kt`).
   Version 2 → 3 (M6) only adds: the columns isPersonal (default 0), isActive
   (default 1) and systemKey (null) to `expense_categories`, a unique index on
   systemKey, and an index on `expenses.expenseDate` (`MIGRATION_2_3`).
   Version 3 → 4 (M9) only adds the index
   `index_stock_movements_productId_quantity` (`MIGRATION_3_4`); nothing is
-  dropped or renamed.
-- `MigrationTest` (phone) upgrades a version 1 file through 1 → 2 → 3 → 4 in
-  one go, a version 2 file through 2 → 3 → 4 and a version 3 file through
-  3 → 4, built from the saved 1.json / 2.json / 3.json with data, and checks
-  every old row is unchanged. Backups of versions 1 to 4 are all accepted and
-  brought up to version 4 (`BackupEngineTest`).
+  dropped or renamed. Version 4 → 5 (sale date and warranty, `MIGRATION_4_5`)
+  only adds: `products.warrantyValue`/`warrantyUnit`,
+  `sale_items.warrantyValue`/`warrantyUnit`/`warrantyUntil` (all null),
+  `sales.saleDate` (added NOT NULL DEFAULT 0, then set to each sale's own
+  `createdAt`, so old sales keep their dates, receipt numbers, stock movements
+  and due entries) and the index `index_sales_saleDate`.
+- `MigrationTest` (phone) upgrades a version 1 file through 1 → 2 → 3 → 4 → 5
+  in one go, and version 2, 3 and 4 files the rest of the way, built from the
+  saved schema files with data, and checks every old row is unchanged (version
+  5: every old sale has saleDate = createdAt and no warranty). Backups of
+  versions 1 to 5 are all accepted and brought up to version 5
+  (`BackupEngineTest`); the backup format version stays 1 (the zip did not
+  change, only `dbSchemaVersion` may now be 5).
 - The schema of every version is exported to `app/schemas` and committed.
   Every version change needs a Migration plus a migration test (PC: the SQL
   equals the exported schema; phone: `MigrationTest` upgrades a real old
   database). Never `fallbackToDestructiveMigration`.
 
 ## 5. Business rules
+
+Sale date (version 5):
+- A sale has one date for the whole sale: today by default, or an earlier day
+  picked in the cart (the cart screen comes in part 2 of this feature). Rules
+  in `sale/SaleDateRules.kt`:
+  - never a future Dhaka day (`SaleError.FUTURE_DATE`) and never before
+    1 January 2020 (`SaleError.DATE_BEFORE_MIN`, a mistyped year); the save
+    refuses both and writes nothing;
+  - a day more than 30 days before today (31 or more) asks "আপনি অনেক পুরনো
+    তারিখ দিয়েছেন, ঠিক আছে?" first (a screen rule; exactly 30 days does not ask);
+  - `saleDateFor(day, now)`: today = the moment of saving; an earlier day = that
+    Dhaka day at the current Dhaka time of day (the same rule as a back-dated
+    khata entry or expense).
+- Everything of the sale uses the sale date: the reports, the sales list and
+  its periods, Home "today", the receipt date and number, the SALE stock
+  movements, the SALE_DUE entry (entryDate; its createdAt is the real moment),
+  the cost of goods and the profit. Stock and balances are sums, so their
+  totals do not change.
+- The receipt number uses the sale day: the next free counter of THAT day. A
+  back-dated sale gets the next free number of its own day (so within a day
+  the counter shows the order of entry, not the time of day); the unique index
+  and the "already taken: try the next" loop stay.
+- `createdAt` stays the real moment of saving, never editable. A sale is
+  back-dated when the Dhaka days of saleDate and createdAt differ.
+- Cancelling is a new event: the cancellation, the stock coming back and the
+  due reversal are dated by the moment of cancelling, also for a back-dated
+  sale. The cancelled sale leaves every total of its own period.
+- Double-tap protection and the one-transaction rule are unchanged: the
+  journal and the crash recovery work with createdAt, so a back-dated sale is
+  found again after a restart exactly like any other.
+
+Warranty (version 5, rules in `warranty/WarrantyRules.kt`):
+- A warranty is a number and a unit (DAY / MONTH / YEAR = দিন / মাস / বছর). The
+  number is 1 to 999 days, 1 to 120 months or 1 to 50 years. "No warranty" =
+  both empty. `checkWarranty` is the one check (product form, cart and save);
+  the save refuses a broken one with `SaleError.WARRANTY_INVALID`.
+- A product may have a default warranty; each sale line stores its own copy.
+- The last day = the sale's Dhaka date plus the period on the calendar
+  (`warrantyUntil`), not 30 or 365 days: a day that does not exist moves to
+  the month's last day (31 Jan + 1 month = 28 Feb, or 29 Feb in a leap year;
+  29 Feb + 1 year = 28 Feb). The warranty covers up to and including it.
+- A finished sale is never edited; a wrong warranty means cancel and sell again.
 
 - Completing a sale runs in **one database transaction**: insert Sale, insert
   SaleItems, insert StockMovements (negative), insert LedgerEntry if due > 0.
