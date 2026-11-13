@@ -365,6 +365,10 @@
 
     <!-- Home dashboard -->
     <string name="home_title">আজকের হিসাব</string>
+    <string name="home_quick_new_sale">নতুন বিক্রি</string>
+    <string name="home_quick_receive">টাকা পেলাম</string>
+    <string name="home_quick_new_expense">নতুন খরচ</string>
+    <string name="home_quick_new_product">নতুন পণ্য</string>
     <string name="home_card_sales">আজকের বিক্রি</string>
     <string name="home_card_expense">আজকের খরচ</string>
     <string name="home_card_receivable">মোট পাবো</string>
@@ -463,7 +467,7 @@
     <string name="ledger_note_counter">%1$s / %2$s</string>
     <string name="ledger_correction_plus">(+) বাকি বাড়বে</string>
     <string name="ledger_correction_minus">(−) বাকি কমবে</string>
-    <string name="ledger_current_balance">এখন ব্যালেন্স</string>
+    <string name="ledger_current_balance">এখন বাকি</string>
     <string name="ledger_after_balance">এরপর ব্যালেন্স হবে</string>
     <string name="ledger_advance_warning">অগ্রিম %1$s হবে</string>
     <string name="ledger_advance_max">সর্বোচ্চ ফেরত দেওয়া যাবে %1$s</string>

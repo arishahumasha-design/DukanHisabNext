@@ -1,6 +1,6 @@
 package com.example.dukanhisabnext.ui.customers
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.dukanhisabnext.ui.theme.AppTheme
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,8 +14,8 @@ import com.example.dukanhisabnext.util.formatTaka
 
 @Composable
 fun BalanceStatus.color(): Color = when (this) {
-    BalanceStatus.OWES -> if (isSystemInDarkTheme()) Color(0xFFFFB74D) else Color(0xFFB26A00) // amber
-    BalanceStatus.ADVANCE -> if (isSystemInDarkTheme()) Color(0xFF81C784) else Color(0xFF2E7D32) // green
+    BalanceStatus.OWES -> AppTheme.colors.amberText // amber
+    BalanceStatus.ADVANCE -> MaterialTheme.colorScheme.primary // green
     BalanceStatus.CLEAR -> MaterialTheme.colorScheme.onSurfaceVariant
 }
 

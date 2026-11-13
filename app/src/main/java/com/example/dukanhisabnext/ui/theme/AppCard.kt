@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.theme
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -29,14 +30,15 @@ object Spacing {
 fun isDarkScheme(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f
 
 /**
- * THE card of the app: white (a slightly lighter panel in dark mode) with a soft shadow and the
- * theme's 16dp corners. Every card uses it, so they all look the same. A card that carries a message
- * (an error, a "saved" note) passes its own [colors] but keeps the same shape and shadow.
+ * THE card of the app: the surface colour, a 1dp border, no shadow, the theme's 16dp corners. Every
+ * card uses it, so they all look the same. A card that carries a message (an error, a "saved" note)
+ * passes its own [colors] but keeps the same shape. [border] is null for a solid card (the hero).
  */
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
     colors: CardColors = appCardColors(),
+    border: BorderStroke? = BorderStroke(1.dp, AppTheme.colors.border),
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -47,7 +49,8 @@ fun AppCard(
             modifier = modifier,
             shape = MaterialTheme.shapes.medium,
             colors = colors,
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = border,
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             content = content
         )
     } else {
@@ -55,15 +58,16 @@ fun AppCard(
             modifier = modifier,
             shape = MaterialTheme.shapes.medium,
             colors = colors,
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            border = border,
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             content = content
         )
     }
 }
 
-/** The default card colours: [CardLight] / [CardDark] with the normal text colour. */
+/** The default card colours: the surface colour with the normal text colour. */
 @Composable
 fun appCardColors(): CardColors = CardDefaults.cardColors(
-    containerColor = if (isDarkScheme()) CardDark else CardLight,
+    containerColor = MaterialTheme.colorScheme.surface,
     contentColor = MaterialTheme.colorScheme.onSurface
 )

@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import com.example.dukanhisabnext.ui.components.BottomBar
+import com.example.dukanhisabnext.ui.components.BottomBarItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -98,9 +96,11 @@ private fun AppFrame() {
             // Form screens hide the bar, and so does an open keyboard (the bar would only sit
             // behind it and leave a gap).
             if (!Routes.hidesBottomBar(currentDestination?.route) && !imeVisible) {
-                NavigationBar {
-                    Screen.entries.forEach { screen ->
-                        NavigationBarItem(
+                BottomBar(
+                    items = Screen.entries.map { screen ->
+                        BottomBarItem(
+                            label = stringResource(screen.labelRes),
+                            icon = screen.icon,
                             // hierarchy = this screen and its parents. A screen inside the
                             // More group still "belongs to" the More tab, so it stays highlighted.
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
@@ -113,12 +113,10 @@ private fun AppFrame() {
                                     launchSingleTop = true // do not stack the same tab twice
                                     restoreState = true
                                 }
-                            },
-                            icon = { Icon(screen.icon, contentDescription = null) },
-                            label = { Text(stringResource(screen.labelRes)) }
+                            }
                         )
                     }
-                }
+                )
             }
         }
     ) { innerPadding ->
@@ -139,6 +137,11 @@ private fun AppFrame() {
                 // the product list with the "কম স্টক" chip on, the Khata tab as a tab).
                 HomeScreen(
                     onOpenBackup = { navController.navigate(Routes.BACKUP) },
+                    // The four quick actions only open screens that already exist.
+                    onNewSale = { navController.openTab(Screen.Sell) },
+                    onReceiveMoney = { navController.openTab(Screen.Khata) },
+                    onNewExpense = { navController.navigate(Routes.expenseForm(null)) },
+                    onNewProduct = { navController.navigate(Routes.productEdit(null)) },
                     onOpen = { target ->
                         when (target) {
                             DashboardTarget.SALES_LIST -> navController.navigate(Routes.SALES_LIST)

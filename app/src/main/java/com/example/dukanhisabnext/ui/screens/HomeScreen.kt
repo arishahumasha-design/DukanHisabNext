@@ -25,6 +25,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.dukanhisabnext.data.ShopRepository
+import com.example.dukanhisabnext.ui.components.StatTile
+import com.example.dukanhisabnext.ui.sales.dayHeaderText
+import kotlinx.coroutines.flow.flowOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -74,7 +84,8 @@ class HomeViewModel(
     private val clock: () -> Long = System::currentTimeMillis,
     private val lastBackupAt: StateFlow<Long?> = MutableStateFlow(null),
     private val rowCounts: suspend () -> Map<String, Long> = { emptyMap() },
-    private val prefs: BackupPrefs? = null
+    private val prefs: BackupPrefs? = null,
+    shops: ShopRepository? = null
 ) : ViewModel() {
 
     private val _showBackupNudge = MutableStateFlow(false)
@@ -105,6 +116,11 @@ class HomeViewModel(
     fun onNudgeLater() {
         _showBackupNudge.value = false
     }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    /** The shop name for the small top line (null while there is none). */
+    val shopName: StateFlow<String?> = (shops?.observe() ?: flowOf(null))
+        .map { profile -> profile?.name?.trim()?.ifEmpty { null } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val dashboard: StateFlow<Dashboard?> = flow {
@@ -139,13 +155,18 @@ class HomeViewModel(
 fun HomeScreen(
     onOpen: (DashboardTarget) -> Unit,
     onOpenBackup: () -> Unit,
+    onNewSale: () -> Unit,
+    onReceiveMoney: () -> Unit,
+    onNewExpense: () -> Unit,
+    onNewProduct: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = appViewModel { app, _ ->
         HomeViewModel(
             app.reportRepository,
             lastBackupAt = app.backupPrefs.lastBackupAt,
             rowCounts = app.backupManager::currentCounts,
-            prefs = app.backupPrefs
+            prefs = app.backupPrefs,
+            shops = app.shopRepository
         )
     }
 ) {
@@ -169,12 +190,26 @@ fun HomeScreen(
         )
     }
     val taka = stringResource(R.string.unit_taka)
+    val shopName by viewModel.shopName.collectAsStateWithLifecycle()
+    val monthNames = stringArrayResource(R.array.months_bn).toList()
+    val todayText = remember { dayHeaderText(DhakaTime.localDate(System.currentTimeMillis()), monthNames) }
 
     Column(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
+        // The small top line: the shop's name (or the page name while there is none) and today's date.
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = shopName ?: stringResource(R.string.home_title),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.width(Spacing.m))
+            Text(todayText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
 
         val d = dashboard
         if (d == null) {
@@ -194,14 +229,13 @@ fun HomeScreen(
             onClick = { onOpen(targetOf(DashboardCard.TODAY_SALES)) }
         )
 
-        // 2. Today's expense and the total receivable: two smaller cards side by side (stacked when the
+        // 2. Today's expense and the total receivable: two stat tiles side by side (stacked when the
         //    phone's font is very large, so a big number never gets squeezed).
-        val expenseCard: @Composable (Modifier) -> Unit = { m ->
-            SmallStatCard(
-                title = stringResource(R.string.home_card_expense),
+        val expenseTile: @Composable (Modifier) -> Unit = { m ->
+            StatTile(
+                label = stringResource(R.string.home_card_expense),
                 value = "$taka ${formatTaka(d.todayExpenseTotal)}",
-                valueColor = MaterialTheme.colorScheme.onSurface,
-                icon = ExpenseIcon,
+                icon = R.drawable.ic_expense,
                 hint = if (showsExpenseSplit(d)) {
                     stringResource(
                         R.string.home_expense_split,
@@ -215,33 +249,32 @@ fun HomeScreen(
                 modifier = m
             )
         }
-        val receivableCard: @Composable (Modifier) -> Unit = { m ->
-            SmallStatCard(
-                title = stringResource(R.string.home_card_receivable),
+        val receivableTile: @Composable (Modifier) -> Unit = { m ->
+            StatTile(
+                label = stringResource(R.string.home_card_receivable),
                 value = "$taka ${formatTaka(d.totalReceivable)}",
                 valueColor = BalanceStatus.OWES.color(),
-                icon = ReceivableIcon,
-                hint = null,
+                icon = R.drawable.ic_contacts,
                 onClick = { onOpen(targetOf(DashboardCard.RECEIVABLE)) },
                 modifier = m
             )
         }
         if (LocalDensity.current.fontScale > 1.3f) {
-            expenseCard(Modifier.fillMaxWidth())
-            receivableCard(Modifier.fillMaxWidth())
+            expenseTile(Modifier.fillMaxWidth())
+            receivableTile(Modifier.fillMaxWidth())
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
                 horizontalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
-                expenseCard(Modifier.weight(1f).fillMaxHeight())
-                receivableCard(Modifier.weight(1f).fillMaxHeight())
+                expenseTile(Modifier.weight(1f).fillMaxHeight())
+                receivableTile(Modifier.weight(1f).fillMaxHeight())
             }
         }
 
         // 3. Low stock: amber when something needs attention, a calm green when all is well.
         val low = lowStockState(d)
-        LowStockCard(
+        LowStockTile(
             title = stringResource(R.string.home_card_low_stock),
             value = when (low) {
                 LowStockState.NEEDS_ATTENTION -> stringResource(R.string.home_low_stock_count, toBengaliDigits(d.lowStockCount.toString()))
@@ -251,15 +284,17 @@ fun HomeScreen(
             onClick = { onOpen(targetOf(DashboardCard.LOW_STOCK)) }
         )
 
-        // A small line, not a notification: no backup for more than 7 days (or ever) and there is data.
+        // 4. Four quick actions. They only open screens that already exist.
+        QuickActionsRow(
+            onNewSale = onNewSale,
+            onReceiveMoney = onReceiveMoney,
+            onNewExpense = onNewExpense,
+            onNewProduct = onNewProduct
+        )
+
+        // A tappable card, not a notification: no backup for more than 7 days (or ever) and there is data.
         if (showBackupReminder) {
-            Text(
-                text = stringResource(R.string.home_backup_reminder),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenBackup).heightIn(min = 48.dp).padding(vertical = Spacing.m)
-            )
+            BackupReminderCard(text = stringResource(R.string.home_backup_reminder), onClick = onOpenBackup)
         }
     }
 }

@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +32,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
+import com.example.dukanhisabnext.ui.components.ProductTile
+import com.example.dukanhisabnext.ui.theme.AppTheme
+import com.example.dukanhisabnext.ui.theme.ButtonShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -253,6 +254,7 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
+                ProductTile(name = input.name, modifier = Modifier.padding(end = 12.dp, top = 8.dp), size = 40.dp)
                 Text(
                     text = input.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -260,7 +262,7 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                 )
                 // The default size of an IconButton is 48dp: easy to hit.
                 IconButton(onClick = { viewModel.onRemoveLine(input.productId) }) {
-                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.btn_remove_line))
+                    Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.btn_remove_line))
                 }
             }
 
@@ -309,7 +311,7 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.Warning,
+                        painter = painterResource(R.drawable.ic_warning),
                         contentDescription = null,
                         tint = StockStatus.LOW.color(),
                         modifier = Modifier.size(16.dp)
@@ -330,7 +332,7 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.Warning,
+                        painter = painterResource(R.drawable.ic_warning),
                         contentDescription = null,
                         tint = StockStatus.LOW.color(),
                         modifier = Modifier.size(16.dp)
@@ -350,30 +352,33 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
 /** সর্বমোট on the left, and the big "এগিয়ে যান" button on the right (off while anything is invalid). */
 @Composable
 private fun GrandTotalBar(total: Long, canContinue: Boolean, onContinue: () -> Unit) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.label_grand_total),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(R.string.price_format, formatTaka(total)),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Button(
-                onClick = onContinue,
-                enabled = canContinue,
-                modifier = Modifier.heightIn(min = 56.dp)
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column {
+            HorizontalDivider(color = AppTheme.colors.border)
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(stringResource(R.string.btn_continue), style = MaterialTheme.typography.titleMedium)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.label_grand_total),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(R.string.price_format, formatTaka(total)),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                Button(
+                    onClick = onContinue,
+                    enabled = canContinue,
+                    shape = ButtonShape,
+                    modifier = Modifier.heightIn(min = 52.dp)
+                ) {
+                    Text(stringResource(R.string.btn_continue), style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }

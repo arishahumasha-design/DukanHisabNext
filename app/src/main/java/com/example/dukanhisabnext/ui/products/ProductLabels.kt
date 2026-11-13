@@ -2,7 +2,7 @@ package com.example.dukanhisabnext.ui.products
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.example.dukanhisabnext.ui.theme.AppTheme
 import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.ProductUnit
@@ -39,5 +39,5 @@ fun stockStatus(stock: Long, lowStockLevel: Long?): StockStatus = when {
 fun StockStatus.color(): Color = when (this) {
     StockStatus.NORMAL -> MaterialTheme.colorScheme.onSurfaceVariant
     StockStatus.NEGATIVE -> MaterialTheme.colorScheme.error
-    StockStatus.LOW -> if (isSystemInDarkTheme()) Color(0xFFFFB74D) else Color(0xFFB26A00)
+    StockStatus.LOW -> AppTheme.colors.amberText
 }

@@ -18,12 +18,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import com.example.dukanhisabnext.ui.components.InitialAvatar
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.components.SectionHeader
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.AppTheme
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +45,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
@@ -116,42 +126,61 @@ fun CustomerDetailScreen(
         LazyColumn(modifier = Modifier.padding(padding).fillMaxSize()) {
             // ---- The details ----
             item(key = "info") {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(c.name, style = MaterialTheme.typography.headlineMedium)
-
-                    // Balance: always computed from the ledger, never stored on the customer.
-                    AppCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(stringResource(R.string.label_balance), style = MaterialTheme.typography.labelLarge)
-                            BalanceText(balance = balance ?: 0L, style = MaterialTheme.typography.headlineMedium)
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // The balance hero card: who, and how much is due now. Always computed from the
+                    // ledger, never stored on the customer. Amber while they owe, soft green otherwise.
+                    val status = balanceStatus(balance ?: 0L)
+                    val colors = AppTheme.colors
+                    val heroContainer = if (status == BalanceStatus.OWES) colors.amberContainer else MaterialTheme.colorScheme.primaryContainer
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = heroContainer, contentColor = MaterialTheme.colorScheme.onSurface),
+                        border = null
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                InitialAvatar(name = c.name, size = 48.dp)
+                                Text(c.name, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            Text(stringResource(R.string.label_balance), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                            BalanceText(balance = balance ?: 0L, style = MaterialTheme.typography.headlineLarge)
                         }
                     }
 
-                    // Tapping the number opens the phone dialer with the number filled in.
-                    // It does NOT call by itself and needs no permission.
-                    c.phone?.let { phone ->
-                        Column(modifier = Modifier.fillMaxWidth().clickable { openDialer(context, phone) }) {
-                            Text(stringResource(R.string.label_phone), style = MaterialTheme.typography.labelLarge)
-                            Text(
-                                text = toBengaliDigits(phone),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                textDecoration = TextDecoration.Underline
-                            )
-                            Text(
-                                text = stringResource(R.string.tap_to_call),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    // The contact details in one card. Tapping the number opens the phone dialer with the
+                    // number filled in. It does NOT call by itself and needs no permission.
+                    if (c.phone != null || c.address != null || c.note != null) {
+                        AppCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                c.phone?.let { phone ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { openDialer(context, phone) },
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Icon(painterResource(R.drawable.ic_phone), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                                        Column {
+                                            Text(
+                                                text = toBengaliDigits(phone),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.tap_to_call),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                                c.address?.let { InfoRow(stringResource(R.string.label_address), it) }
+                                c.note?.let { InfoRow(stringResource(R.string.label_note), it) }
+                            }
                         }
                     }
 
-                    c.address?.let { InfoRow(stringResource(R.string.label_address), it) }
-                    c.note?.let { InfoRow(stringResource(R.string.label_note), it) }
-
-                    OutlinedButton(onClick = { onEdit(c.id) }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.btn_edit))
-                    }
+                    SecondaryButton(text = stringResource(R.string.btn_edit), onClick = { onEdit(c.id) }, modifier = Modifier.fillMaxWidth())
                 }
             }
 
@@ -173,24 +202,21 @@ fun CustomerDetailScreen(
                 }
             }
 
-            // ---- The action buttons (two in a row) ----
+            // ---- The action buttons: a 2x2 grid ----
             item(key = "actions") {
                 Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     actions.chunked(2).forEachIndexed { rowIndex, pair ->
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             pair.forEachIndexed { i, action ->
-                                val modifier = Modifier.weight(1f).heightIn(min = 52.dp)
-                                val label = @Composable {
-                                    Text(stringResource(action.buttonRes()), style = MaterialTheme.typography.titleSmall)
-                                }
+                                val modifier = Modifier.weight(1f)
                                 // The first button (টাকা পেলাম) is the main one.
                                 if (rowIndex == 0 && i == 0) {
-                                    Button(onClick = { onAction(c.id, action) }, modifier = modifier) { label() }
+                                    PrimaryButton(text = stringResource(action.buttonRes()), onClick = { onAction(c.id, action) }, modifier = modifier)
                                 } else {
-                                    OutlinedButton(onClick = { onAction(c.id, action) }, modifier = modifier) { label() }
+                                    SecondaryButton(text = stringResource(action.buttonRes()), onClick = { onAction(c.id, action) }, modifier = modifier)
                                 }
                             }
                             if (pair.size == 1) Spacer(Modifier.weight(1f))
@@ -201,13 +227,10 @@ fun CustomerDetailScreen(
 
             // ---- The history ----
             item(key = "history-title") {
-                Text(
+                SectionHeader(
                     text = stringResource(R.string.ledger_history_title),
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
                 )
-                HorizontalDivider()
             }
 
             val days = history
@@ -250,14 +273,13 @@ private fun InfoRow(label: String, value: String) {
 
 @Composable
 private fun DayHeader(text: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Text(text = text, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -324,14 +346,7 @@ internal fun HistoryRow(
                     }
                 )
                 if (showsCancelledTag(row)) {
-                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                            text = stringResource(R.string.sale_cancelled_tag),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    StatusPill(stringResource(R.string.sale_cancelled_tag), PillVariant.Cancelled)
                 }
             }
         }

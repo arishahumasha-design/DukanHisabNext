@@ -43,6 +43,8 @@ import com.example.dukanhisabnext.ui.backup.PLACEHOLDER
 import com.example.dukanhisabnext.ui.backup.periodWords
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
 
 /**
  * Settings: an owner card (avatar, name, "মালিক", mobile, "এডিট করুন") and a big shop button.
@@ -76,8 +78,9 @@ fun SettingsScreen(
                 if (shopSavedMessage) SavedMessage(stringResource(R.string.shop_saved))
 
                 OwnerCard(ui = current, onEdit = onEditOwner)
-                ShopSection(shopName = current.shopName, onClick = onOpenShop)
+                ShopNameCard(shopName = current.shopName)
                 BackupRow(onClick = onOpenBackup)
+                ShopButton(shopName = current.shopName, onClick = onOpenShop)
             }
         }
     }
@@ -160,31 +163,49 @@ private fun OwnerCard(ui: SettingsUi, onEdit: () -> Unit) {
 }
 
 /**
- * The big shop button. No shop name yet: "দোকান যুক্ত করুন". A shop exists: its name in small
- * text above, and "দোকান পরিবর্তন করুন". Both open "দোকানের তথ্য".
+ * The shop name: a small label "দোকানের নাম" with the name under it (only when a shop exists).
+ * It sits above the Backup card; the button that edits it ([ShopButton]) sits below that card.
  */
 @Composable
-private fun ShopSection(shopName: String?, onClick: () -> Unit) {
-    val kind = shopButtonKind(shopName)
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (kind == ShopButtonKind.CHANGE) {
+private fun ShopNameCard(shopName: String?) {
+    if (shopButtonKind(shopName) != ShopButtonKind.CHANGE) return
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = stringResource(R.string.field_shop_name),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Text(
                 text = shopName.orEmpty().trim(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Button(onClick = onClick, modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)) {
-            val label = when (kind) {
-                ShopButtonKind.ADD -> R.string.btn_add_shop
-                ShopButtonKind.CHANGE -> R.string.btn_change_shop
-            }
-            Text(stringResource(label), style = MaterialTheme.typography.titleLarge)
-        }
     }
 }
+
+/**
+ * The shop button. No shop name yet: "দোকান যুক্ত করুন" (the main button). A shop exists: "দোকান
+ * পরিবর্তন করুন" as a quiet outlined button. Both open "দোকানের তথ্য".
+ */
+@Composable
+private fun ShopButton(shopName: String?, onClick: () -> Unit) {
+    when (shopButtonKind(shopName)) {
+        ShopButtonKind.ADD -> PrimaryButton(
+            text = stringResource(R.string.btn_add_shop),
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        )
+        ShopButtonKind.CHANGE -> SecondaryButton(
+            text = stringResource(R.string.btn_change_shop),
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
 
 /**
  * "ব্যাকআপ ও রিস্টোর": the last backup time (Dhaka time) or "এখনও ব্যাকআপ নেওয়া হয়নি", and opens the backup screen.

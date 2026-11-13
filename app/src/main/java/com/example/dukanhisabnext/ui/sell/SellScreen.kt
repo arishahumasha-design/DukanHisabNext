@@ -15,12 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -37,6 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.res.painterResource
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.ProductTile
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.AppTheme
+import com.example.dukanhisabnext.ui.theme.ButtonShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.dao.ProductWithStock
@@ -77,11 +79,12 @@ fun SellScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             singleLine = true,
             placeholder = { Text(stringResource(R.string.search_products)) },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+            leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+            shape = ButtonShape,
             trailingIcon = {
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { viewModel.onQueryChange("") }) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                        Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                     }
                 }
             }
@@ -152,12 +155,11 @@ private fun ProductPicker(
     HorizontalDivider()
     when {
         products == null -> LoadingIndicator(modifier) // still loading
-        products.isEmpty() -> Box(modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(if (filtering) R.string.empty_search else R.string.empty_products),
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
+        products.isEmpty() -> EmptyState(
+            icon = if (filtering) R.drawable.ic_search else R.drawable.ic_product,
+            text = stringResource(if (filtering) R.string.empty_search else R.string.empty_products),
+            modifier = modifier
+        )
         else -> LazyColumn(modifier = modifier) {
             items(products, key = { it.product.id }) { item ->
                 ProductPickRow(item, quantityInCart[item.product.id], onClick = { onTap(item.product) })
@@ -176,11 +178,13 @@ private fun ProductPickRow(item: ProductWithStock, inCartText: String?, onClick:
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 64.dp)
+            .heightIn(min = 68.dp)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        ProductTile(name = product.name)
         Column(modifier = Modifier.weight(1f)) {
             Text(product.name, style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -188,30 +192,23 @@ private fun ProductPickRow(item: ProductWithStock, inCartText: String?, onClick:
                     text = stringResource(R.string.price_format, formatTaka(product.sellPrice)),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Text(text = "  ·  ", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "  ·  ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
                     text = stringResource(R.string.stock_label, formatQuantity(item.stock), unitText),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = status.color()
                 )
             }
         }
         // Feedback for the tap: how much of this product is in the cart now.
         if (inCartText != null) {
-            Surface(
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.in_cart, toBengaliDigits(inCartText)),
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
+            StatusPill(
+                text = stringResource(R.string.in_cart, toBengaliDigits(inCartText)),
+                variant = PillVariant.Paid
+            )
         }
     }
-    HorizontalDivider()
+    HorizontalDivider(modifier = Modifier.padding(start = 16.dp), color = AppTheme.colors.border)
 }
 
 /**
@@ -220,39 +217,43 @@ private fun ProductPickRow(item: ProductWithStock, inCartText: String?, onClick:
  */
 @Composable
 private fun PickerBottomBar(total: Long, lineCount: Int, onOpenCart: () -> Unit) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.label_grand_total),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(R.string.price_format, formatTaka(total)),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Button(
-                onClick = onOpenCart,
-                enabled = lineCount > 0,
-                modifier = Modifier.heightIn(min = 56.dp)
+    Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+        Column {
+            HorizontalDivider(color = AppTheme.colors.border)
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(Icons.Filled.ShoppingCart, contentDescription = null)
-                Text(
-                    text = toBengaliDigits(lineCount.toString()),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-                Icon(
-                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = stringResource(R.string.btn_open_cart)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.label_grand_total),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(R.string.price_format, formatTaka(total)),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                Button(
+                    onClick = onOpenCart,
+                    enabled = lineCount > 0,
+                    shape = ButtonShape,
+                    modifier = Modifier.heightIn(min = 52.dp)
+                ) {
+                    Icon(painterResource(R.drawable.ic_sell), contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(
+                        text = toBengaliDigits(lineCount.toString()),
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                    Icon(
+                        painterResource(R.drawable.ic_chevron_right),
+                        contentDescription = stringResource(R.string.btn_open_cart),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

@@ -19,10 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -37,6 +33,19 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.InitialAvatar
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.components.TopBar
+import com.example.dukanhisabnext.ui.theme.AppTheme
+import com.example.dukanhisabnext.ui.theme.ButtonShape
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -69,6 +78,7 @@ import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.DateRangePickerFlow
 import com.example.dukanhisabnext.ui.components.customRangeText
 import com.example.dukanhisabnext.ui.customers.BalanceStatus
+import com.example.dukanhisabnext.ui.customers.balanceStatus
 import com.example.dukanhisabnext.ui.customers.BalanceText
 import com.example.dukanhisabnext.ui.customers.HistoryRow
 import com.example.dukanhisabnext.ui.customers.color
@@ -123,11 +133,7 @@ fun KhataScreen(
     // This tab sits inside the app frame, which already keeps clear of the system bars.
     Scaffold(contentWindowInsets = WindowInsets(0)) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            Text(
-                text = stringResource(R.string.khata_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
-            )
+            TopBar(title = stringResource(R.string.khata_title))
 
             val current = ui
             val controls = current?.controls ?: KhataControls()
@@ -171,11 +177,12 @@ fun KhataScreen(
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.search_customers)) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+                    shape = ButtonShape,
                     trailingIcon = {
                         if (query.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onQueryChange("") }) {
-                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                                Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                             }
                         }
                     }
@@ -196,7 +203,7 @@ fun KhataScreen(
                         AssistChip(
                             onClick = { sortOpen = true },
                             label = { Text(stringResource(R.string.khata_sort_button)) },
-                            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) }
+                            trailingIcon = { Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, modifier = Modifier.size(18.dp).rotate(90f)) }
                         )
                     }
                 }
@@ -268,12 +275,15 @@ fun KhataScreen(
             }
 
             // ---- The bottom button: নতুন বাকি ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = { pickerOpen = true },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text(stringResource(R.string.khata_new_due), style = MaterialTheme.typography.titleMedium)
+            Surface(color = MaterialTheme.colorScheme.surface, modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    HorizontalDivider(color = AppTheme.colors.border)
+                    PrimaryButton(
+                        text = stringResource(R.string.khata_new_due),
+                        onClick = { pickerOpen = true },
+                        icon = R.drawable.ic_add,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp).fillMaxWidth()
+                    )
                 }
             }
         }
@@ -372,11 +382,10 @@ internal fun AllSummaryCard(summary: KhataAllSummary) {
 @Composable
 private fun SummaryColumn(label: String, amount: Long, status: BalanceStatus, modifier: Modifier) {
     Column(modifier = modifier) {
-        Text(label, style = MaterialTheme.typography.labelLarge)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
             text = stringResource(R.string.price_format, formatTaka(abs(amount))),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium,
             color = status.color()
         )
     }
@@ -429,33 +438,48 @@ internal fun PeriodSummaryCard(summary: PeriodSummary) {
 /** One customer of the "সব" list: name, mobile, the "… পর্যন্ত" line, and the balance. */
 @Composable
 private fun CustomerDueRow(row: KhataCustomerRow, lastText: String?, onClick: () -> Unit) {
-    ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
-        headlineContent = { Text(row.customer.name, style = MaterialTheme.typography.titleMedium) },
-        supportingContent = {
-            Column {
-                row.customer.phone?.let { Text(toBengaliDigits(it), style = MaterialTheme.typography.bodyMedium) }
-                lastText?.let {
-                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = 68.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        InitialAvatar(name = row.customer.name)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(row.customer.name, style = MaterialTheme.typography.titleMedium)
+            row.customer.phone?.let {
+                Text(toBengaliDigits(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        },
-        trailingContent = { BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium) }
-    )
-    HorizontalDivider()
+            lastText?.let {
+                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        // On the right: the amount (with a "বাকি" pill when they owe), an advance in green, or a calm "বাকি নেই" pill.
+        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            when (balanceStatus(row.balance)) {
+                BalanceStatus.OWES -> {
+                    BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium)
+                    StatusPill(stringResource(R.string.report_tab_due), PillVariant.Due)
+                }
+                BalanceStatus.ADVANCE -> BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium)
+                BalanceStatus.CLEAR -> StatusPill(stringResource(R.string.balance_clear), PillVariant.Paid)
+            }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(start = 68.dp))
 }
 
 @Composable
 private fun DayHeader(text: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 @Composable
@@ -466,9 +490,10 @@ private fun EmptyMessage(kind: KhataEmpty, period: KhataPeriod) {
         KhataEmpty.NO_ENTRIES -> R.string.khata_empty_entries
         KhataEmpty.PICK_DATES -> R.string.khata_empty_pick_dates
     }
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
-    }
+    EmptyState(
+        icon = if (kind == KhataEmpty.NO_MATCH) R.drawable.ic_search else if (kind == KhataEmpty.PICK_DATES) R.drawable.ic_calendar else R.drawable.ic_khata,
+        text = stringResource(message)
+    )
 }
 
 // =========================================================================================
@@ -535,11 +560,12 @@ private fun CustomerPickDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.search_customers)) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
+                    shape = ButtonShape,
                     trailingIcon = {
                         if (query.isNotEmpty()) {
                             IconButton(onClick = { query = "" }) {
-                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                                Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                             }
                         }
                     }
