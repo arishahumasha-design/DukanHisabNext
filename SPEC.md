@@ -591,7 +591,7 @@ built on the shared conditions above:
 
 Sale date (version 5):
 - A sale has one date for the whole sale: today by default, or an earlier day
-  picked in the cart (the cart screen comes in part 2 of this feature). Rules
+  picked in the cart (see "Screens" below). Rules
   in `sale/SaleDateRules.kt`:
   - never a future Dhaka day (`SaleError.FUTURE_DATE`) and never before
     1 January 2020 (`SaleError.DATE_BEFORE_MIN`, a mistyped year); the save
@@ -618,6 +618,28 @@ Sale date (version 5):
 - Double-tap protection and the one-transaction rule are unchanged: the
   journal and the crash recovery work with createdAt, so a back-dated sale is
   found again after a restart exactly like any other.
+
+Screens of the sale date and the warranty (version 5, part 2):
+- Cart: a tappable card at the top, "বিক্রির তারিখ", showing "আজ" or the day with an amber
+  "পুরনো তারিখ" pill when it is an earlier day. It opens the single-day picker (no future day,
+  nothing before 1 Jan 2020). A day more than 30 days old asks "আপনি অনেক পুরনো তারিখ দিয়েছেন,
+  ঠিক আছে?" ("হ্যাঁ, ঠিক আছে" / "তারিখ বদলান"); it is asked again at "এগিয়ে যান" if the day
+  was not confirmed (for example it crossed 30 days while the cart waited).
+- Each cart line shows its warranty ("ওয়ারেন্টি: ৬ মাস" or "ওয়ারেন্টি নেই · যোগ করুন"); tapping it opens a
+  dialog (switch, whole number, দিন / মাস / বছর, and a live "১০ মে ২০২৭ পর্যন্ত" counted from the
+  cart's date). A new line copies the product's default warranty; changing it affects this sale only.
+- Product form: a "ওয়ারেন্টি" card with the switch "ওয়ারেন্টি আছে" (number + unit); turning the switch
+  off clears both; the number is checked with `checkWarranty`.
+- The cart file is version 2 (saleDay, oldDateConfirmed, a warranty per line); version 1 files are still
+  read (today, no warranty). A saved day in the future or before 2020 goes back to today with a note.
+- The payment screen names an earlier sale date ("বিক্রির তারিখ: …") before saving.
+- Receipt: the warranty caption under a product that has one ("ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)");
+  the date is the sale date, the DATE ONLY for a back-dated sale, with a small "লেখা হয়েছে <date time>" line
+  on the receipt screen (not in the shared text). The sales list and the report list show the date only
+  (no time) for back-dated rows; the customer history already did (its back-dated rule).
+- Sales list chips: আজ | ৭ দিন | এই মাস | এই বছর | তারিখ বাছুন | সব. "তারিখ বাছুন" uses the shared two-step
+  picker (the same day twice = one day) and the chip shows "১২ নভেম্বর ২০২৬" or "১ নভেম্বর – ১২ নভেম্বর ২০২৬".
+  While the search box has text, all sales are searched whatever the chip (unchanged).
 
 Warranty (version 5, rules in `warranty/WarrantyRules.kt`):
 - A warranty is a number and a unit (DAY / MONTH / YEAR = দিন / মাস / বছর). The

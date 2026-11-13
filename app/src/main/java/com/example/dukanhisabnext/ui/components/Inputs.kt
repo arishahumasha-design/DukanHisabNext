@@ -68,6 +68,7 @@ fun FormError.messageRes(): Int = when (this) {
     FormError.DISCOUNT_TOO_LARGE -> R.string.error_discount_too_large
     FormError.PERCENT_OUT_OF_RANGE -> R.string.error_percent_range
     FormError.DUE_MORE_THAN_TOTAL -> R.string.error_due_more_than_total
+    FormError.WARRANTY_OUT_OF_RANGE -> R.string.error_warranty_range
 }
 
 /** True while the on-screen keyboard is showing. (Compose marks this API as experimental.) */

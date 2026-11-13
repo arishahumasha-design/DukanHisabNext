@@ -417,7 +417,8 @@ class SalesListLogicTest {
     @Test
     fun whileSearchingTheChipMakesNoDifference() {
         val results = SalesFilter.entries.map { ids(screen(it, "করিম")) }
-        assertEquals(listOf(listOf(1L, 2L), listOf(1L, 2L), listOf(1L, 2L)), results)
+        // Every chip (আজ, ৭ দিন, এই মাস, এই বছর, তারিখ বাছুন, সব) gives the same result while searching.
+        assertEquals(List(SalesFilter.entries.size) { listOf(1L, 2L) }, results)
     }
 
     @Test

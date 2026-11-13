@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.InfoCard
 import com.example.dukanhisabnext.ui.components.DialogTextButton
 import com.example.dukanhisabnext.ui.components.SecondaryButton
 import com.example.dukanhisabnext.data.entity.PaymentMethod
@@ -94,6 +95,17 @@ fun PaymentScreen(
                 }
 
                 val busy = state.isSaving
+
+                // ---- Version 5: a back-dated sale says its date here, before saving ----
+                val backDatedDay by viewModel.backDatedDay.collectAsStateWithLifecycle()
+                backDatedDay?.let { day ->
+                    val monthNames = androidx.compose.ui.res.stringArrayResource(R.array.months_bn).toList()
+                    InfoCard(
+                        text = stringResource(R.string.payment_sale_date, com.example.dukanhisabnext.ui.sales.dayHeaderText(day, monthNames)),
+                        variant = com.example.dukanhisabnext.ui.components.PillVariant.Due,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // ---- পেয়েছি, with the live change / due line ----
                 NumberField(

@@ -3,6 +3,9 @@ package com.example.dukanhisabnext.ui.receipt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.ui.products.labelRes
+import androidx.compose.ui.res.stringArrayResource
 import com.example.dukanhisabnext.cancel.CancelDialogLabels
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.ProductUnit
@@ -47,6 +50,11 @@ fun receiptLabels(): ReceiptLabels {
         DayPeriod.NIGHT to stringResource(R.string.period_night)
     )
 
+    val warrantyUnits: Map<WarrantyUnit, String> = WarrantyUnit.entries.associateWith { stringResource(it.labelRes()) }
+    val months = stringArrayResource(R.array.months_bn).toList()
+    val untilTemplate = stringResource(R.string.warranty_until, "{day}")
+    val captionTemplate = stringResource(R.string.receipt_warranty, "{period}", "{until}")
+
     return ReceiptLabels(
         shopPlaceholder = stringResource(R.string.receipt_shop_placeholder),
         mobile = stringResource(R.string.receipt_mobile),
@@ -67,6 +75,10 @@ fun receiptLabels(): ReceiptLabels {
         taka = stringResource(R.string.unit_taka),
         unit = { units.getValue(it) },
         method = { methods.getValue(it) },
-        period = { periods.getValue(it) }
+        period = { periods.getValue(it) },
+        warrantyUnit = { warrantyUnits.getValue(it) },
+        monthNames = months,
+        warrantyUntil = { day -> untilTemplate.replace("{day}", day) },
+        warrantyCaption = { period, until -> captionTemplate.replace("{period}", period).replace("{until}", until) }
     )
 }

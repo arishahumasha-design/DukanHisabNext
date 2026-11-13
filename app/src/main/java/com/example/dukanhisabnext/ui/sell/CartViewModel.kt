@@ -53,6 +53,21 @@ class CartViewModel(
         s.canContinue && s.lines.none { it.input.productId in marked }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    /** Today in Dhaka: the sale day is checked against it. */
+    fun today(): java.time.LocalDate = cart.today()
+
+    /** True once after a restart when a saved sale day had to go back to today. */
+    val dateReset: StateFlow<Boolean> = cart.dateReset
+
+    fun onDateResetShown() = cart.dismissDateReset()
+
+    fun onSaleDayPicked(day: java.time.LocalDate) = cart.setSaleDay(day)
+
+    fun onOldDateConfirmed(day: java.time.LocalDate) = cart.confirmOldDate(day)
+
+    fun onLineWarranty(productId: Long, value: Int?, unit: com.example.dukanhisabnext.data.entity.WarrantyUnit?) =
+        cart.setLineWarranty(productId, value, unit)
+
     fun onQuantityChange(productId: Long, text: String) = cart.setQuantityText(productId, text)
 
     fun onUnitPriceChange(productId: Long, text: String) = cart.setUnitPriceText(productId, text)

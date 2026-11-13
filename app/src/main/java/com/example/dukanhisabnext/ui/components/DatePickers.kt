@@ -44,13 +44,15 @@ fun DayPickerDialog(
     selectable: (Long) -> Boolean,
     lastYear: Int,
     onConfirm: (LocalDate) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    /** The earliest year the year list offers (the days themselves are still decided by [selectable]). */
+    firstYear: Int = 1900
 ) {
     val state = rememberDatePickerState(
         initialSelectedDateMillis = pickerStartFor(initial),
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean = selectable(utcTimeMillis)
-            override fun isSelectableYear(year: Int): Boolean = year <= lastYear
+            override fun isSelectableYear(year: Int): Boolean = year in firstYear..lastYear
         }
     )
     DatePickerDialog(

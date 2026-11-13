@@ -82,6 +82,11 @@ class CheckoutViewModel(
     )
     val state: StateFlow<CheckoutState> = _state.asStateFlow()
 
+    /** Version 5: the earlier day this sale belongs to, or null when it is today's (the payment screen names it). */
+    val backDatedDay: StateFlow<java.time.LocalDate?> = cart.state
+        .map { if (it.isBackDated(cart.today())) it.saleDay else null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), cart.state.value.let { if (it.isBackDated(cart.today())) it.saleDay else null })
+
     /** Change or due for the typed "পেয়েছি". */
     val view: StateFlow<PaymentView> = combine(summary, _state) { s, st ->
         paymentView(s, st.receivedText, hasCustomer = true)
@@ -310,7 +315,7 @@ class CheckoutViewModel(
                     is CustomerDecision.Missing -> error("handled above")
                 }
                 // The cart's single draft id: a double tap or a retry is recognised by the repository.
-                val draft = buildDraft(cartSummary, received, method, customerId, cart.draftId, note)
+                val draft = buildDraft(cartSummary, received, method, customerId, cart.draftId, note, cart.state.value.saleDay)
                 handleResult(sales.completeSale(draft), from, namesById)
             } catch (e: CancellationException) {
                 throw e

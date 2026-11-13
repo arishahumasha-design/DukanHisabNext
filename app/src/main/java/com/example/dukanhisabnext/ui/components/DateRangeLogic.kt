@@ -19,6 +19,23 @@ fun customRangeText(from: LocalDate?, to: LocalDate?): String? {
     return if (from == to) dayText(from) else dayText(from) + " – " + dayText(to)
 }
 
+/**
+ * The long text on the chip of the sales list: "১২ নভেম্বর ২০২৬" for one day, "১ নভেম্বর – ১২ নভেম্বর
+ * ২০২৬" for a range (the year is written once when both days are in the same year, else on both).
+ * null while no range is chosen (the chip then says "তারিখ বাছুন"). [monthNames] are the 12 Bengali
+ * month names, January first.
+ */
+fun customRangeLongText(from: LocalDate?, to: LocalDate?, monthNames: List<String>): String? {
+    if (from == null || to == null) return null
+    fun full(d: LocalDate) = "${com.example.dukanhisabnext.util.toBengaliDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]} ${com.example.dukanhisabnext.util.toBengaliDigits(d.year.toString())}"
+    fun noYear(d: LocalDate) = "${com.example.dukanhisabnext.util.toBengaliDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]}"
+    return when {
+        from == to -> full(from)
+        from.year == to.year -> noYear(from) + " – " + full(to)
+        else -> full(from) + " – " + full(to)
+    }
+}
+
 /** The first picker ("from"): any day up to today. */
 fun isSelectableFromDay(pickerMillis: Long, today: LocalDate): Boolean = isSelectableDay(pickerMillis, today)
 

@@ -1,6 +1,10 @@
 package com.example.dukanhisabnext.ui.sell
 
 import com.example.dukanhisabnext.data.entity.ProductUnit
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.sale.checkSaleDay
+import com.example.dukanhisabnext.sale.needsOldDateConfirm
+import java.time.LocalDate
 import com.example.dukanhisabnext.util.QUANTITY_SCALE
 import com.example.dukanhisabnext.util.formatQuantityPlain
 import com.example.dukanhisabnext.util.formatTakaPlain
@@ -17,8 +21,14 @@ data class CartLineInput(
     val name: String,          // the product's name when it was added (shown in the cart)
     val unit: ProductUnit,
     val quantityText: String,  // "1", "2.5", ... typed by the user or set by tapping
-    val unitPriceText: String  // taka, for ONE unit. Starts as the product's price; the user may edit
+    val unitPriceText: String, // taka, for ONE unit. Starts as the product's price; the user may edit
                                // it, and then it changes THIS sale only, never the product.
+    /**
+     * Version 5: this line's warranty for THIS sale (both null = none). Copied from the product's
+     * default when the line is added; the cart may change, remove or add it, never the product.
+     */
+    val warrantyValue: Int? = null,
+    val warrantyUnit: WarrantyUnit? = null
 )
 
 /** How the discount box is read: a fixed taka amount, or a percentage of the subtotal. */
@@ -34,7 +44,11 @@ data class CartState(
     val discountUnit: DiscountUnit = DiscountUnit.TAKA,
     val discountText: String = "",
     val deliveryOn: Boolean = false,
-    val deliveryText: String = ""
+    val deliveryText: String = "",
+    /** Version 5: the Dhaka day the sale belongs to. null = today (it follows the clock). */
+    val saleDay: LocalDate? = null,
+    /** The old day the shopkeeper already said "হ্যাঁ, ঠিক আছে" to (valid only while it is the saleDay). */
+    val oldDateConfirmedDay: LocalDate? = null
 )
 
 /**
@@ -46,7 +60,9 @@ fun CartState.withProductAdded(
     productId: Long,
     name: String,
     unit: ProductUnit,
-    sellPricePaisa: Long
+    sellPricePaisa: Long,
+    warrantyValue: Int? = null,
+    warrantyUnit: WarrantyUnit? = null
 ): CartState {
     val index = lines.indexOfFirst { it.productId == productId }
     if (index < 0) {
@@ -55,7 +71,9 @@ fun CartState.withProductAdded(
             name = name,
             unit = unit,
             quantityText = "1",
-            unitPriceText = formatTakaPlain(sellPricePaisa)
+            unitPriceText = formatTakaPlain(sellPricePaisa),
+            warrantyValue = warrantyValue,
+            warrantyUnit = warrantyUnit
         )
         return copy(lines = lines + line)
     }
@@ -75,6 +93,45 @@ fun CartState.withUnitPriceText(productId: Long, text: String): CartState =
 
 fun CartState.withoutLine(productId: Long): CartState =
     copy(lines = lines.filterNot { it.productId == productId })
+
+/** Sets or removes (both null) the warranty of one line, for this sale only. */
+fun CartState.withLineWarranty(productId: Long, value: Int?, unit: WarrantyUnit?): CartState =
+    copy(lines = lines.map { if (it.productId == productId) it.copy(warrantyValue = value, warrantyUnit = unit) else it })
+
+// ---- The sale date (version 5) ----
+
+/** The day the sale belongs to: the chosen day, or [today]. */
+fun CartState.saleDayOrToday(today: LocalDate): LocalDate = saleDay ?: today
+
+/** True when the sale day is an earlier day than [today] (the cart shows the amber "পুরনো তারিখ"). */
+fun CartState.isBackDated(today: LocalDate): Boolean = saleDay != null && saleDay.isBefore(today)
+
+/** Picking [day]: today is stored as null ("today", following the clock). */
+fun CartState.withSaleDay(day: LocalDate, today: LocalDate): CartState =
+    copy(saleDay = if (day == today) null else day)
+
+/** The shopkeeper said "হ্যাঁ, ঠিক আছে" to the old day [day]. */
+fun CartState.withOldDateConfirmed(day: LocalDate): CartState = copy(oldDateConfirmedDay = day)
+
+/**
+ * Must the "আপনি অনেক পুরনো তারিখ দিয়েছেন, ঠিক আছে?" question be asked now? Only for a chosen day more
+ * than 30 days before [today] (31 or older) that was not confirmed yet. Exactly 30 days never asks.
+ * A day that grows older while the cart waits (a day passes) asks when it crosses the limit.
+ */
+fun CartState.needsOldDateQuestion(today: LocalDate): Boolean {
+    val day = saleDay ?: return false
+    return needsOldDateConfirm(day, today) && oldDateConfirmedDay != day
+}
+
+/**
+ * The cart as read back from the disk: a saved sale day that is NOT allowed any more (after today,
+ * for example the phone clock moved back, or before 1 January 2020) goes back to today. The second
+ * value is true when that happened, so the screen can say so once.
+ */
+fun CartState.withValidSaleDay(today: LocalDate): Pair<CartState, Boolean> {
+    val day = saleDay ?: return this to false
+    return if (checkSaleDay(day, today) != null) copy(saleDay = null, oldDateConfirmedDay = null) to true else this to false
+}
 
 fun CartState.withDiscountOn(on: Boolean): CartState = copy(discountOn = on)
 

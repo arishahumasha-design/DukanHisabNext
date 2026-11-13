@@ -39,6 +39,13 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.customRangeLongText
+import com.example.dukanhisabnext.ui.components.DateRangePickerFlow
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import com.example.dukanhisabnext.data.dao.SaleListRow
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
@@ -65,6 +72,9 @@ fun SalesListScreen(
     viewModel: SalesListViewModel = appViewModel { app, _ -> SalesListViewModel(app.saleRepository) }
 ) {
     val filter by viewModel.filter.collectAsStateWithLifecycle()
+    val customFrom by viewModel.customFrom.collectAsStateWithLifecycle()
+    val customTo by viewModel.customTo.collectAsStateWithLifecycle()
+    var rangePickerOpen by rememberSaveable { mutableStateOf(false) }
     val query by viewModel.query.collectAsStateWithLifecycle()
     val ui by viewModel.ui.collectAsStateWithLifecycle()
 
@@ -105,12 +115,26 @@ fun SalesListScreen(
             // Clearing the search brings the chosen chip back.
             val searching = isSearching(query)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterOption(SalesFilter.TODAY, R.string.filter_today, filter, !searching, viewModel)
-                FilterOption(SalesFilter.THIS_MONTH, R.string.filter_month, filter, !searching, viewModel)
-                FilterOption(SalesFilter.ALL, R.string.filter_all, filter, !searching, viewModel)
+                SalesFilter.entries.forEach { option ->
+                    FilterChip(
+                        selected = filter == option,
+                        enabled = !searching,
+                        onClick = {
+                            if (option == SalesFilter.CUSTOM) rangePickerOpen = true else viewModel.onFilterChange(option)
+                        },
+                        label = {
+                            // The chosen days show on the chip: "১২ নভেম্বর ২০২৬" or "১ নভেম্বর – ১২ নভেম্বর ২০২৬".
+                            val text = if (option == SalesFilter.CUSTOM) customRangeLongText(customFrom, customTo, monthNames) else null
+                            Text(text ?: stringResource(option.labelRes()), style = MaterialTheme.typography.titleSmall)
+                        }
+                    )
+                }
             }
             if (searching) {
                 Text(
@@ -173,22 +197,30 @@ fun SalesListScreen(
             }
         }
     }
+
+    // ---- "তারিখ বাছুন": the two-step picker shared with the Khata tab (the same day twice = one day) ----
+    if (rangePickerOpen) {
+        DateRangePickerFlow(
+            today = viewModel.today(),
+            initialFrom = customFrom,
+            initialTo = customTo,
+            onConfirm = { from, to ->
+                viewModel.onCustomRange(from, to)
+                rangePickerOpen = false
+            },
+            onDismiss = { rangePickerOpen = false }
+        )
+    }
 }
 
-@Composable
-private fun FilterOption(
-    option: SalesFilter,
-    label: Int,
-    selected: SalesFilter,
-    enabled: Boolean,
-    viewModel: SalesListViewModel
-) {
-    FilterChip(
-        selected = selected == option,
-        enabled = enabled,
-        onClick = { viewModel.onFilterChange(option) },
-        label = { Text(stringResource(label), style = MaterialTheme.typography.titleSmall) }
-    )
+/** The chip words (the same as the Khata, expense and report chips). */
+private fun SalesFilter.labelRes(): Int = when (this) {
+    SalesFilter.TODAY -> R.string.khata_chip_today
+    SalesFilter.LAST_7_DAYS -> R.string.khata_chip_7days
+    SalesFilter.THIS_MONTH -> R.string.khata_chip_month
+    SalesFilter.THIS_YEAR -> R.string.khata_chip_year
+    SalesFilter.CUSTOM -> R.string.khata_chip_custom
+    SalesFilter.ALL -> R.string.khata_chip_all
 }
 
 /** The day header, for example "১০ নভেম্বর ২০২৬". */
@@ -216,7 +248,7 @@ private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClic
         leadingContent = { IconTile(R.drawable.ic_receipt) },
         headlineContent = {
             Text(
-                text = toBengaliDigits(row.receiptNo) + "  ·  " + timeText,
+                text = saleRowTitle(row, timeText),
                 style = MaterialTheme.typography.titleMedium
             )
         },
@@ -248,6 +280,7 @@ private fun EmptyMessage(kind: EmptyKind) {
     val message = when (kind) {
         EmptyKind.NO_SALES_AT_ALL -> R.string.empty_sales_none
         EmptyKind.NO_MATCH -> R.string.empty_sales_match
+        EmptyKind.PICK_DATES -> R.string.khata_empty_pick_dates
     }
     EmptyState(icon = R.drawable.ic_receipt, text = stringResource(message))
 }

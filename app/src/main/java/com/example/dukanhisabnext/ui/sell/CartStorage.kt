@@ -1,6 +1,9 @@
 package com.example.dukanhisabnext.ui.sell
 
 import com.example.dukanhisabnext.data.entity.ProductUnit
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.warranty.checkWarranty
+import java.time.LocalDate
 import java.io.File
 import java.io.IOException
 import org.json.JSONArray
@@ -29,16 +32,22 @@ interface CartStorage {
     }
 }
 
-/** The version of the cart file. A file of another version is ignored (the cart starts empty). */
-const val CART_FILE_VERSION = 1
+/**
+ * The version of the cart file. Version 2 (sale date and warranty) adds "saleDay", "oldDateConfirmed"
+ * and a warranty per line; a version 1 file is still read (today's date, no warranty). A file of any
+ * other version is ignored (the cart starts empty).
+ */
+const val CART_FILE_VERSION = 2
 
 /**
  * The cart as a small JSON file in the app's private files folder (not in the database, not in the
  * backup). Written on every change: to a temporary file, then renamed, so a half-written file can
  * never be read. Example:
- *   {"version":1,"draftId":"…","customerId":12,"discountOn":false,"discountUnit":"TAKA",
- *    "discountText":"","deliveryOn":false,"deliveryText":"",
- *    "lines":[{"productId":3,"name":"চাল","unit":"KG","quantityText":"1.5","unitPriceText":"75"}]}
+ *   {"version":2,"draftId":"…","customerId":12,"discountOn":false,"discountUnit":"TAKA",
+ *    "discountText":"","deliveryOn":false,"deliveryText":"","saleDay":20400,"oldDateConfirmed":null,
+ *    "lines":[{"productId":3,"name":"চাল","unit":"KG","quantityText":"1.5","unitPriceText":"75",
+ *              "warrantyValue":6,"warrantyUnit":"MONTH"}]}
+ * "saleDay" and "oldDateConfirmed" are epoch days (LocalDate.toEpochDay); null saleDay = today.
  */
 class FileCartStorage(private val file: File) : CartStorage {
 
@@ -81,6 +90,8 @@ fun cartToJson(cart: SavedCart): String {
                 .put("unit", line.unit.name)
                 .put("quantityText", line.quantityText)
                 .put("unitPriceText", line.unitPriceText)
+                .put("warrantyValue", line.warrantyValue ?: JSONObject.NULL)
+                .put("warrantyUnit", line.warrantyUnit?.name ?: JSONObject.NULL)
         )
     }
     return JSONObject()
@@ -92,6 +103,8 @@ fun cartToJson(cart: SavedCart): String {
         .put("discountText", s.discountText)
         .put("deliveryOn", s.deliveryOn)
         .put("deliveryText", s.deliveryText)
+        .put("saleDay", s.saleDay?.toEpochDay() ?: JSONObject.NULL)
+        .put("oldDateConfirmed", s.oldDateConfirmedDay?.toEpochDay() ?: JSONObject.NULL)
         .put("lines", lines)
         .toString()
 }
@@ -99,7 +112,8 @@ fun cartToJson(cart: SavedCart): String {
 /** The cart from its file text, or null when the text is not a cart of this version. */
 fun cartFromJson(text: String): SavedCart? = try {
     val o = JSONObject(text)
-    if (o.optInt("version", -1) != CART_FILE_VERSION) {
+    val version = o.optInt("version", -1)
+    if (version != 1 && version != CART_FILE_VERSION) {
         null
     } else {
         val linesJson = o.getJSONArray("lines")
@@ -110,7 +124,10 @@ fun cartFromJson(text: String): SavedCart? = try {
                 name = l.getString("name"),
                 unit = ProductUnit.valueOf(l.getString("unit")),
                 quantityText = l.getString("quantityText"),
-                unitPriceText = l.getString("unitPriceText")
+                unitPriceText = l.getString("unitPriceText"),
+                // Version 1 has no warranty keys. A broken warranty is dropped (the line stays).
+                warrantyValue = warrantyOf(l)?.first,
+                warrantyUnit = warrantyOf(l)?.second
             )
         }
         val draftId = o.getString("draftId")
@@ -124,7 +141,9 @@ fun cartFromJson(text: String): SavedCart? = try {
                     discountUnit = DiscountUnit.valueOf(o.getString("discountUnit")),
                     discountText = o.getString("discountText"),
                     deliveryOn = o.getBoolean("deliveryOn"),
-                    deliveryText = o.getString("deliveryText")
+                    deliveryText = o.getString("deliveryText"),
+                    saleDay = if (version >= 2 && !o.isNull("saleDay")) LocalDate.ofEpochDay(o.getLong("saleDay")) else null,
+                    oldDateConfirmedDay = if (version >= 2 && !o.isNull("oldDateConfirmed")) LocalDate.ofEpochDay(o.getLong("oldDateConfirmed")) else null
                 ),
                 customerId = if (o.isNull("customerId")) null else o.getLong("customerId"),
                 draftId = draftId
@@ -135,4 +154,14 @@ fun cartFromJson(text: String): SavedCart? = try {
     null
 } catch (e: IllegalArgumentException) {
     null // an unknown unit or discount kind
+} catch (e: java.time.DateTimeException) {
+    null // a day number that is not a real date
+}
+
+/** The warranty of a saved line, or null when it has none or what is saved is not a valid warranty. */
+private fun warrantyOf(line: JSONObject): Pair<Int, WarrantyUnit>? {
+    if (line.isNull("warrantyValue") || line.isNull("warrantyUnit")) return null
+    val value = line.optInt("warrantyValue", -1)
+    val unit = WarrantyUnit.entries.firstOrNull { it.name == line.optString("warrantyUnit") } ?: return null
+    return if (checkWarranty(value, unit) == null) value to unit else null
 }

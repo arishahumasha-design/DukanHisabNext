@@ -28,6 +28,22 @@ import com.example.dukanhisabnext.ui.components.DialogTextButton
 fun CartRestoreNote(modifier: Modifier = Modifier) {
     val cart = (LocalContext.current.applicationContext as DokanHisabApp).cartStore
     val removed by cart.removedOnRestart.collectAsStateWithLifecycle()
+    val dateReset by cart.dateReset.collectAsStateWithLifecycle()
+    if (dateReset) {
+        AppCard(
+            modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.cart_date_reset_note),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+                DialogTextButton(stringResource(R.string.ledger_date_ok), cart::dismissDateReset)
+            }
+        }
+    }
     if (removed.isEmpty()) return
     AppCard(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

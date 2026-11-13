@@ -1,6 +1,9 @@
 package com.example.dukanhisabnext.ui.products
 
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
 import com.example.dukanhisabnext.util.parseQuantity
+import com.example.dukanhisabnext.warranty.checkWarranty
+import com.example.dukanhisabnext.warranty.parseWarrantyInput
 import com.example.dukanhisabnext.util.parseTakaToPaisa
 
 // Form checking is plain Kotlin (no Android), so it can be unit-tested on the PC.
@@ -11,7 +14,8 @@ enum class FormError {
     TOO_LARGE,          // a number so big the sum would overflow (a typo)
     DISCOUNT_TOO_LARGE, // discount more than the subtotal
     PERCENT_OUT_OF_RANGE, // a percentage below 0 or above 100
-    DUE_MORE_THAN_TOTAL   // a due bigger than the sale total
+    DUE_MORE_THAN_TOTAL,  // a due bigger than the sale total
+    WARRANTY_OUT_OF_RANGE // a warranty number below 1 or above the limit of its unit (the screen names the limit)
 }
 
 /** What the user typed. All numbers are still text here. */
@@ -29,11 +33,29 @@ data class ProductFormErrors(
     val sellPrice: FormError? = null,
     val costPrice: FormError? = null,
     val openingStock: FormError? = null,
-    val lowStockLevel: FormError? = null
+    val lowStockLevel: FormError? = null,
+    /** Version 5: the warranty number box (only while the warranty switch is on). */
+    val warranty: FormError? = null
 ) {
     val hasErrors: Boolean
         get() = name != null || sellPrice != null || costPrice != null ||
-            openingStock != null || lowStockLevel != null
+            openingStock != null || lowStockLevel != null || warranty != null
+}
+
+/** The checked warranty of the form: both null (no warranty) or both set. [error] when the box is wrong. */
+data class WarrantyInputResult(val value: Int?, val unit: WarrantyUnit?, val error: FormError?)
+
+/**
+ * The warranty part of the product form. Switch off = no warranty (nothing is checked). Switch on:
+ * the box must hold a whole number within the limit of the unit (1-999 days, 1-120 months, 1-50
+ * years; the same [checkWarranty] as the cart and the save).
+ */
+fun validateWarrantyInput(on: Boolean, text: String, unit: WarrantyUnit): WarrantyInputResult {
+    if (!on) return WarrantyInputResult(null, null, null)
+    if (text.isBlank()) return WarrantyInputResult(null, null, FormError.REQUIRED)
+    val value = parseWarrantyInput(text) ?: return WarrantyInputResult(null, null, FormError.INVALID_NUMBER)
+    if (checkWarranty(value, unit) != null) return WarrantyInputResult(null, null, FormError.WARRANTY_OUT_OF_RANGE)
+    return WarrantyInputResult(value, unit, null)
 }
 
 /** Clean, checked values: money in paisa, quantities in thousandths. */

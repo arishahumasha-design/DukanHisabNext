@@ -40,6 +40,7 @@ import com.example.dukanhisabnext.ui.components.FormWithSaveBar
 import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.SectionHeader
 import com.example.dukanhisabnext.ui.components.DialogTextButton
 import com.example.dukanhisabnext.ui.components.DestructiveTextButton
 import com.example.dukanhisabnext.ui.components.needsStockConfirm
@@ -175,6 +176,20 @@ fun ProductEditScreen(
                 onValueChange = viewModel::onLowStockLevelChange,
                 error = state.errors.lowStockLevel
             )
+            }
+
+            // Version 5: the default warranty for new sales.
+            FormCard {
+                SectionHeader(stringResource(R.string.warranty_card_title))
+                WarrantyEditor(
+                    on = state.warrantyOn,
+                    text = state.warrantyText,
+                    unit = state.warrantyUnit,
+                    error = state.errors.warranty,
+                    onOnChange = viewModel::onWarrantyOnChange,
+                    onTextChange = viewModel::onWarrantyTextChange,
+                    onUnitChange = viewModel::onWarrantyUnitChange
+                )
             }
 
             if (!state.isNew) {

@@ -58,6 +58,7 @@ import com.example.dukanhisabnext.ui.sales.customerLabel
 import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.ui.sales.groupByDhakaDay
 import com.example.dukanhisabnext.ui.sales.saleTimeText
+import com.example.dukanhisabnext.ui.sales.saleRowTitle
 import com.example.dukanhisabnext.ui.components.EmptyState
 import com.example.dukanhisabnext.ui.components.IconTile
 import com.example.dukanhisabnext.ui.components.InfoCard
@@ -289,7 +290,7 @@ private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClic
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = { IconTile(R.drawable.ic_receipt) },
-        headlineContent = { Text(toBengaliDigits(row.receiptNo) + "  ·  " + timeText, style = MaterialTheme.typography.titleMedium) },
+        headlineContent = { Text(saleRowTitle(row, timeText), style = MaterialTheme.typography.titleMedium) },
         supportingContent = { Text(customer, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {

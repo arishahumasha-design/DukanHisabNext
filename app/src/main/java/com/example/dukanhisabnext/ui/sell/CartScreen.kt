@@ -40,6 +40,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.window.DialogProperties
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.sale.MIN_SALE_DAY
+import com.example.dukanhisabnext.sale.isSelectableSaleDay
+import com.example.dukanhisabnext.sale.needsOldDateConfirm
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
+import com.example.dukanhisabnext.ui.components.DayPickerDialog
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.IconTile
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.products.FormError
+import com.example.dukanhisabnext.ui.products.WarrantyEditor
+import com.example.dukanhisabnext.ui.products.validateWarrantyInput
+import com.example.dukanhisabnext.ui.sales.dayHeaderText
+import com.example.dukanhisabnext.ui.theme.Spacing
+import com.example.dukanhisabnext.warranty.parseWarrantyInput
+import com.example.dukanhisabnext.warranty.sanitizeWarrantyInput
+import com.example.dukanhisabnext.warranty.warrantyPeriodText
+import com.example.dukanhisabnext.warranty.warrantyPreviewDay
+import java.time.LocalDate
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.NumberField
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
@@ -66,6 +92,14 @@ fun CartScreen(
     val unavailable by viewModel.unavailable.collectAsStateWithLifecycle()
     val costPrices by viewModel.costPrices.collectAsStateWithLifecycle()
     val canContinue by viewModel.canContinue.collectAsStateWithLifecycle()
+    val today = viewModel.today()
+    val monthNames = stringArrayResource(R.array.months_bn).toList()
+
+    // The sale date (version 5): the picker, and the "পুরনো তারিখ" question for a day older than 30 days.
+    var pickerOpen by rememberSaveable { mutableStateOf(false) }
+    var pendingEpochDay by rememberSaveable { mutableStateOf<Long?>(null) }   // a day waiting for "হ্যাঁ, ঠিক আছে"
+    var continueAfterYes by rememberSaveable { mutableStateOf(false) }         // the question came from "এগিয়ে যান"
+    var warrantyFor by rememberSaveable { mutableStateOf<Long?>(null) }        // the product whose warranty dialog is open
 
     SubScreenScaffold(title = stringResource(R.string.cart_title), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize().imePadding()) {
@@ -75,6 +109,16 @@ fun CartScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // ---- The sale date: one for the whole sale ----
+                item(key = "sale-date") {
+                    SaleDateRow(
+                        day = cart.saleDay,
+                        today = today,
+                        monthNames = monthNames,
+                        onClick = { pickerOpen = true }
+                    )
+                }
+
                 // ---- Lines ----
                 if (summary.lines.isEmpty()) {
                     item(key = "empty") {
@@ -91,7 +135,10 @@ fun CartScreen(
                             stock = stocks[line.input.productId] ?: 0L, // no movements yet = stock 0
                             unavailable = line.input.productId in unavailable,
                             costPrice = costPrices[line.input.productId],
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            saleDay = cart.saleDayOrToday(today),
+                            monthNames = monthNames,
+                            onWarranty = { warrantyFor = line.input.productId }
                         )
                     }
                 }
@@ -172,9 +219,174 @@ fun CartScreen(
             }
 
             // ---- Fixed bottom bar: সর্বমোট and the big continue button ----
-            GrandTotalBar(total = summary.total, canContinue = canContinue, onContinue = onContinue)
+            GrandTotalBar(
+                total = summary.total,
+                canContinue = canContinue,
+                onContinue = {
+                    // An old day that was not confirmed yet (for example a day passed while the cart waited) asks first.
+                    if (cart.needsOldDateQuestion(today)) {
+                        pendingEpochDay = cart.saleDay?.toEpochDay()
+                        continueAfterYes = true
+                    } else {
+                        onContinue()
+                    }
+                }
+            )
         }
     }
+
+    // ---- The single-day picker: no future day, nothing before 1 January 2020 ----
+    if (pickerOpen) {
+        DayPickerDialog(
+            title = stringResource(R.string.cart_date_pick_title),
+            confirmText = stringResource(R.string.ledger_date_ok),
+            initial = cart.saleDayOrToday(today),
+            selectable = { isSelectableSaleDay(it, today) },
+            firstYear = MIN_SALE_DAY.year,
+            lastYear = today.year,
+            onConfirm = { day ->
+                pickerOpen = false
+                if (needsOldDateConfirm(day, today)) pendingEpochDay = day.toEpochDay() else viewModel.onSaleDayPicked(day)
+            },
+            onDismiss = { pickerOpen = false }
+        )
+    }
+
+    // ---- "আপনি অনেক পুরনো তারিখ দিয়েছেন, ঠিক আছে?" ----
+    pendingEpochDay?.let { epochDay ->
+        val day = LocalDate.ofEpochDay(epochDay)
+        AppAlertDialog(
+            properties = DialogProperties(dismissOnClickOutside = false),
+            onDismissRequest = {
+                pendingEpochDay = null
+                continueAfterYes = false
+            },
+            title = { Text(stringResource(R.string.old_date_question)) },
+            text = { Text(dayHeaderText(day, monthNames), style = MaterialTheme.typography.titleMedium) },
+            confirmButton = {
+                DialogTextButton(stringResource(R.string.old_date_yes), {
+                    viewModel.onSaleDayPicked(day)
+                    viewModel.onOldDateConfirmed(day)
+                    pendingEpochDay = null
+                    if (continueAfterYes) {
+                        continueAfterYes = false
+                        onContinue()
+                    }
+                })
+            },
+            dismissButton = {
+                DialogTextButton(stringResource(R.string.old_date_change), {
+                    pendingEpochDay = null
+                    continueAfterYes = false
+                    pickerOpen = true
+                })
+            }
+        )
+    }
+
+    // ---- A line's warranty for this sale only ----
+    warrantyFor?.let { productId ->
+        val line = cart.lines.firstOrNull { it.productId == productId }
+        if (line == null) {
+            warrantyFor = null
+        } else {
+            LineWarrantyDialog(
+                line = line,
+                saleDay = cart.saleDayOrToday(today),
+                monthNames = monthNames,
+                onSave = { value, unit ->
+                    viewModel.onLineWarranty(productId, value, unit)
+                    warrantyFor = null
+                },
+                onDismiss = { warrantyFor = null }
+            )
+        }
+    }
+}
+
+/**
+ * The tappable card at the top of the cart: the sale date ("আজ" or the chosen day) with an amber
+ * "পুরনো তারিখ" pill when it is an earlier day. Tapping it opens the single-day picker.
+ */
+@Composable
+private fun SaleDateRow(day: LocalDate?, today: LocalDate, monthNames: List<String>, onClick: () -> Unit) {
+    val backDated = day != null && day.isBefore(today)
+    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(
+            modifier = Modifier.padding(Spacing.l).heightIn(min = 48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+        ) {
+            IconTile(R.drawable.ic_calendar)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.cart_date_label),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = if (day == null) stringResource(R.string.cart_date_today) else dayHeaderText(day, monthNames),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            if (backDated) StatusPill(stringResource(R.string.cart_date_old_pill), PillVariant.Due)
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, modifier = Modifier.size(20.dp))
+        }
+    }
+}
+
+/**
+ * The warranty dialog of one cart line: the switch, the number, the unit and a live preview of the last
+ * covered day ("১৩ মে ২০২৭ পর্যন্ত"), counted from the sale day. "ঠিক আছে" checks it (the same rules as
+ * the product form) and changes THIS sale's line only; the product keeps its own default.
+ */
+@Composable
+private fun LineWarrantyDialog(
+    line: CartLineInput,
+    saleDay: LocalDate,
+    monthNames: List<String>,
+    onSave: (Int?, WarrantyUnit?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var on by rememberSaveable(line.productId) { mutableStateOf(line.warrantyValue != null) }
+    var text by rememberSaveable(line.productId) { mutableStateOf(line.warrantyValue?.toString().orEmpty()) }
+    var unit by rememberSaveable(line.productId) { mutableStateOf(line.warrantyUnit ?: WarrantyUnit.MONTH) }
+    var error by rememberSaveable(line.productId) { mutableStateOf<FormError?>(null) }
+
+    val value = if (on) parseWarrantyInput(text) else null
+    val preview = warrantyPreviewDay(saleDay, value, unit, monthNames)
+
+    AppAlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.line_warranty_title) + " · " + line.name) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
+                WarrantyEditor(
+                    on = on,
+                    text = text,
+                    unit = unit,
+                    error = error,
+                    onOnChange = { on = it; error = null; if (!it) text = "" },
+                    onTextChange = { text = sanitizeWarrantyInput(it); error = null },
+                    onUnitChange = { unit = it; error = null }
+                )
+                if (on && preview != null) {
+                    Text(
+                        text = stringResource(R.string.warranty_until, preview),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            DialogTextButton(stringResource(R.string.ledger_date_ok), {
+                val checked = validateWarrantyInput(on, text, unit)
+                if (checked.error != null) error = checked.error else onSave(checked.value, checked.unit)
+            })
+        },
+        dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), onDismiss) }
+    )
 }
 
 // =========================================================================================
@@ -230,7 +442,16 @@ private fun DiscountUnitToggle(selected: DiscountUnit, onSelect: (DiscountUnit) 
 
 /** One cart line: name, remove, quantity, price, line total (computed, read-only), stock warning. */
 @Composable
-private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, costPrice: Long?, viewModel: CartViewModel) {
+private fun CartLineCard(
+    line: CartLineView,
+    stock: Long,
+    unavailable: Boolean,
+    costPrice: Long?,
+    viewModel: CartViewModel,
+    saleDay: LocalDate,
+    monthNames: List<String>,
+    onWarranty: () -> Unit
+) {
     val input = line.input
     val unitText = stringResource(input.unit.labelRes())
 
@@ -300,6 +521,33 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                         text = line.lineTotal?.let { stringResource(R.string.price_format, formatTaka(it)) } ?: "—",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // The warranty of this line for this sale: tap to change, remove or add one.
+            val warrantyUnitNames = WarrantyUnit.entries.associateWith { stringResource(it.labelRes()) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .padding(end = 8.dp)
+                    .clickable(onClick = onWarranty),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val value = input.warrantyValue
+                val unit = input.warrantyUnit
+                if (value != null && unit != null) {
+                    Text(
+                        text = stringResource(R.string.line_warranty_row, warrantyPeriodText(value, unit) { warrantyUnitNames.getValue(it) }),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.line_warranty_none),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

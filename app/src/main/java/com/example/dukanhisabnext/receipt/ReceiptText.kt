@@ -2,6 +2,9 @@ package com.example.dukanhisabnext.receipt
 
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.ProductUnit
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.warranty.warrantyPeriodText
+import com.example.dukanhisabnext.warranty.warrantyUntilDayText
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.dayPeriod
 import com.example.dukanhisabnext.util.formatDate
@@ -34,7 +37,12 @@ data class ReceiptLabels(
     val taka: String,              // ৳
     val unit: (ProductUnit) -> String,
     val method: (PaymentMethod) -> String,
-    val period: (DayPeriod) -> String
+    val period: (DayPeriod) -> String,
+    // ---- Version 5: the warranty caption under a product ("ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)") ----
+    val warrantyUnit: (WarrantyUnit) -> String = { it.name },
+    val monthNames: List<String> = emptyList(),   // the 12 Bengali month names, January first
+    val warrantyUntil: (day: String) -> String = { "$it পর্যন্ত" },        // "১৩ মে ২০২৭ পর্যন্ত"
+    val warrantyCaption: (period: String, until: String) -> String = { p, u -> "ওয়ারেন্টি: $p ($u)" }
 )
 
 /** "৳ ১,২৩৪.৫০": the taka sign, then Bengali digits with Bangladeshi grouping. */
@@ -47,6 +55,34 @@ fun receiptQuantity(line: ReceiptLine, labels: ReceiptLabels): String =
 /** "১০/১১/২০২৬ রাত ১১:৪৫": the Asia/Dhaka date and 12-hour time, in Bengali digits. */
 fun receiptDateTime(createdAt: Long, labels: ReceiptLabels): String =
     "${formatDate(createdAt)} ${labels.period(dayPeriod(createdAt))} ${formatTime12(createdAt)}"
+
+/**
+ * The caption under a product that has a warranty: "ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)". null when
+ * the line has no warranty (nothing is printed).
+ */
+fun receiptWarrantyCaption(line: ReceiptLine, labels: ReceiptLabels): String? {
+    val value = line.warrantyValue ?: return null
+    val unit = line.warrantyUnit ?: return null
+    val until = line.warrantyUntil ?: return null
+    return labels.warrantyCaption(
+        warrantyPeriodText(value, unit, labels.warrantyUnit),
+        labels.warrantyUntil(warrantyUntilDayText(until, labels.monthNames))
+    )
+}
+
+/**
+ * The date of the sale on the receipt: the sale date with its time of day, or the DATE ONLY when the
+ * sale was back-dated (its time of day is the time of saving, not of selling).
+ */
+fun receiptSaleDate(data: ReceiptData, labels: ReceiptLabels): String =
+    if (data.isBackDated) formatDate(data.saleDate) else receiptDateTime(data.saleDate, labels)
+
+/**
+ * For a back-dated sale: the real moment it was written ("১২/১১/২০২৬ রাত ৯:০৫"), shown on the receipt
+ * SCREEN under the date as "লেখা হয়েছে …" (not in the shared text). null for a normal sale.
+ */
+fun receiptWrittenOn(data: ReceiptData, labels: ReceiptLabels): String? =
+    if (data.isBackDated) receiptDateTime(data.createdAt, labels) else null
 
 /** The label of the "পরিশোধ" line: the method is named only when something was paid. */
 fun receiptPaidLabel(data: ReceiptData, labels: ReceiptLabels): String =
@@ -94,7 +130,7 @@ fun buildReceiptText(data: ReceiptData, labels: ReceiptLabels): String = buildSt
 
     // ---- This sale ----
     appendLine("${labels.receiptNo}: ${toBengaliDigits(data.receiptNo)}")
-    appendLine("${labels.date}: ${receiptDateTime(data.saleDate, labels)}")
+    appendLine("${labels.date}: ${receiptSaleDate(data, labels)}")
     data.customerName?.let { name ->
         appendLine("${labels.customer}: $name")
         data.customerPhone?.let { appendLine("${labels.mobile}: ${toBengaliDigits(it)}") }
@@ -105,6 +141,7 @@ fun buildReceiptText(data: ReceiptData, labels: ReceiptLabels): String = buildSt
     data.lines.forEachIndexed { index, line ->
         appendLine("${toBengaliDigits((index + 1).toString())}. ${line.name}")
         appendLine("   ${receiptQuantity(line, labels)} × ${money(line.unitPrice)} = ${money(line.lineTotal)}")
+        receiptWarrantyCaption(line, labels)?.let { appendLine("   $it") }
     }
     appendLine(SEPARATOR)
 

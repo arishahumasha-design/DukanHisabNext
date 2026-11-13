@@ -47,3 +47,10 @@ fun saleDateFor(day: LocalDate, nowMillis: Long): Long = entryDateFor(day, nowMi
  */
 fun isBackDated(sale: Sale): Boolean =
     DhakaTime.localDate(sale.saleDate) != DhakaTime.localDate(sale.createdAt)
+
+/**
+ * Can this Material date-picker day (UTC midnight millis) be chosen as a sale day? Not in the future,
+ * and not before 1 January 2020 (the same two rules as [checkSaleDay]).
+ */
+fun isSelectableSaleDay(pickerMillis: Long, today: LocalDate): Boolean =
+    checkSaleDay(com.example.dukanhisabnext.ledger.pickerMillisToDate(pickerMillis), today) == null

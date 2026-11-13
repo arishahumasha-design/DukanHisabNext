@@ -54,6 +54,9 @@ import com.example.dukanhisabnext.receipt.receiptDateTime
 import com.example.dukanhisabnext.receipt.receiptMoney
 import com.example.dukanhisabnext.receipt.receiptPaidLabel
 import com.example.dukanhisabnext.receipt.receiptQuantity
+import com.example.dukanhisabnext.receipt.receiptWarrantyCaption
+import com.example.dukanhisabnext.receipt.receiptWrittenOn
+import com.example.dukanhisabnext.receipt.receiptSaleDate
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.DashedDivider
@@ -324,7 +327,17 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
 
             // ---- This sale ----
             KeyValue(labels.receiptNo, toBengaliDigits(data.receiptNo))
-            KeyValue(labels.date, receiptDateTime(data.saleDate, labels))
+            KeyValue(labels.date, receiptSaleDate(data, labels))
+            // Version 5: a back-dated sale says when it was really written (not in the shared text).
+            receiptWrittenOn(data, labels)?.let { written ->
+                Text(
+                    text = stringResource(R.string.ledger_written_on, written),
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.End
+                )
+            }
             data.customerName?.let { name ->
                 KeyValue(labels.customer, name)
                 data.customerPhone?.let { KeyValue(labels.mobile, toBengaliDigits(it)) }
@@ -346,6 +359,15 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
                     money(line.unitPrice),
                     money(line.lineTotal)
                 )
+                // Version 5: the warranty of this line, only when it has one.
+                receiptWarrantyCaption(line, labels)?.let { caption ->
+                    Text(
+                        text = caption,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 

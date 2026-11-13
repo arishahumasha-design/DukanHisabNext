@@ -1,6 +1,7 @@
 package com.example.dukanhisabnext.ui.sales
 
 import com.example.dukanhisabnext.data.dao.SaleListRow
+import com.example.dukanhisabnext.ledger.customDays
 import com.example.dukanhisabnext.data.dao.SalesListSummaryRow
 import com.example.dukanhisabnext.data.dao.SalesSearchParams
 import com.example.dukanhisabnext.util.DayPeriod
@@ -17,20 +18,41 @@ import java.time.LocalDate
 // to that Dhaka day, even though it is the next day in UTC).
 
 // =========================================================================================
-// Filter chips: আজ, এই মাস, সব
+// Filter chips: আজ | ৭ দিন | এই মাস | এই বছর | তারিখ বাছুন | সব
 // =========================================================================================
 
-enum class SalesFilter { TODAY, THIS_MONTH, ALL }
+enum class SalesFilter { TODAY, LAST_7_DAYS, THIS_MONTH, THIS_YEAR, CUSTOM, ALL }
 
 /**
  * The time window of a filter, as UTC millis (start included, end excluded), using the Dhaka
- * day and month boundaries around [nowMillis]. ALL covers every moment.
+ * day, month and year boundaries around [nowMillis]. The windows are the same as the Khata,
+ * expense and report chips: ৭ দিন = today and the 6 days before it. ALL covers every moment.
+ * "তারিখ বাছুন" ([SalesFilter.CUSTOM]) covers the picked days from [from] to [to] (one day when they
+ * are equal; made safe by [customDays]: no future day, a backwards pair is swapped); before both are
+ * picked it is an EMPTY window (the screen asks to pick the dates).
  */
-fun salesFilterRange(filter: SalesFilter, nowMillis: Long): DhakaTime.TimeRange = when (filter) {
+fun salesFilterRange(
+    filter: SalesFilter,
+    nowMillis: Long,
+    from: LocalDate? = null,
+    to: LocalDate? = null
+): DhakaTime.TimeRange = when (filter) {
     SalesFilter.TODAY -> DhakaTime.today(nowMillis)
+    SalesFilter.LAST_7_DAYS -> {
+        val today = DhakaTime.localDate(nowMillis)
+        DhakaTime.customRange(today.minusDays(6), today)
+    }
     SalesFilter.THIS_MONTH -> DhakaTime.thisMonth(nowMillis)
+    SalesFilter.THIS_YEAR -> DhakaTime.thisYear(nowMillis)
+    SalesFilter.CUSTOM ->
+        customDays(from, to, DhakaTime.localDate(nowMillis))?.let { (a, b) -> DhakaTime.customRange(a, b) }
+            ?: DhakaTime.TimeRange(0L, 0L)
     SalesFilter.ALL -> DhakaTime.TimeRange(0L, Long.MAX_VALUE)
 }
+
+/** True while "তারিখ বাছুন" is chosen but the two days are not picked yet. */
+fun needsDatesPicked(filter: SalesFilter, from: LocalDate?, to: LocalDate?): Boolean =
+    filter == SalesFilter.CUSTOM && (from == null || to == null)
 
 /** True while the search box has text (spaces alone do not count). */
 fun isSearching(query: String): Boolean = query.isNotBlank()
@@ -163,6 +185,19 @@ fun salesSummaryLine(
     }
 }
 
+/**
+ * A sale is back-dated when it was saved on a later Dhaka day than the day it belongs to (version 5).
+ * Its time of day is the time of saving, not of selling, so the list shows the DATE only.
+ */
+fun SaleListRow.isBackDated(): Boolean = DhakaTime.localDate(saleDate) != DhakaTime.localDate(createdAt)
+
+/**
+ * The first line of a sale row: the receipt number and the time ("২৬১১১২-০০১  ·  রাত ৮:০০"), or the
+ * receipt number alone for a back-dated sale (the day header above already shows its date).
+ */
+fun saleRowTitle(row: SaleListRow, timeText: String): String =
+    toBengaliDigits(row.receiptNo) + if (row.isBackDated()) "" else "  ·  $timeText"
+
 /** The small grey "বাতিল" tag is shown on cancelled rows; the red due tag is not (a cancelled sale owes nothing). */
 fun showCancelledTag(row: SaleListRow): Boolean = row.isCancelled
 fun showDueTag(row: SaleListRow): Boolean = !row.isCancelled && row.dueAmount > 0
@@ -215,7 +250,8 @@ sealed interface SalesListItem {
 /** Which empty message to show. */
 enum class EmptyKind {
     NO_SALES_AT_ALL, // no sale has ever been saved
-    NO_MATCH         // there are sales, but none for this search or filter
+    NO_MATCH,        // there are sales, but none for this search or filter
+    PICK_DATES       // "তারিখ বাছুন" is chosen but the two days are not picked yet
 }
 
 /** null when there is something to show. */

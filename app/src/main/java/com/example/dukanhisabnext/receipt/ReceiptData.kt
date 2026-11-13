@@ -7,6 +7,8 @@ import com.example.dukanhisabnext.data.entity.Sale
 import com.example.dukanhisabnext.data.entity.SaleCancellation
 import com.example.dukanhisabnext.data.entity.SaleItem
 import com.example.dukanhisabnext.data.entity.ShopProfile
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.util.DhakaTime
 
 // A receipt is built from a SAVED sale (never from the cart), so the same receipt can be shown
 // right after saving and again later from the sales list. This file is plain Kotlin (no Android)
@@ -18,7 +20,11 @@ data class ReceiptLine(
     val quantity: Long,       // thousandths
     val unit: ProductUnit?,   // null only if the product row is gone (cannot normally happen)
     val unitPrice: Long,      // paisa for one unit, as sold
-    val lineTotal: Long       // paisa
+    val lineTotal: Long,      // paisa
+    /** Version 5: this line's warranty (a copy taken at the sale). All three null = no warranty. */
+    val warrantyValue: Int? = null,
+    val warrantyUnit: WarrantyUnit? = null,
+    val warrantyUntil: Long? = null // the last covered day, an epoch day
 )
 
 /** Everything a receipt shows. Optional parts are null when they must not be shown. */
@@ -59,6 +65,9 @@ data class ReceiptData(
     val saleDate: Long = createdAt
 ) {
     val isCancelled: Boolean get() = cancelledAt != null
+
+    /** Version 5: the sale belongs to an earlier Dhaka day than the day it was saved on. */
+    val isBackDated: Boolean get() = DhakaTime.localDate(saleDate) != DhakaTime.localDate(createdAt)
     val showChange: Boolean get() = shouldShowChange(change)
     val showDiscount: Boolean get() = discount > 0
     val showDelivery: Boolean get() = deliveryCharge > 0
@@ -103,7 +112,10 @@ fun buildReceiptData(
             quantity = it.quantity,
             unit = units[it.productId],
             unitPrice = it.unitPrice,
-            lineTotal = it.lineTotal
+            lineTotal = it.lineTotal,
+            warrantyValue = it.warrantyValue,
+            warrantyUnit = it.warrantyUnit,
+            warrantyUntil = it.warrantyUntil
         )
     },
     subtotal = sale.subtotal,

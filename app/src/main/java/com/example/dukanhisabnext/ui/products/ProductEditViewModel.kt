@@ -7,6 +7,8 @@ import com.example.dukanhisabnext.data.ProductRepository
 import com.example.dukanhisabnext.data.entity.Category
 import com.example.dukanhisabnext.data.entity.Product
 import com.example.dukanhisabnext.data.entity.ProductUnit
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.warranty.sanitizeWarrantyInput
 import com.example.dukanhisabnext.util.formatQuantityPlain
 import com.example.dukanhisabnext.util.formatTakaPlain
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,10 @@ data class ProductFormState(
     val costPrice: String = "",
     val openingStock: String = "",
     val lowStockLevel: String = "",
+    /** Version 5: the "ওয়ারেন্টি আছে" switch, the typed number and its unit. Off = no warranty. */
+    val warrantyOn: Boolean = false,
+    val warrantyText: String = "",
+    val warrantyUnit: WarrantyUnit = WarrantyUnit.MONTH,
     val errors: ProductFormErrors = ProductFormErrors(),
     val duplicateNameWarning: Boolean = false,
     val isNew: Boolean = true,
@@ -81,6 +87,9 @@ class ProductEditViewModel(
                     sellPrice = formatTakaPlain(product.sellPrice),
                     costPrice = product.costPrice?.let(::formatTakaPlain).orEmpty(),
                     lowStockLevel = product.lowStockLevel?.let(::formatQuantityPlain).orEmpty(),
+                    warrantyOn = product.warrantyValue != null && product.warrantyUnit != null,
+                    warrantyText = product.warrantyValue?.toString().orEmpty(),
+                    warrantyUnit = product.warrantyUnit ?: WarrantyUnit.MONTH,
                     isLoading = false
                 )
             }
@@ -113,6 +122,19 @@ class ProductEditViewModel(
 
     fun onLowStockLevelChange(text: String) =
         _state.update { it.copy(lowStockLevel = text, errors = it.errors.copy(lowStockLevel = null)) }
+
+    // ---- Warranty (version 5) ----
+
+    /** The switch. Turning it off clears the number (both values are saved empty); on starts empty. */
+    fun onWarrantyOnChange(on: Boolean) = _state.update {
+        it.copy(warrantyOn = on, warrantyText = if (on) it.warrantyText else "", errors = it.errors.copy(warranty = null))
+    }
+
+    fun onWarrantyTextChange(text: String) =
+        _state.update { it.copy(warrantyText = sanitizeWarrantyInput(text), errors = it.errors.copy(warranty = null)) }
+
+    fun onWarrantyUnitChange(unit: WarrantyUnit) =
+        _state.update { it.copy(warrantyUnit = unit, errors = it.errors.copy(warranty = null)) }
 
     // ---- New category pop-up ----
 
@@ -157,9 +179,13 @@ class ProductEditViewModel(
                 isNew = s.isNew
             )
         )
-        when (result) {
-            is ProductFormResult.Invalid -> _state.update { it.copy(errors = result.errors) }
-            is ProductFormResult.Valid -> {
+        val warranty = validateWarrantyInput(s.warrantyOn, s.warrantyText, s.warrantyUnit)
+        when {
+            result is ProductFormResult.Invalid ->
+                _state.update { it.copy(errors = result.errors.copy(warranty = warranty.error)) }
+            warranty.error != null ->
+                _state.update { it.copy(errors = ProductFormErrors(warranty = warranty.error)) }
+            result is ProductFormResult.Valid -> {
                 _state.update { it.copy(errors = ProductFormErrors(), isSaving = true) }
                 val checked = result.product
                 viewModelScope.launch {
@@ -175,7 +201,9 @@ class ProductEditViewModel(
                                 costPrice = checked.costPrice,
                                 lowStockLevel = checked.lowStockLevel,
                                 createdAt = 0,
-                                updatedAt = 0
+                                updatedAt = 0,
+                                warrantyValue = warranty.value,
+                                warrantyUnit = warranty.unit
                             ),
                             openingStock = checked.openingStock
                         )
@@ -187,7 +215,9 @@ class ProductEditViewModel(
                                 categoryId = s.categoryId,
                                 sellPrice = checked.sellPrice,
                                 costPrice = checked.costPrice,
-                                lowStockLevel = checked.lowStockLevel
+                                lowStockLevel = checked.lowStockLevel,
+                                warrantyValue = warranty.value,
+                                warrantyUnit = warranty.unit
                             )
                         )
                     }

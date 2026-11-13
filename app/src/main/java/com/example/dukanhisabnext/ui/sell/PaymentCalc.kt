@@ -88,16 +88,20 @@ fun buildDraft(
     method: PaymentMethod,
     customerId: Long?,
     draftId: String,
-    note: String? = null
+    note: String? = null,
+    saleDay: java.time.LocalDate? = null
 ): SaleDraft = SaleDraft(
     draftId = draftId,
-    lines = summary.lines.map { SaleDraftLine(it.input.productId, it.quantity!!, it.unitPrice!!) },
+    lines = summary.lines.map {
+        SaleDraftLine(it.input.productId, it.quantity!!, it.unitPrice!!, it.input.warrantyValue, it.input.warrantyUnit)
+    },
     discount = summary.discount,
     deliveryCharge = summary.delivery,
     received = received,
     paymentMethod = method,
     customerId = customerId,
-    note = note
+    note = note,
+    saleDay = saleDay
 )
 
 // ---- The "নতুন বাকি" screen ----

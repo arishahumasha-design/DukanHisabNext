@@ -1,6 +1,9 @@
 package com.example.dukanhisabnext.ui.sell
 
 import com.example.dukanhisabnext.data.entity.Product
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.util.DhakaTime
+import java.time.LocalDate
 import java.util.UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,12 +23,22 @@ import kotlinx.coroutines.flow.update
  */
 class CartStore(
     private val storage: CartStorage = CartStorage.None,
+    /** Today in Dhaka (tests pass their own). The sale day is checked against it. */
+    val today: () -> LocalDate = { DhakaTime.localDate(System.currentTimeMillis()) },
     private val newDraftId: () -> String = { UUID.randomUUID().toString() } // last, so CartStore { "id" } works
 ) {
     private val restored = storage.load()
 
-    private val _state = MutableStateFlow(restored?.state ?: CartState())
+    // A saved sale day that is not allowed any more (after today, before 2020) goes back to today.
+    private val restoredFixed = restored?.state?.withValidSaleDay(today())
+
+    private val _state = MutableStateFlow(restoredFixed?.first ?: CartState())
     val state: StateFlow<CartState> = _state.asStateFlow()
+
+    private val _dateReset = MutableStateFlow(restoredFixed?.second == true)
+
+    /** True once after a restart when the saved sale day had to go back to today (the screen says so). */
+    val dateReset: StateFlow<Boolean> = _dateReset.asStateFlow()
 
     private val _customerId = MutableStateFlow(restored?.customerId)
 
@@ -71,7 +84,25 @@ class CartStore(
 
     /** Tap on a product: new line (quantity 1) or +1 on its existing line. */
     fun addProduct(product: Product) = change {
-        _state.update { it.withProductAdded(product.id, product.name, product.unit, product.sellPrice) }
+        _state.update {
+            it.withProductAdded(product.id, product.name, product.unit, product.sellPrice, product.warrantyValue, product.warrantyUnit)
+        }
+    }
+
+    /** This line's warranty for this sale only (both null removes it). The product is not touched. */
+    fun setLineWarranty(productId: Long, value: Int?, unit: WarrantyUnit?) = change {
+        _state.update { it.withLineWarranty(productId, value, unit) }
+    }
+
+    /** The sale day (today is kept as "follows the clock"). */
+    fun setSaleDay(day: LocalDate) = change { _state.update { it.withSaleDay(day, today()) } }
+
+    /** "হ্যাঁ, ঠিক আছে" was said to the old day [day]. */
+    fun confirmOldDate(day: LocalDate) = change { _state.update { it.withOldDateConfirmed(day) } }
+
+    /** The note about the sale day going back to today was read. */
+    fun dismissDateReset() {
+        _dateReset.value = false
     }
 
     fun setQuantityText(productId: Long, text: String) = change { _state.update { it.withQuantityText(productId, text) } }
@@ -108,6 +139,7 @@ class CartStore(
         _customerId.value = null
         _unavailableProductIds.value = emptySet()
         _removedOnRestart.value = emptyList()
+        _dateReset.value = false
         draftId = newDraftId()
     }
 

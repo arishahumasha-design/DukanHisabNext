@@ -67,8 +67,13 @@ class SalePeriodGuardTest {
 
     @Test
     fun theReceiptShowsTheSaleDate() {
-        assertTrue(text("receipt/ReceiptText.kt").contains("receiptDateTime(data.saleDate, labels)"))
-        assertTrue(text("ui/receipt/ReceiptScreen.kt").contains("receiptDateTime(data.saleDate, labels)"))
+        // Both the screen and the shared text show the date through receiptSaleDate, which reads saleDate.
+        val receiptText = text("receipt/ReceiptText.kt")
+        assertTrue(receiptText.contains("fun receiptSaleDate"))
+        assertTrue(receiptText.contains("receiptDateTime(data.saleDate, labels)"))
+        assertTrue(receiptText.contains("labels.date}: \${receiptSaleDate(data, labels)}"))
+        assertTrue(text("ui/receipt/ReceiptScreen.kt").contains("receiptSaleDate(data, labels)"))
+        assertFalse(text("ui/receipt/ReceiptScreen.kt").contains("receiptDateTime(data.createdAt"))
     }
 
     @Test
