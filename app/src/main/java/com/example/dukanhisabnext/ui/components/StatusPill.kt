@@ -10,8 +10,8 @@ import androidx.compose.ui.unit.dp
 import com.example.dukanhisabnext.ui.theme.AppTheme
 import com.example.dukanhisabnext.ui.theme.PillShape
 
-/** The kinds of small status label: due = amber, paid = green, cancelled = red, lowStock = amber, info = blue. */
-enum class PillVariant { Due, Paid, Cancelled, LowStock, Info }
+/** The kinds of small status label: due = amber, paid = green, cancelled = red, lowStock = amber, info = blue, neutral = grey. */
+enum class PillVariant { Due, Paid, Cancelled, LowStock, Info, Neutral }
 
 /** A small rounded label (10dp corners) such as "বাকি" or "বাতিল". */
 @Composable
@@ -22,6 +22,7 @@ fun StatusPill(text: String, variant: PillVariant, modifier: Modifier = Modifier
         PillVariant.Paid -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
         PillVariant.Cancelled -> c.redContainer to MaterialTheme.colorScheme.onErrorContainer
         PillVariant.Info -> c.infoContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        PillVariant.Neutral -> c.border to c.textSecondary
     }
     Text(
         text = text,

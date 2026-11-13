@@ -19,7 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +37,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.example.dukanhisabnext.ui.components.FormWithSaveBar
 import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.SecondaryButton
 import com.example.dukanhisabnext.ui.components.messageRes
 
 /**
@@ -78,7 +80,8 @@ fun CustomerEditScreen(
             saveBar = { SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading, viewModel::save) }
         ) {
             if (state.isNew) {
-                OutlinedButton(
+                SecondaryButton(
+                    text = stringResource(R.string.btn_from_phonebook),
                     onClick = {
                         val intent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
                         try {
@@ -87,13 +90,12 @@ fun CustomerEditScreen(
                             // A device with no phonebook app: the boxes can still be typed by hand.
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                ) {
-                    Text(stringResource(R.string.btn_from_phonebook), style = MaterialTheme.typography.titleMedium)
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
-            OutlinedTextField(
+            FormCard {
+            AppTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -113,20 +115,20 @@ fun CustomerEditScreen(
                 warning = if (state.phoneWarning) stringResource(R.string.phone_duplicate_warning) else null
             )
 
-            OutlinedTextField(
+            AppTextField(
                 value = state.address,
                 onValueChange = viewModel::onAddressChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_address)) }
             )
 
-            OutlinedTextField(
+            AppTextField(
                 value = state.note,
                 onValueChange = viewModel::onNoteChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_note)) }
             )
-
+            }
         }
     }
 }

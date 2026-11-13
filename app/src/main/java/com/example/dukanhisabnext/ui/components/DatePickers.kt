@@ -1,14 +1,17 @@
 package com.example.dukanhisabnext.ui.components
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -132,17 +135,26 @@ fun DayField(
 ) {
     var open by rememberSaveable { mutableStateOf(false) }
 
-    Column {
-        Text(stringResource(R.string.ledger_date_label), style = MaterialTheme.typography.labelLarge)
-        OutlinedButton(
-            onClick = { open = true },
-            enabled = enabled,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-        ) {
-            Text(dayText(date), style = MaterialTheme.typography.titleMedium)
+    // A read-only text field (the same style as every field); a finished tap opens the calendar.
+    val interactionSource = remember { MutableInteractionSource() }
+    LaunchedEffect(interactionSource, enabled) {
+        interactionSource.interactions.collect { interaction ->
+            if (enabled && interaction is PressInteraction.Release) open = true
         }
-        errorText?.let { Text(it, color = MaterialTheme.colorScheme.error) }
     }
+    AppTextField(
+        value = dayText(date),
+        onValueChange = {},
+        readOnly = true,
+        enabled = enabled,
+        singleLine = true,
+        label = { Text(stringResource(R.string.ledger_date_label)) },
+        trailingIcon = { Icon(painterResource(R.drawable.ic_calendar), contentDescription = null) },
+        isError = errorText != null,
+        supportingText = errorText?.let { { Text(it) } },
+        interactionSource = interactionSource,
+        modifier = Modifier.fillMaxWidth()
+    )
 
     if (open) {
         DayPickerDialog(

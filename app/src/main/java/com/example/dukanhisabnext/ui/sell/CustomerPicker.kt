@@ -16,22 +16,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +42,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.SmallOutlinedButton
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.DialogTextButton
 import com.example.dukanhisabnext.data.entity.Customer
 import com.example.dukanhisabnext.ui.components.MobileField
 import com.example.dukanhisabnext.ui.components.messageRes
@@ -88,7 +87,7 @@ fun CustomerPickerSection(viewModel: CheckoutViewModel, onAddCustomer: () -> Uni
             SelectedCustomerCard(customer = chosen, onChange = viewModel::onChangeCustomer)
         } else {
             // ---- Name: type to search; the icon opens the full list ----
-            OutlinedTextField(
+            AppTextField(
                 value = input.name,
                 onValueChange = viewModel::onCustomerNameChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -127,7 +126,7 @@ fun CustomerPickerSection(viewModel: CheckoutViewModel, onAddCustomer: () -> Uni
                 error = input.errors.phone,
                 prefix = stringResource(R.string.phone_country_prefix)
             )
-            OutlinedTextField(
+            AppTextField(
                 value = input.address,
                 onValueChange = viewModel::onCustomerAddressChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -157,12 +156,12 @@ private fun closeKeyboard(keyboard: SoftwareKeyboardController?, focusManager: F
 private fun PersonPlusIcon(contentDescription: String) {
     Box(modifier = Modifier.size(28.dp)) {
         Icon(
-            Icons.Filled.Person,
+            painterResource(R.drawable.ic_contacts),
             contentDescription = contentDescription,
             modifier = Modifier.size(24.dp).align(Alignment.BottomStart)
         )
         Icon(
-            Icons.Filled.Add,
+            painterResource(R.drawable.ic_add),
             contentDescription = null,
             modifier = Modifier.size(14.dp).align(Alignment.TopEnd)
         )
@@ -187,9 +186,7 @@ private fun SelectedCustomerCard(customer: Customer, onChange: () -> Unit) {
                 }
                 customer.address?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
             }
-            OutlinedButton(onClick = onChange, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text(stringResource(R.string.btn_change_customer))
-            }
+            SmallOutlinedButton(stringResource(R.string.btn_change_customer), onChange)
         }
     }
 }
@@ -231,17 +228,17 @@ private fun CustomerListDialog(viewModel: CheckoutViewModel, onAddCustomer: () -
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.dialog_customer_list_title), style = MaterialTheme.typography.titleLarge)
 
-                OutlinedTextField(
+                AppTextField(
                     value = state.listQuery,
                     onValueChange = viewModel::onListQueryChange,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.search_customers)) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                     trailingIcon = {
                         if (state.listQuery.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onListQueryChange("") }) {
-                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                                Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                             }
                         }
                     }
@@ -266,15 +263,12 @@ private fun CustomerListDialog(viewModel: CheckoutViewModel, onAddCustomer: () -
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = viewModel::onCloseCustomerList, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.btn_close_dialog))
-                    }
-                    Button(
+                    DialogTextButton(stringResource(R.string.btn_close_dialog), viewModel::onCloseCustomerList)
+                    PrimaryButton(
+                        text = stringResource(R.string.btn_add_customer_dialog),
                         onClick = onAddCustomer,
-                        modifier = Modifier.weight(1f).heightIn(min = 52.dp)
-                    ) {
-                        Text(stringResource(R.string.btn_add_customer_dialog), style = MaterialTheme.typography.titleMedium)
-                    }
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }

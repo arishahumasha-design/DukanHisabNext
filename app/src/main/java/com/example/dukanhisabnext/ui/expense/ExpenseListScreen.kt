@@ -17,8 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -27,11 +25,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +50,15 @@ import com.example.dukanhisabnext.expense.UNDO_SECONDS
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.DateRangePickerFlow
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.IconTile
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.Spacing
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.ui.components.customRangeText
 import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.util.formatTaka
@@ -126,17 +134,17 @@ fun ExpenseListScreen(
                 if (current.rangeReady) SummaryCard(current.summary, taka)
 
                 // ---- Search: filters only the rows below ----
-                OutlinedTextField(
+                AppTextField(
                     value = query,
                     onValueChange = viewModel::onQueryChange,
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.expense_search_hint)) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                    leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                     trailingIcon = {
                         if (query.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onQueryChange("") }) {
-                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                                Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                             }
                         }
                     }
@@ -152,9 +160,7 @@ fun ExpenseListScreen(
                             ExpenseEmpty.NO_MATCH -> R.string.expense_empty_match
                             ExpenseEmpty.PICK_DATES -> R.string.khata_empty_pick_dates
                         }
-                        Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
-                        }
+                        EmptyState(icon = R.drawable.ic_expense, text = stringResource(message))
                     } else {
                         LazyColumn(modifier = Modifier.fillMaxSize()) {
                             current.days.forEach { day ->
@@ -202,17 +208,21 @@ fun ExpenseListScreen(
             }
 
             // ---- The bottom buttons ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
+            Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
-                    OutlinedButton(onClick = onOpenCategories, modifier = Modifier.weight(1f).heightIn(min = 56.dp)) {
-                        Text(stringResource(R.string.expense_btn_categories), style = MaterialTheme.typography.titleMedium)
-                    }
-                    Button(onClick = onNewExpense, modifier = Modifier.weight(1.4f).heightIn(min = 56.dp)) {
-                        Text(stringResource(R.string.expense_btn_new), style = MaterialTheme.typography.titleMedium)
-                    }
+                    SecondaryButton(
+                        text = stringResource(R.string.expense_btn_categories),
+                        onClick = onOpenCategories,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.expense_btn_new),
+                        onClick = onNewExpense,
+                        modifier = Modifier.weight(1.4f)
+                    )
                 }
             }
         }
@@ -288,27 +298,18 @@ internal fun SummaryCard(summary: ExpenseSummary, taka: String) {
 
 @Composable
 private fun PersonalTag() {
-    Surface(color = MaterialTheme.colorScheme.tertiaryContainer, shape = RoundedCornerShape(8.dp)) {
-        Text(
-            text = stringResource(R.string.expense_personal_tag),
-            modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer
-        )
-    }
+    StatusPill(stringResource(R.string.expense_personal_tag), PillVariant.Neutral)
 }
 
 @Composable
 private fun DayHeader(text: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth().padding(start = Spacing.l, end = Spacing.l, top = Spacing.l, bottom = Spacing.s),
+        style = MaterialTheme.typography.bodySmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /** One expense: the category (with a "ব্যক্তিগত" mark), the reason, "লেখা হয়েছে <date>" if back-dated, and the amount. Tap = edit. */
@@ -316,7 +317,9 @@ private fun DayHeader(text: String) {
 private fun ExpenseRowItem(row: ExpenseRow, taka: String, writtenOn: String?, onClick: () -> Unit) {
     val expense = row.expense
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = { IconTile(R.drawable.ic_expense) },
         headlineContent = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(row.categoryName, style = MaterialTheme.typography.titleMedium)

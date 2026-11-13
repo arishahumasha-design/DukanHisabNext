@@ -16,8 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -25,10 +23,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +42,13 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.dao.SaleListRow
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.IconTile
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.Spacing
+import androidx.compose.material3.ListItemDefaults
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
@@ -78,17 +84,17 @@ fun SalesListScreen(
     SubScreenScaffold(title = stringResource(R.string.title_sales), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             // ---- Search ----
-            OutlinedTextField(
+            AppTextField(
                 value = query,
                 onValueChange = viewModel::onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.search_sales)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                            Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                         }
                     }
                 }
@@ -155,12 +161,11 @@ fun SalesListScreen(
                         // Only the newest sales are loaded; older ones come one page at a time.
                         if (current.hasMore) {
                             item(key = "show-more") {
-                                OutlinedButton(
+                                SecondaryButton(
+                                    text = stringResource(R.string.sales_show_more),
                                     onClick = viewModel::onShowMore,
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 48.dp)
-                                ) {
-                                    Text(stringResource(R.string.sales_show_more), style = MaterialTheme.typography.titleMedium)
-                                }
+                                    modifier = Modifier.fillMaxWidth().padding(Spacing.l)
+                                )
                             }
                         }
                     }
@@ -189,15 +194,13 @@ private fun FilterOption(
 /** The day header, for example "১০ নভেম্বর ২০২৬". */
 @Composable
 private fun DayHeader(text: String) {
-    Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
+    Text(
+        text = text,
+        modifier = Modifier.fillMaxWidth().padding(start = Spacing.l, end = Spacing.l, top = Spacing.l, bottom = Spacing.s),
+        style = MaterialTheme.typography.bodySmall,
+        fontWeight = FontWeight.SemiBold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant
+    )
 }
 
 /**
@@ -208,14 +211,16 @@ private fun DayHeader(text: String) {
 @Composable
 private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClick: () -> Unit) {
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = { IconTile(R.drawable.ic_receipt) },
         headlineContent = {
             Text(
                 text = toBengaliDigits(row.receiptNo) + "  ·  " + timeText,
                 style = MaterialTheme.typography.titleMedium
             )
         },
-        supportingContent = { Text(customer, style = MaterialTheme.typography.bodyMedium) },
+        supportingContent = { Text(customer, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
@@ -227,35 +232,15 @@ private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClic
                     textDecoration = if (row.isCancelled) TextDecoration.LineThrough else null
                 )
                 if (showCancelledTag(row)) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.sale_cancelled_tag),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    StatusPill(stringResource(R.string.sale_cancelled_tag), PillVariant.Cancelled)
                 }
                 if (showDueTag(row)) {
-                    Surface(
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.sale_due_tag, formatTaka(row.dueAmount)),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
+                    StatusPill(stringResource(R.string.sale_due_tag, formatTaka(row.dueAmount)), PillVariant.Due)
                 }
             }
         }
     )
-    HorizontalDivider()
+    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
 }
 
 @Composable
@@ -264,7 +249,5 @@ private fun EmptyMessage(kind: EmptyKind) {
         EmptyKind.NO_SALES_AT_ALL -> R.string.empty_sales_none
         EmptyKind.NO_MATCH -> R.string.empty_sales_match
     }
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
-    }
+    EmptyState(icon = R.drawable.ic_receipt, text = stringResource(message))
 }

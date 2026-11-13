@@ -2,7 +2,6 @@ package com.example.dukanhisabnext.ui.khata
 
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,18 +10,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.InitialAvatar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -83,23 +84,23 @@ fun ContactsScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAddCustomer,
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                icon = { Icon(painterResource(R.drawable.ic_add), contentDescription = null) },
                 text = { Text(stringResource(R.string.add_customer)) }
             )
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            OutlinedTextField(
+            AppTextField(
                 value = query,
                 onValueChange = viewModel::onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.search_customers)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                            Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                         }
                     }
                 }
@@ -113,9 +114,7 @@ fun ContactsScreen(
                 val empty = contactsEmptyKind(current.totalCustomers, current.rows.size)
                 if (empty != null) {
                     val message = if (empty == KhataEmpty.NO_CUSTOMERS) R.string.empty_customers else R.string.empty_customer_search
-                    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
-                    }
+                    EmptyState(icon = R.drawable.ic_contacts, text = stringResource(message))
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -123,20 +122,36 @@ fun ContactsScreen(
                         contentPadding = PaddingValues(bottom = 88.dp)
                     ) {
                         items(current.rows, key = { it.customer.id }) { row ->
-                            ListItem(
-                                modifier = Modifier.clickable { onOpenCustomer(row.customer.id) },
-                                headlineContent = { Text(row.customer.name, style = MaterialTheme.typography.titleMedium) },
-                                supportingContent = row.customer.phone?.let { phone ->
-                                    { Text(toBengaliDigits(phone), style = MaterialTheme.typography.bodyMedium) }
-                                },
-                                // The balance is shown small: this is an address book, not the due list.
-                                trailingContent = { BalanceText(balance = row.balance, style = MaterialTheme.typography.bodySmall) }
-                            )
+                            ContactRow(row, onClick = { onOpenCustomer(row.customer.id) })
                             HorizontalDivider()
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** One contact: the same row style as the Khata list (initial avatar, name, mobile, balance on the right). */
+@Composable
+private fun ContactRow(row: KhataCustomerRow, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .heightIn(min = 68.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        InitialAvatar(name = row.customer.name)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(row.customer.name, style = MaterialTheme.typography.titleMedium)
+            row.customer.phone?.let {
+                Text(toBengaliDigits(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        // The balance is shown small: this is an address book, not the due list.
+        BalanceText(balance = row.balance, style = MaterialTheme.typography.bodySmall)
     }
 }

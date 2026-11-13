@@ -19,7 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -58,6 +58,11 @@ import com.example.dukanhisabnext.ui.components.DayField
 import com.example.dukanhisabnext.ui.components.DropdownField
 import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.InfoCard
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.SaveBar
+import com.example.dukanhisabnext.ui.components.SegmentedControl
 import com.example.dukanhisabnext.ui.components.needsMoneyConfirm
 import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.parseTakaToPaisa
@@ -105,6 +110,7 @@ fun LedgerFormScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // ---- Who, and how much they owe now ----
+                FormCard {
                 customer?.let { Text(it.name, style = MaterialTheme.typography.titleLarge) }
                 balance?.let { current ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -112,29 +118,23 @@ fun LedgerFormScreen(
                         BalanceText(balance = current, style = MaterialTheme.typography.titleMedium)
                     }
                 }
+                }
 
                 // ---- A correction is plus or minus ----
                 if (isCorrection(form.action)) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            selected = form.action == LedgerAction.CORRECTION_PLUS,
-                            onClick = { viewModel.onCorrectionSign(true) },
-                            enabled = !ui.saving,
-                            label = { Text(stringResource(R.string.ledger_correction_plus)) }
-                        )
-                        FilterChip(
-                            selected = form.action == LedgerAction.CORRECTION_MINUS,
-                            onClick = { viewModel.onCorrectionSign(false) },
-                            enabled = !ui.saving,
-                            label = { Text(stringResource(R.string.ledger_correction_minus)) }
-                        )
-                    }
+                    SegmentedControl(
+                        labels = listOf(stringResource(R.string.ledger_correction_plus), stringResource(R.string.ledger_correction_minus)),
+                        selectedIndex = if (form.action == LedgerAction.CORRECTION_PLUS) 0 else 1,
+                        onSelect = { viewModel.onCorrectionSign(it == 0) },
+                        enabled = !ui.saving
+                    )
                 }
 
                 // ---- Amount ----
+                FormCard {
                 val amountError = errorsFor(FormField.AMOUNT, ui.errors).firstOrNull()
                 val maxAdvance = balance?.let { maxAdvanceReturn(it, form.action) }
-                OutlinedTextField(
+                AppTextField(
                     value = form.amountText,
                     onValueChange = { viewModel.onAmountChange(sanitizeNumberInput(it)) },
                     modifier = Modifier.fillMaxWidth(),
@@ -162,18 +162,13 @@ fun LedgerFormScreen(
                             BalanceText(balance = preview.balanceAfter, style = MaterialTheme.typography.titleMedium)
                         }
                         preview.advanceCreated?.let { advance ->
-                            Surface(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(12.dp)) {
-                                Text(
-                                    text = stringResource(
-                                        R.string.ledger_advance_warning,
-                                        stringResource(R.string.price_format, formatTaka(advance))
-                                    ),
-                                    modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
+                            InfoCard(
+                                text = stringResource(
+                                    R.string.ledger_advance_warning,
+                                    stringResource(R.string.price_format, formatTaka(advance))
+                                ),
+                                variant = PillVariant.Cancelled
+                            )
                         }
                     }
                 }
@@ -211,7 +206,7 @@ fun LedgerFormScreen(
 
                 // ---- Note ----
                 val noteError = errorsFor(FormField.NOTE, ui.errors).firstOrNull()
-                OutlinedTextField(
+                AppTextField(
                     value = form.note,
                     onValueChange = viewModel::onNoteChange,
                     modifier = Modifier.fillMaxWidth(),
@@ -240,6 +235,8 @@ fun LedgerFormScreen(
                     }
                 )
 
+                }
+
                 // ---- Problems that are not about one box ----
                 errorsFor(FormField.GENERAL, ui.errors).forEach {
                     Text(stringResource(it.messageRes()), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyLarge)
@@ -250,20 +247,11 @@ fun LedgerFormScreen(
             }
 
             // ---- The save button: disabled while saving, so a double tap cannot save twice ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = {
-                        if (needsMoneyConfirm(amountPaisa, LEDGER_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave()
-                    },
-                    enabled = !ui.saving && !ui.saved,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text(
-                        stringResource(if (ui.saving) R.string.ledger_saving else R.string.btn_save),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+            SaveBar(
+                label = stringResource(if (ui.saving) R.string.ledger_saving else R.string.btn_save),
+                enabled = !ui.saving && !ui.saved,
+                onClick = { if (needsMoneyConfirm(amountPaisa, LEDGER_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave() }
+            )
         }
     }
 

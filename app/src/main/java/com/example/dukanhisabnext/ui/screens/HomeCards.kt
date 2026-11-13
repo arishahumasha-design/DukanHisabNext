@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -122,11 +123,29 @@ fun QuickActionsRow(
     onNewExpense: () -> Unit,
     onNewProduct: () -> Unit
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        QuickAction(androidx.compose.ui.res.stringResource(R.string.home_quick_new_sale), R.drawable.ic_sell, onNewSale, Modifier.weight(1f))
-        QuickAction(androidx.compose.ui.res.stringResource(R.string.home_quick_receive), R.drawable.ic_khata, onReceiveMoney, Modifier.weight(1f))
-        QuickAction(androidx.compose.ui.res.stringResource(R.string.home_quick_new_expense), R.drawable.ic_expense, onNewExpense, Modifier.weight(1f))
-        QuickAction(androidx.compose.ui.res.stringResource(R.string.home_quick_new_product), R.drawable.ic_product, onNewProduct, Modifier.weight(1f))
+    val newSale = androidx.compose.ui.res.stringResource(R.string.home_quick_new_sale)
+    val receive = androidx.compose.ui.res.stringResource(R.string.home_quick_receive)
+    val newExpense = androidx.compose.ui.res.stringResource(R.string.home_quick_new_expense)
+    val newProduct = androidx.compose.ui.res.stringResource(R.string.home_quick_new_product)
+    // With a very large system font the four actions wrap into a 2x2 grid, so no label is cut off.
+    if (LocalDensity.current.fontScale > 1.3f) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                QuickAction(newSale, R.drawable.ic_sell, onNewSale, Modifier.weight(1f))
+                QuickAction(receive, R.drawable.ic_khata, onReceiveMoney, Modifier.weight(1f))
+            }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                QuickAction(newExpense, R.drawable.ic_expense, onNewExpense, Modifier.weight(1f))
+                QuickAction(newProduct, R.drawable.ic_product, onNewProduct, Modifier.weight(1f))
+            }
+        }
+    } else {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            QuickAction(newSale, R.drawable.ic_sell, onNewSale, Modifier.weight(1f))
+            QuickAction(receive, R.drawable.ic_khata, onReceiveMoney, Modifier.weight(1f))
+            QuickAction(newExpense, R.drawable.ic_expense, onNewExpense, Modifier.weight(1f))
+            QuickAction(newProduct, R.drawable.ic_product, onNewProduct, Modifier.weight(1f))
+        }
     }
 }
 

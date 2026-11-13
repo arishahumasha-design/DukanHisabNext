@@ -12,7 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.PrimaryButton
 import com.example.dukanhisabnext.util.formatTaka
 
 // Pieces shared by the payment screen and the "নতুন বাকি" screen.
@@ -67,7 +68,7 @@ fun LabeledSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) ->
 /** The "মন্তব্য" box (saved as the sale's note). */
 @Composable
 fun NoteField(value: String, onValueChange: (String) -> Unit) {
-    OutlinedTextField(
+    AppTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
@@ -104,9 +105,7 @@ fun CheckoutErrorCard(error: PaymentError, onBackToCart: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(message, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onErrorContainer)
             if (needsCartFix) {
-                Button(onClick = onBackToCart, modifier = Modifier.heightIn(min = 52.dp)) {
-                    Text(stringResource(R.string.btn_back_to_cart))
-                }
+                PrimaryButton(text = stringResource(R.string.btn_back_to_cart), onClick = onBackToCart)
             }
         }
     }

@@ -16,13 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -39,6 +39,13 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.ExpenseCategory
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.SaveBar
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.StatusPill
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.delay
 
 /**
@@ -89,9 +96,7 @@ fun CategoriesScreen(
                 val list = categories
                 when {
                     list == null -> LoadingIndicator(Modifier.fillMaxSize())
-                    list.isEmpty() -> Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text(stringResource(R.string.cat_empty), style = MaterialTheme.typography.bodyLarge)
-                    }
+                    list.isEmpty() -> EmptyState(icon = R.drawable.ic_expense, text = stringResource(R.string.cat_empty))
                     else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                         items(list, key = { it.id }) { category ->
                             CategoryRow(
@@ -105,14 +110,7 @@ fun CategoriesScreen(
             }
 
             // ---- Add ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = viewModel::onAddClick,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text(stringResource(R.string.cat_btn_add), style = MaterialTheme.typography.titleMedium)
-                }
-            }
+            SaveBar(label = stringResource(R.string.cat_btn_add), enabled = true, onClick = viewModel::onAddClick)
         }
     }
 
@@ -125,6 +123,7 @@ fun CategoriesScreen(
 @Composable
 private fun CategoryRow(category: ExpenseCategory, onEdit: () -> Unit, onToggle: () -> Unit) {
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onEdit),
         headlineContent = {
             Text(
@@ -138,14 +137,7 @@ private fun CategoryRow(category: ExpenseCategory, onEdit: () -> Unit, onToggle:
             if (marks.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     marks.forEach { mark ->
-                        Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(8.dp)) {
-                            Text(
-                                text = stringResource(mark.labelRes()),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        StatusPill(stringResource(mark.labelRes()), PillVariant.Neutral)
                     }
                 }
             }
@@ -163,12 +155,12 @@ private fun CategoryRow(category: ExpenseCategory, onEdit: () -> Unit, onToggle:
 @Composable
 private fun CategoryDialog(form: CategoryForm, ui: CategoriesUi, viewModel: CategoriesViewModel) {
     val nameError = errorsFor(CategoryField.NAME, ui.errors).firstOrNull()
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = viewModel::onDismiss,
         title = { Text(stringResource(if (form.isNew) R.string.cat_title_add else R.string.cat_title_edit)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
+                AppTextField(
                     value = form.name,
                     onValueChange = viewModel::onNameChange,
                     modifier = Modifier.fillMaxWidth(),
@@ -204,12 +196,10 @@ private fun CategoryDialog(form: CategoryForm, ui: CategoriesUi, viewModel: Cate
             }
         },
         confirmButton = {
-            Button(onClick = viewModel::onSave, enabled = !ui.busy) {
-                Text(stringResource(if (ui.busy) R.string.ledger_saving else R.string.btn_save))
-            }
+            DialogTextButton(stringResource(if (ui.busy) R.string.ledger_saving else R.string.btn_save), viewModel::onSave, enabled = !ui.busy)
         },
         dismissButton = {
-            TextButton(onClick = viewModel::onDismiss, enabled = !ui.busy) { Text(stringResource(R.string.btn_cancel)) }
+            DialogTextButton(stringResource(R.string.btn_cancel), viewModel::onDismiss, enabled = !ui.busy)
         }
     )
 }

@@ -8,14 +8,14 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,6 +39,9 @@ import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
 import com.example.dukanhisabnext.ui.components.FormWithSaveBar
 import com.example.dukanhisabnext.ui.components.SaveBar
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.DestructiveTextButton
 import com.example.dukanhisabnext.ui.components.needsStockConfirm
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.parseQuantity
@@ -76,8 +79,9 @@ fun ProductEditScreen(
                 }
             }
         ) {
+            FormCard {
             // Name
-            OutlinedTextField(
+            AppTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -138,6 +142,9 @@ fun ProductEditScreen(
                 )
             }
 
+            }
+
+            FormCard {
             NumberField(
                 label = stringResource(R.string.field_sell_price),
                 value = state.sellPrice,
@@ -150,6 +157,9 @@ fun ProductEditScreen(
                 onValueChange = viewModel::onCostPriceChange,
                 error = state.errors.costPrice
             )
+            }
+
+            FormCard {
             // Opening stock only exists when adding. Later changes go through the stock screen.
             if (state.isNew) {
                 NumberField(
@@ -165,15 +175,14 @@ fun ProductEditScreen(
                 onValueChange = viewModel::onLowStockLevelChange,
                 error = state.errors.lowStockLevel
             )
+            }
 
             if (!state.isNew) {
-                OutlinedButton(
+                DestructiveTextButton(
+                    text = stringResource(R.string.btn_archive),
                     onClick = { showArchiveConfirm = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(stringResource(R.string.btn_archive))
-                }
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -193,11 +202,11 @@ fun ProductEditScreen(
 
     // ---- Pop-up: new category ----
     if (state.categoryDialogOpen) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = viewModel::closeCategoryDialog,
             title = { Text(stringResource(R.string.dialog_category_title)) },
             text = {
-                OutlinedTextField(
+                AppTextField(
                     value = state.categoryName,
                     onValueChange = viewModel::onCategoryNameChange,
                     label = { Text(stringResource(R.string.field_category_name)) },
@@ -208,27 +217,25 @@ fun ProductEditScreen(
                 )
             },
             confirmButton = {
-                TextButton(onClick = viewModel::confirmNewCategory) { Text(stringResource(R.string.btn_add)) }
+                DialogTextButton(stringResource(R.string.btn_add), viewModel::confirmNewCategory)
             },
             dismissButton = {
-                TextButton(onClick = viewModel::closeCategoryDialog) { Text(stringResource(R.string.btn_cancel)) }
+                DialogTextButton(stringResource(R.string.btn_cancel), viewModel::closeCategoryDialog)
             }
         )
     }
 
     // ---- Pop-up: confirm archive ----
     if (showArchiveConfirm) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = { showArchiveConfirm = false },
             title = { Text(stringResource(R.string.archive_confirm_title)) },
             text = { Text(stringResource(R.string.archive_confirm_text)) },
             confirmButton = {
-                TextButton(onClick = { showArchiveConfirm = false; viewModel.archive() }) {
-                    Text(stringResource(R.string.btn_archive))
-                }
+                DestructiveTextButton(stringResource(R.string.btn_archive), { showArchiveConfirm = false; viewModel.archive() })
             },
             dismissButton = {
-                TextButton(onClick = { showArchiveConfirm = false }) { Text(stringResource(R.string.btn_cancel)) }
+                DialogTextButton(stringResource(R.string.btn_cancel), { showArchiveConfirm = false })
             }
         )
     }

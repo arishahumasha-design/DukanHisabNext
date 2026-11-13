@@ -3,7 +3,6 @@ package com.example.dukanhisabnext.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -27,7 +26,7 @@ fun ConfirmAmountDialog(
     onFix: () -> Unit,
     onConfirm: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onFix,
         title = { Text(stringResource(R.string.confirm_amount_title)) },

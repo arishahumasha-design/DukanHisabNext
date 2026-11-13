@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.DialogTextButton
 
 /**
  * Shown once on the sell and cart screens when the cart came back after the app was closed but
@@ -38,7 +39,7 @@ fun CartRestoreNote(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
-            TextButton(onClick = cart::dismissRemovedNote) { Text(stringResource(R.string.ledger_date_ok)) }
+            DialogTextButton(stringResource(R.string.ledger_date_ok), cart::dismissRemovedNote)
         }
     }
 }

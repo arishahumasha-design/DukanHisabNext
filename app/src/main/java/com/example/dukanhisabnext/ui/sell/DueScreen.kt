@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.PrimaryButton
 import com.example.dukanhisabnext.ui.components.NumberField
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.util.formatTaka
@@ -90,17 +91,16 @@ fun DueScreen(
             }
 
             // ---- Confirm: saves at once; disabled while saving ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-                Button(
+            Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
+                PrimaryButton(
+                    text = stringResource(R.string.btn_confirm_due),
                     onClick = viewModel::confirmDue,
                     enabled = !state.isSaving && due.error == null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                         .heightIn(min = 64.dp)
-                ) {
-                    Text(stringResource(R.string.btn_confirm_due), style = MaterialTheme.typography.titleLarge)
-                }
+                )
             }
         }
     }

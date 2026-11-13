@@ -19,7 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -28,7 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -45,7 +45,6 @@ import com.example.dukanhisabnext.ui.components.PrimaryButton
 import com.example.dukanhisabnext.ui.components.StatusPill
 import com.example.dukanhisabnext.ui.components.TopBar
 import com.example.dukanhisabnext.ui.theme.AppTheme
-import com.example.dukanhisabnext.ui.theme.ButtonShape
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,6 +62,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.DialogTextButton
 import com.example.dukanhisabnext.data.dao.KhataCustomerRow
 import com.example.dukanhisabnext.ledger.KhataAllSummary
 import com.example.dukanhisabnext.ledger.KhataPeriod
@@ -171,14 +171,13 @@ fun KhataScreen(
                 }
 
                 // ---- Search (works in every chip) ----
-                OutlinedTextField(
+                AppTextField(
                     value = query,
                     onValueChange = viewModel::onQueryChange,
                     modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.search_customers)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-                    shape = ButtonShape,
                     trailingIcon = {
                         if (query.isNotEmpty()) {
                             IconButton(onClick = { viewModel.onQueryChange("") }) {
@@ -457,14 +456,10 @@ private fun CustomerDueRow(row: KhataCustomerRow, lastText: String?, onClick: ()
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        // On the right: the amount (with a "বাকি" pill when they owe), an advance in green, or a calm "বাকি নেই" pill.
+        // On the right: the amount (amber when they owe, so no extra pill), an advance in green, or a calm "বাকি নেই" pill.
         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
             when (balanceStatus(row.balance)) {
-                BalanceStatus.OWES -> {
-                    BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium)
-                    StatusPill(stringResource(R.string.report_tab_due), PillVariant.Due)
-                }
-                BalanceStatus.ADVANCE -> BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium)
+                BalanceStatus.OWES, BalanceStatus.ADVANCE -> BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium)
                 BalanceStatus.CLEAR -> StatusPill(stringResource(R.string.balance_clear), PillVariant.Paid)
             }
         }
@@ -503,7 +498,7 @@ private fun EmptyMessage(kind: KhataEmpty, period: KhataPeriod) {
 /** The 4 sort options with a radio button each. Choosing one applies it and closes. */
 @Composable
 private fun SortDialog(selected: KhataSort, onSelect: (KhataSort) -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.khata_sort_title)) },
         text = {
@@ -527,7 +522,7 @@ private fun SortDialog(selected: KhataSort, onSelect: (KhataSort) -> Unit, onDis
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_close_dialog)) }
+            DialogTextButton(stringResource(R.string.btn_close_dialog), onDismiss)
         }
     )
 }
@@ -554,14 +549,13 @@ private fun CustomerPickDialog(
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.dialog_customer_list_title), style = MaterialTheme.typography.titleLarge)
-                OutlinedTextField(
+                AppTextField(
                     value = query,
                     onValueChange = { query = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = { Text(stringResource(R.string.search_customers)) },
                     leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-                    shape = ButtonShape,
                     trailingIcon = {
                         if (query.isNotEmpty()) {
                             IconButton(onClick = { query = "" }) {
@@ -598,12 +592,12 @@ private fun CustomerPickDialog(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.btn_close_dialog))
-                    }
-                    Button(onClick = onAddCustomer, modifier = Modifier.weight(1f).heightIn(min = 52.dp)) {
-                        Text(stringResource(R.string.btn_add_customer_dialog), style = MaterialTheme.typography.titleMedium)
-                    }
+                    DialogTextButton(stringResource(R.string.btn_close_dialog), onDismiss)
+                    PrimaryButton(
+                        text = stringResource(R.string.btn_add_customer_dialog),
+                        onClick = onAddCustomer,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }

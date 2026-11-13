@@ -13,7 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,7 +57,7 @@ fun ShopScreen(
             padding = padding,
             saveBar = { SaveBar(stringResource(R.string.btn_save), !state.isSaving && !state.isLoading, viewModel::save) }
         ) {
-            OutlinedTextField(
+            AppTextField(
                 value = state.name,
                 onValueChange = viewModel::onNameChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -68,7 +68,7 @@ fun ShopScreen(
                 supportingText = state.errors.name?.let { { Text(stringResource(it.messageRes())) } }
             )
 
-            OutlinedTextField(
+            AppTextField(
                 value = state.ownerName,
                 onValueChange = viewModel::onOwnerChange,
                 modifier = Modifier.fillMaxWidth(),
@@ -86,7 +86,7 @@ fun ShopScreen(
                 prefix = stringResource(R.string.phone_country_prefix)
             )
 
-            OutlinedTextField(
+            AppTextField(
                 value = state.address,
                 onValueChange = viewModel::onAddressChange,
                 modifier = Modifier.fillMaxWidth(),

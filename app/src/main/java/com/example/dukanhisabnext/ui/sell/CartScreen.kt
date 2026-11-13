@@ -216,11 +216,11 @@ private fun DiscountUnitToggle(selected: DiscountUnit, onSelect: (DiscountUnit) 
             val modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 48.dp)
             val padding = PaddingValues(horizontal = 12.dp)
             if (unit == selected) {
-                Button(onClick = { onSelect(unit) }, modifier = modifier, contentPadding = padding) {
+                Button(onClick = { onSelect(unit) }, modifier = modifier, contentPadding = padding, shape = ButtonShape) {
                     Text(label, style = MaterialTheme.typography.titleMedium)
                 }
             } else {
-                OutlinedButton(onClick = { onSelect(unit) }, modifier = modifier, contentPadding = padding) {
+                OutlinedButton(onClick = { onSelect(unit) }, modifier = modifier, contentPadding = padding, shape = ButtonShape) {
                     Text(label, style = MaterialTheme.typography.titleMedium)
                 }
             }
@@ -254,7 +254,7 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ProductTile(name = input.name, modifier = Modifier.padding(end = 12.dp, top = 8.dp), size = 40.dp)
+                ProductTile(name = input.name, modifier = Modifier.padding(end = 12.dp), size = 40.dp)
                 Text(
                     text = input.name,
                     style = MaterialTheme.typography.titleMedium,

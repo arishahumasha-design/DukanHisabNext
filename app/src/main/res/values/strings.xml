@@ -40,6 +40,7 @@
     <string name="search_products">পণ্য খুঁজুন</string>
     <string name="clear_search">খোঁজা মুছুন</string>
     <string name="chip_all">সব</string>
+    <string name="tag_archived">আর্কাইভ করা</string>
     <string name="show_archived">আর্কাইভ করা পণ্য দেখান</string>
     <string name="empty_products">কোনো পণ্য নেই। নতুন পণ্য যোগ করুন।</string>
     <string name="empty_archived">আর্কাইভ করা কোনো পণ্য নেই।</string>

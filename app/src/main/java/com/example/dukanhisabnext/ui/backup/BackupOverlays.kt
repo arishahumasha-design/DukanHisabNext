@@ -34,6 +34,7 @@ import com.example.dukanhisabnext.backup.backupDateTimeText
 import com.example.dukanhisabnext.backup.blocksApp
 import com.example.dukanhisabnext.backup.summaryRows
 import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.ui.components.PrimaryButton
 
 /**
  * Two full-screen layers above the whole app (the bottom bar too):
@@ -97,9 +98,7 @@ private fun StartupNoteScreen(note: StartupNote, onDone: () -> Unit) {
                     textAlign = TextAlign.Center
                 )
             }
-            Button(onClick = onDone, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
-                Text(stringResource(R.string.backup_ok), style = MaterialTheme.typography.titleMedium)
-            }
+            PrimaryButton(text = stringResource(R.string.backup_ok), onClick = onDone, modifier = Modifier.fillMaxWidth())
         }
     }
 }

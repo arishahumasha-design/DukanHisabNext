@@ -30,6 +30,7 @@ import com.example.dukanhisabnext.ui.components.PrimaryButton
 import com.example.dukanhisabnext.ui.components.SecondaryButton
 import com.example.dukanhisabnext.ui.components.SectionHeader
 import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.components.InfoCard
 import com.example.dukanhisabnext.ui.theme.AppTheme
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -187,18 +188,11 @@ fun CustomerDetailScreen(
             // ---- The short "saved" message ----
             if (justSaved) {
                 item(key = "saved") {
-                    Surface(
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        shape = RoundedCornerShape(12.dp),
+                    InfoCard(
+                        text = stringResource(R.string.ledger_saved),
+                        variant = PillVariant.Paid,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.ledger_saved),
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                    )
                 }
             }
 
@@ -313,7 +307,7 @@ internal fun HistoryRow(
         colors = if (isHighlighted(entry)) {
             ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
         } else {
-            ListItemDefaults.colors()
+            ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         },
         headlineContent = {
             Text(customerName ?: historyTitle(row, labels, methodName), style = MaterialTheme.typography.titleMedium)

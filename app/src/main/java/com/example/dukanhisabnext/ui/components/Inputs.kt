@@ -9,11 +9,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +19,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,7 +90,7 @@ fun NumberField(
     prefix: String? = null,
     suffix: String? = null
 ) {
-    OutlinedTextField(
+    AppTextField(
         value = value,
         onValueChange = { onValueChange(sanitizeNumberInput(it)) },
         modifier = modifier.fillMaxWidth(),
@@ -130,14 +129,14 @@ fun DropdownField(
     }
 
     Box(modifier = modifier.fillMaxWidth()) {
-        OutlinedTextField(
+        AppTextField(
             value = selectedText,
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
             singleLine = true,
             label = { Text(label) },
-            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+            trailingIcon = { Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null, modifier = Modifier.rotate(90f)) },
             interactionSource = interactionSource,
             modifier = Modifier.fillMaxWidth()
         )

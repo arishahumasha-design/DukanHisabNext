@@ -58,6 +58,17 @@ import com.example.dukanhisabnext.ui.sales.customerLabel
 import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.ui.sales.groupByDhakaDay
 import com.example.dukanhisabnext.ui.sales.saleTimeText
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.IconTile
+import com.example.dukanhisabnext.ui.components.InfoCard
+import com.example.dukanhisabnext.ui.components.InitialAvatar
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.SectionHeader
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.Spacing
+import com.example.dukanhisabnext.ui.theme.AppTheme
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.ui.sales.showDueTag
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
@@ -86,12 +97,24 @@ fun ReportScreen(
     SubScreenScaffold(title = stringResource(R.string.title_reports), onBack = onBack) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             // ---- The four tabs ----
-            PrimaryTabRow(selectedTabIndex = controls.tab.ordinal) {
+            PrimaryTabRow(
+                selectedTabIndex = controls.tab.ordinal,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ) {
                 ReportTab.entries.forEach { tab ->
                     Tab(
                         selected = controls.tab == tab,
                         onClick = { viewModel.onTabChange(tab) },
-                        text = { Text(stringResource(tab.labelRes()), style = MaterialTheme.typography.titleSmall) }
+                        selectedContentColor = MaterialTheme.colorScheme.primary,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = {
+                            Text(
+                                stringResource(tab.labelRes()),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = if (controls.tab == tab) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
                     )
                 }
             }
@@ -158,19 +181,12 @@ private fun ReportTab.labelRes(): Int = when (this) {
 
 @Composable
 private fun Message(resId: Int) {
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-        Text(stringResource(resId), style = MaterialTheme.typography.bodyLarge)
-    }
+    EmptyState(icon = R.drawable.ic_report, text = stringResource(resId))
 }
 
 @Composable
 private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold
-    )
+    SectionHeader(text = text, modifier = Modifier.padding(start = Spacing.l, end = Spacing.l, top = Spacing.s))
 }
 
 // =========================================================================================
@@ -206,15 +222,13 @@ private fun SalesBody(body: ReportBody.Sales, onOpenReceipt: (Long) -> Unit) {
         }
         groupByDhakaDay(body.rows).forEach { group ->
             item(key = "day-${group.date.toEpochDay()}") {
-                Surface(color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = dayHeaderText(group.date, monthNames),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                Text(
+                    text = dayHeaderText(group.date, monthNames),
+                    modifier = Modifier.fillMaxWidth().padding(start = Spacing.l, end = Spacing.l, top = Spacing.l, bottom = Spacing.s),
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             group.rows.forEach { row ->
                 item(key = "sale-${row.id}") {
@@ -272,9 +286,11 @@ private fun SalesLine.labelRes(): Int = when (this) {
 @Composable
 private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClick: () -> Unit) {
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = { IconTile(R.drawable.ic_receipt) },
         headlineContent = { Text(toBengaliDigits(row.receiptNo) + "  ·  " + timeText, style = MaterialTheme.typography.titleMedium) },
-        supportingContent = { Text(customer, style = MaterialTheme.typography.bodyMedium) },
+        supportingContent = { Text(customer, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
@@ -283,19 +299,12 @@ private fun SaleRow(row: SaleListRow, timeText: String, customer: String, onClic
                     fontWeight = FontWeight.Bold
                 )
                 if (showDueTag(row)) {
-                    Surface(color = MaterialTheme.colorScheme.errorContainer, shape = RoundedCornerShape(8.dp)) {
-                        Text(
-                            stringResource(R.string.sale_due_tag, formatTaka(row.dueAmount)),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
+                    StatusPill(stringResource(R.string.sale_due_tag, formatTaka(row.dueAmount)), PillVariant.Due)
                 }
             }
         }
     )
-    HorizontalDivider()
+    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
 }
 
 // =========================================================================================
@@ -344,7 +353,9 @@ private fun DueBody(body: ReportBody.Due, rangeReady: Boolean, onOpenCustomer: (
 @Composable
 private fun OwingRow(row: KhataCustomerRow, onClick: () -> Unit) {
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         modifier = Modifier.clickable(onClick = onClick),
+        leadingContent = { InitialAvatar(name = row.customer.name) },
         headlineContent = { Text(row.customer.name, style = MaterialTheme.typography.titleMedium) },
         supportingContent = row.customer.phone?.let { phone -> { Text(toBengaliDigits(phone), style = MaterialTheme.typography.bodyMedium) } },
         trailingContent = { BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium) }
@@ -390,34 +401,62 @@ private fun ProfitBody(report: ProfitReport) {
     val taka = stringResource(R.string.unit_taka)
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item(key = "box") {
-            AppCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    profitLines(report).forEach { line ->
-                        if (line.kind == ProfitLineKind.NET_PROFIT) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                        val bold = isBoldProfitLine(line)
-                        val color = if (isRedProfitLine(line)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                        val label = when (line.kind) {
-                            ProfitLineKind.NET_SALES -> R.string.report_profit_net_sales
-                            ProfitLineKind.COST_OF_GOODS -> R.string.report_profit_cost
-                            ProfitLineKind.GROSS_PROFIT ->
-                                if (line.amount < 0) R.string.report_profit_gross_loss else R.string.report_profit_gross
-                            ProfitLineKind.SHOP_EXPENSES -> R.string.report_profit_shop_expenses
-                            ProfitLineKind.NET_PROFIT ->
-                                if (netResultWord(report) == ResultWord.LOSS) R.string.report_profit_net_loss else R.string.report_profit_net
+            val allLines = profitLines(report)
+            Column(
+                modifier = Modifier.padding(start = Spacing.l, end = Spacing.l, top = Spacing.m),
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
+            ) {
+                // The steps up to the gross profit and the shop expenses.
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        allLines.filter { it.kind != ProfitLineKind.NET_PROFIT }.forEach { line ->
+                            val bold = isBoldProfitLine(line)
+                            val color = if (isRedProfitLine(line)) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                            val label = when (line.kind) {
+                                ProfitLineKind.NET_SALES -> R.string.report_profit_net_sales
+                                ProfitLineKind.COST_OF_GOODS -> R.string.report_profit_cost
+                                ProfitLineKind.GROSS_PROFIT ->
+                                    if (line.amount < 0) R.string.report_profit_gross_loss else R.string.report_profit_gross
+                                else -> R.string.report_profit_shop_expenses
+                            }
+                            if (line.kind == ProfitLineKind.GROSS_PROFIT) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(
+                                    stringResource(label),
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                                    color = color
+                                )
+                                Text(
+                                    profitAmountText(line, taka, formatTaka(abs(line.amount))),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                                    color = color
+                                )
+                            }
                         }
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    }
+                }
+
+                // The result: a hero-style card, green for a profit and red for a loss.
+                allLines.firstOrNull { it.kind == ProfitLineKind.NET_PROFIT }?.let { line ->
+                    val loss = netResultWord(report) == ResultWord.LOSS
+                    val container = if (loss) MaterialTheme.colorScheme.error else AppTheme.colors.hero
+                    val content = if (loss) MaterialTheme.colorScheme.onError else AppTheme.colors.onHero
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = container, contentColor = content),
+                        border = null
+                    ) {
+                        Column(modifier = Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                             Text(
-                                stringResource(label),
-                                modifier = Modifier.weight(1f),
-                                style = if (line.kind == ProfitLineKind.NET_PROFIT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-                                color = color
+                                stringResource(if (loss) R.string.report_profit_net_loss else R.string.report_profit_net),
+                                style = MaterialTheme.typography.labelLarge
                             )
                             Text(
                                 profitAmountText(line, taka, formatTaka(abs(line.amount))),
-                                style = if (line.kind == ProfitLineKind.NET_PROFIT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
-                                fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
-                                color = color
+                                style = MaterialTheme.typography.headlineLarge
                             )
                         }
                     }
@@ -444,21 +483,14 @@ private fun ProfitBody(report: ProfitReport) {
         // ---- "আনুমানিক": some sold lines had no cost price ----
         approximateNote(report)?.let { note ->
             item(key = "approx") {
-                AppCard(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
-                ) {
-                    Text(
-                        text = stringResource(
-                            R.string.report_approximate,
-                            toBengaliDigits(note.missingCostLines.toString()),
-                            "$taka ${formatTaka(note.missingCostSales)}"
-                        ),
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer
-                    )
-                }
+                InfoCard(
+                    text = stringResource(
+                        R.string.report_approximate,
+                        toBengaliDigits(note.missingCostLines.toString()),
+                        "$taka ${formatTaka(note.missingCostSales)}"
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(Spacing.l)
+                )
             }
         }
     }

@@ -10,13 +10,15 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
+import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.SectionHeader
+import com.example.dukanhisabnext.ui.components.SegmentedControl
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -77,7 +79,8 @@ fun StockAdjustScreen(
         ) {
             // Product name and current stock (the SUM of the movements below)
             item {
-                Column {
+                FormCard {
+                  Column {
                     Text(product?.name.orEmpty(), style = MaterialTheme.typography.titleLarge)
                     val current = stock
                     if (current != null) {
@@ -88,27 +91,21 @@ fun StockAdjustScreen(
                             color = status.color()
                         )
                     }
+                  }
                 }
             }
 
             // Which action: buying stock, or fixing the count
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = form.mode == StockMode.PURCHASE,
-                        onClick = { viewModel.onModeChange(StockMode.PURCHASE) },
-                        label = { Text(stringResource(R.string.mode_purchase)) }
-                    )
-                    FilterChip(
-                        selected = form.mode == StockMode.CORRECTION,
-                        onClick = { viewModel.onModeChange(StockMode.CORRECTION) },
-                        label = { Text(stringResource(R.string.mode_correction)) }
-                    )
-                }
+                SegmentedControl(
+                    labels = listOf(stringResource(R.string.mode_purchase), stringResource(R.string.mode_correction)),
+                    selectedIndex = if (form.mode == StockMode.PURCHASE) 0 else 1,
+                    onSelect = { viewModel.onModeChange(if (it == 0) StockMode.PURCHASE else StockMode.CORRECTION) }
+                )
             }
 
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                FormCard {
                     if (form.mode == StockMode.PURCHASE) {
                         NumberField(
                             label = stringResource(R.string.field_quantity),
@@ -157,7 +154,7 @@ fun StockAdjustScreen(
                             }
                         }
                     }
-                    OutlinedTextField(
+                    AppTextField(
                         value = form.note,
                         onValueChange = viewModel::onNoteChange,
                         modifier = Modifier.fillMaxWidth(),
@@ -168,12 +165,7 @@ fun StockAdjustScreen(
 
             // History: every stock change, newest first. Rows are never edited or deleted.
             item {
-                HorizontalDivider()
-                Text(
-                    text = stringResource(R.string.history_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 12.dp)
-                )
+                SectionHeader(stringResource(R.string.history_title))
             }
             if (movements.isEmpty()) {
                 item { Text(stringResource(R.string.history_empty), style = MaterialTheme.typography.bodyMedium) }
@@ -204,6 +196,7 @@ fun StockAdjustScreen(
 @Composable
 private fun MovementRow(movement: StockMovement, unitText: String) {
     ListItem(
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         headlineContent = {
             Text(
                 text = "${formatSignedQuantity(movement.quantity)} $unitText",

@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,6 +52,19 @@ import com.example.dukanhisabnext.backup.lastBackupText
 import com.example.dukanhisabnext.backup.saveFileName
 import com.example.dukanhisabnext.backup.summaryRows
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.DestructiveTextButton
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.InfoCard
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.theme.AppTheme
+import com.example.dukanhisabnext.ui.theme.Spacing
+import com.example.dukanhisabnext.backup.shouldRemindBackup
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import com.example.dukanhisabnext.ui.settings.SavedMessage
 import com.example.dukanhisabnext.util.toBengaliDigits
 import java.io.File
@@ -112,8 +125,30 @@ fun BackupScreen(onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AppCard(modifier = Modifier.fillMaxWidth()) {
-                Text(lastText, modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            // ---- the status: a green check when the last backup is recent, an amber warning after 7 days (or never) ----
+            val overdue = shouldRemindBackup(System.currentTimeMillis(), lastBackupAt, true)
+            val colors = AppTheme.colors
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (overdue) colors.amberContainer else MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = if (overdue) colors.amberText else MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                border = null
+            ) {
+                Row(
+                    modifier = Modifier.padding(Spacing.l).heightIn(min = 48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+                ) {
+                    Icon(
+                        painterResource(if (overdue) R.drawable.ic_warning else R.drawable.ic_check),
+                        contentDescription = null,
+                        tint = if (overdue) colors.amber else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(lastText, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                }
             }
 
             // ---- what is happening, or how it ended ----
@@ -126,7 +161,7 @@ fun BackupScreen(onBack: () -> Unit) {
             }
             if (ui.showDone) {
                 SavedMessage(stringResource(R.string.backup_saved))
-                TextButton(onClick = manager::dismiss) { Text(stringResource(R.string.backup_ok)) }
+                DialogTextButton(stringResource(R.string.backup_ok), manager::dismiss)
             }
             ui.failure?.let { problem ->
                 AppCard(
@@ -139,55 +174,58 @@ fun BackupScreen(onBack: () -> Unit) {
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
-                        TextButton(onClick = manager::dismiss) { Text(stringResource(R.string.backup_ok)) }
+                        DialogTextButton(stringResource(R.string.backup_ok), manager::dismiss)
                     }
                 }
             }
 
             // ---- make a backup ----
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.btn_backup_save),
                 onClick = { ask = Ask.SAVE_WARNING },
                 enabled = ui.buttonsEnabled,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            ) { Text(stringResource(R.string.btn_backup_save), style = MaterialTheme.typography.titleMedium) }
-            OutlinedButton(
+                modifier = Modifier.fillMaxWidth()
+            )
+            SecondaryButton(
+                text = stringResource(R.string.btn_backup_share),
                 onClick = { ask = Ask.SHARE_WARNING },
                 enabled = ui.buttonsEnabled,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            ) { Text(stringResource(R.string.btn_backup_share), style = MaterialTheme.typography.titleMedium) }
-            Text(
-                stringResource(R.string.backup_privacy_warning),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                modifier = Modifier.fillMaxWidth()
             )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            InfoCard(text = stringResource(R.string.backup_privacy_warning), variant = PillVariant.Due)
 
             // ---- restore ----
-            OutlinedButton(
+            SecondaryButton(
+                text = stringResource(R.string.btn_backup_restore),
                 // "*/*": a renamed or wrong file must be pickable so the checks can refuse it with a clear message.
                 onClick = { openLauncher.launch(arrayOf("*/*")) },
                 enabled = ui.buttonsEnabled,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-            ) { Text(stringResource(R.string.btn_backup_restore), style = MaterialTheme.typography.titleMedium) }
+                modifier = Modifier.fillMaxWidth()
+            )
             Text(
                 stringResource(R.string.backup_restore_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // ---- undo (only while the safety copy exists) ----
+            // ---- undo (only while the safety copy exists): its own card, apart from the rest ----
             if (ui.showUndo) {
-                OutlinedButton(
-                    onClick = { ask = Ask.UNDO },
-                    enabled = ui.buttonsEnabled,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                ) { Text(stringResource(R.string.btn_backup_undo), style = MaterialTheme.typography.titleMedium) }
-                Text(
-                    stringResource(R.string.backup_undo_hint),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(Modifier.height(Spacing.s))
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+                        SecondaryButton(
+                            text = stringResource(R.string.btn_backup_undo),
+                            onClick = { ask = Ask.UNDO },
+                            enabled = ui.buttonsEnabled,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            stringResource(R.string.backup_undo_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
     }
@@ -196,35 +234,35 @@ fun BackupScreen(onBack: () -> Unit) {
 
     if (ask == Ask.SAVE_WARNING || ask == Ask.SHARE_WARNING) {
         val saving = ask == Ask.SAVE_WARNING
-        AlertDialog(
+        AppAlertDialog(
             // Not closed by a tap outside; Back or "বাতিল" cancels.
             properties = DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { ask = Ask.NONE },
             title = { Text(stringResource(R.string.backup_warning_title)) },
             text = { Text(stringResource(R.string.backup_privacy_warning), style = MaterialTheme.typography.bodyLarge) },
             confirmButton = {
-                TextButton(onClick = {
+                DialogTextButton(stringResource(R.string.backup_warning_continue), {
                     ask = Ask.NONE
                     if (saving) saveLauncher.launch(saveFileName(System.currentTimeMillis())) else manager.startShare()
-                }) { Text(stringResource(R.string.backup_warning_continue)) }
+                })
             },
-            dismissButton = { TextButton(onClick = { ask = Ask.NONE }) { Text(stringResource(R.string.btn_cancel)) } }
+            dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), { ask = Ask.NONE }) }
         )
     }
 
     if (ask == Ask.UNDO) {
-        AlertDialog(
+        AppAlertDialog(
             properties = DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = { ask = Ask.NONE },
             title = { Text(stringResource(R.string.undo_confirm_title)) },
             text = { Text(stringResource(R.string.undo_confirm_body), style = MaterialTheme.typography.bodyLarge) },
             confirmButton = {
-                TextButton(onClick = {
+                DestructiveTextButton(stringResource(R.string.btn_undo_confirm), {
                     ask = Ask.NONE
                     manager.startUndo()
-                }) { Text(stringResource(R.string.btn_undo_confirm)) }
+                })
             },
-            dismissButton = { TextButton(onClick = { ask = Ask.NONE }) { Text(stringResource(R.string.btn_cancel)) } }
+            dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), { ask = Ask.NONE }) }
         )
     }
 
@@ -247,7 +285,7 @@ private fun RestoreSummaryDialog(
     onConfirm: () -> Unit,
     onCancel: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onCancel,
         title = { Text(stringResource(R.string.restore_confirm_title)) },
@@ -282,8 +320,8 @@ private fun RestoreSummaryDialog(
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.btn_restore_confirm)) } },
-        dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(R.string.btn_cancel)) } }
+        confirmButton = { DestructiveTextButton(stringResource(R.string.btn_restore_confirm), onConfirm) },
+        dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), onCancel) }
     )
 }
 

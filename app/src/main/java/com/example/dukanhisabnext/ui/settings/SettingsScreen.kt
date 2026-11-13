@@ -16,9 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -26,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -132,7 +130,7 @@ private fun OwnerCard(ui: SettingsUi, onEdit: () -> Unit) {
                         )
                     } else {
                         Icon(
-                            Icons.Filled.Person,
+                            painterResource(R.drawable.ic_contacts),
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(32.dp)
@@ -155,9 +153,7 @@ private fun OwnerCard(ui: SettingsUi, onEdit: () -> Unit) {
                     phone?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
                 }
             }
-            OutlinedButton(onClick = onEdit, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
-                Text(stringResource(R.string.btn_edit_owner), style = MaterialTheme.typography.titleMedium)
-            }
+            SecondaryButton(text = stringResource(R.string.btn_edit_owner), onClick = onEdit, modifier = Modifier.fillMaxWidth())
         }
     }
 }
@@ -233,7 +229,7 @@ private fun BackupRow(onClick: () -> Unit) {
                 Text(stringResource(R.string.title_backup), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
         }
     }
 }

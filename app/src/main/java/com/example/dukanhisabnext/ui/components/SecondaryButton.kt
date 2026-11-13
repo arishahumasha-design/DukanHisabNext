@@ -39,3 +39,32 @@ fun SecondaryButton(
         Text(text, style = MaterialTheme.typography.labelLarge)
     }
 }
+
+/** A small outlined button for a row (for example "ফিরিয়ে আনুন"): 48dp high, 14dp corners. */
+@Composable
+fun SmallOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 48.dp),
+        enabled = enabled,
+        shape = ButtonShape,
+        border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.primary else AppTheme.colors.border)
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/** The red outlined button for something that undoes a thing (for example "বিক্রি বাতিল করুন"): 14dp corners, 52dp high. */
+@Composable
+fun DestructiveOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 52.dp),
+        enabled = enabled,
+        shape = ButtonShape,
+        colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+        border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.error else AppTheme.colors.border)
+    ) {
+        Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}

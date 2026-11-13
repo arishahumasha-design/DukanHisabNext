@@ -21,7 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,7 +38,6 @@ import com.example.dukanhisabnext.ui.components.PillVariant
 import com.example.dukanhisabnext.ui.components.ProductTile
 import com.example.dukanhisabnext.ui.components.StatusPill
 import com.example.dukanhisabnext.ui.theme.AppTheme
-import com.example.dukanhisabnext.ui.theme.ButtonShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.dao.ProductWithStock
@@ -73,14 +72,13 @@ fun SellScreen(
         // The cart came back after a restart, but some products can no longer be sold.
         CartRestoreNote()
         // ---- Search ----
-        OutlinedTextField(
+        AppTextField(
             value = query,
             onValueChange = viewModel::onQueryChange,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             singleLine = true,
             placeholder = { Text(stringResource(R.string.search_products)) },
             leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
-            shape = ButtonShape,
             trailingIcon = {
                 if (query.isNotEmpty()) {
                     IconButton(onClick = { viewModel.onQueryChange("") }) {
@@ -239,7 +237,7 @@ private fun PickerBottomBar(total: Long, lineCount: Int, onOpenCart: () -> Unit)
                 Button(
                     onClick = onOpenCart,
                     enabled = lineCount > 0,
-                    shape = ButtonShape,
+                    shape = com.example.dukanhisabnext.ui.theme.ButtonShape,
                     modifier = Modifier.heightIn(min = 52.dp)
                 ) {
                     Icon(painterResource(R.drawable.ic_sell), contentDescription = null, modifier = Modifier.size(20.dp))

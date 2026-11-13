@@ -13,13 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,12 +24,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
 import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.NumberField
@@ -92,9 +89,7 @@ fun PaymentScreen(
             ) {
                 if (!summary.canContinue) {
                     Text(stringResource(R.string.payment_cart_invalid), style = MaterialTheme.typography.bodyLarge)
-                    OutlinedButton(onClick = onBack, modifier = Modifier.heightIn(min = 52.dp)) {
-                        Text(stringResource(R.string.btn_back_to_cart))
-                    }
+                    SecondaryButton(text = stringResource(R.string.btn_back_to_cart), onClick = onBack)
                     return@Column
                 }
 
@@ -136,7 +131,7 @@ fun PaymentScreen(
                 )
                 BigPayButton(
                     label = stringResource(R.string.btn_pay_due),
-                    icon = Icons.Filled.Person,
+                    icon = R.drawable.ic_contacts,
                     enabled = !busy && summary.total > 0, // a due needs something to owe
                     onClick = {
                         viewModel.prepareDue()
@@ -145,7 +140,7 @@ fun PaymentScreen(
                 )
                 BigPayButton(
                     label = stringResource(R.string.btn_pay_mobile),
-                    icon = Icons.Filled.Phone,
+                    icon = R.drawable.ic_phone,
                     enabled = !busy && view.readyToSave,
                     onClick = viewModel::onMobileTap
                 )
@@ -178,12 +173,11 @@ fun PaymentScreen(
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
-                                Button(
+                                PrimaryButton(
+                                    text = stringResource(R.string.btn_turn_on_customer),
                                     onClick = { viewModel.onCustomerSwitch(true) },
-                                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                                ) {
-                                    Text(stringResource(R.string.btn_turn_on_customer), style = MaterialTheme.typography.titleMedium)
-                                }
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
@@ -194,27 +188,25 @@ fun PaymentScreen(
 
     // ---- The small mobile-money choice ----
     if (state.mobileChoiceOpen) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = viewModel::onMobileDismiss,
             title = { Text(stringResource(R.string.dialog_mobile_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
+                    PrimaryButton(
+                        text = stringResource(R.string.method_bkash),
                         onClick = { viewModel.onMobileChosen(PaymentMethod.BKASH) },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                    ) {
-                        Text(stringResource(R.string.method_bkash), style = MaterialTheme.typography.titleMedium)
-                    }
-                    Button(
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.method_nagad_full),
                         onClick = { viewModel.onMobileChosen(PaymentMethod.NAGAD) },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                    ) {
-                        Text(stringResource(R.string.method_nagad_full), style = MaterialTheme.typography.titleMedium)
-                    }
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             },
             confirmButton = {
-                TextButton(onClick = viewModel::onMobileDismiss) { Text(stringResource(R.string.btn_cancel)) }
+                DialogTextButton(stringResource(R.string.btn_cancel), viewModel::onMobileDismiss)
             }
         )
     }
@@ -224,22 +216,15 @@ fun PaymentScreen(
 @Composable
 private fun BigPayButton(
     label: String,
-    icon: ImageVector?,
+    @androidx.annotation.DrawableRes icon: Int?,
     enabled: Boolean,
     onClick: () -> Unit,
     primary: Boolean = false
 ) {
     val modifier = Modifier.fillMaxWidth().heightIn(min = 64.dp)
-    val content: @Composable () -> Unit = {
-        if (icon != null) {
-            Icon(icon, contentDescription = null)
-            Spacer(Modifier.width(12.dp))
-        }
-        Text(text = label, style = MaterialTheme.typography.titleLarge)
-    }
     if (primary) {
-        Button(onClick = onClick, enabled = enabled, modifier = modifier) { content() }
+        PrimaryButton(text = label, onClick = onClick, enabled = enabled, modifier = modifier, icon = icon)
     } else {
-        FilledTonalButton(onClick = onClick, enabled = enabled, modifier = modifier) { content() }
+        SecondaryButton(text = label, onClick = onClick, enabled = enabled, modifier = modifier, icon = icon)
     }
 }

@@ -3,36 +3,27 @@ package com.example.dukanhisabnext.ui.products
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +34,13 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.dao.ProductWithStock
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.EmptyState
+import com.example.dukanhisabnext.ui.components.PillVariant
+import com.example.dukanhisabnext.ui.components.ProductTile
+import com.example.dukanhisabnext.ui.components.SmallOutlinedButton
+import com.example.dukanhisabnext.ui.components.StatusPill
+import com.example.dukanhisabnext.ui.theme.Spacing
+import androidx.compose.foundation.layout.heightIn
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
 
@@ -69,24 +67,24 @@ fun ProductListScreen(
         floatingActionButton = {
             if (!showArchived) {
                 FloatingActionButton(onClick = onAddProduct) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_product))
+                    Icon(painterResource(R.drawable.ic_add), contentDescription = stringResource(R.string.add_product))
                 }
             }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             // Search box
-            OutlinedTextField(
+            AppTextField(
                 value = query,
                 onValueChange = viewModel::onQueryChange,
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.search_products)) },
-                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                leadingIcon = { Icon(painterResource(R.drawable.ic_search), contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) {
                         IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.clear_search))
+                            Icon(painterResource(R.drawable.ic_close), contentDescription = stringResource(R.string.clear_search))
                         }
                     }
                 }
@@ -150,9 +148,7 @@ fun ProductListScreen(
                         ProductEmptyKind.NO_ARCHIVED -> R.string.empty_archived
                         ProductEmptyKind.NO_PRODUCTS -> R.string.empty_products
                     }
-                    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                        Text(stringResource(message), style = MaterialTheme.typography.bodyLarge)
-                    }
+                    EmptyState(icon = R.drawable.ic_product, text = stringResource(message))
                 }
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -187,40 +183,42 @@ private fun ProductRow(
     val status = stockStatus(item.stock, product.lowStockLevel)
     val unitText = stringResource(product.unit.labelRes())
 
-    ListItem(
-        modifier = Modifier.clickable(enabled = !archived, onClick = onClick),
-        headlineContent = { Text(product.name) },
-        supportingContent = {
-            Column {
-                Text(stringResource(R.string.price_format, formatTaka(product.sellPrice)))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (status != StockStatus.NORMAL) {
-                        Icon(
-                            Icons.Filled.Warning,
-                            contentDescription = null,
-                            tint = status.color(),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = stringResource(R.string.stock_label, formatQuantity(item.stock), unitText),
-                        color = status.color()
-                    )
-                    if (status != StockStatus.NORMAL) {
-                        val tag = if (status == StockStatus.NEGATIVE) R.string.tag_negative_stock else R.string.tag_low_stock
-                        Text(text = " · " + stringResource(tag), color = status.color())
-                    }
-                }
-            }
-        },
-        trailingContent = {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !archived, onClick = onClick)
+            .heightIn(min = 72.dp)
+            .padding(horizontal = Spacing.l, vertical = Spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+    ) {
+        ProductTile(name = product.name)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(product.name, style = MaterialTheme.typography.titleMedium)
+            Text(
+                stringResource(R.string.price_format, formatTaka(product.sellPrice)),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.stock_label, formatQuantity(item.stock), unitText),
+                style = MaterialTheme.typography.bodySmall,
+                color = status.color()
+            )
+            // One pill says what is wrong (the stock text above already shows the amount).
             if (archived) {
-                TextButton(onClick = onRestore) { Text(stringResource(R.string.btn_restore)) }
-            } else {
-                TextButton(onClick = onStock) { Text(stringResource(R.string.btn_stock)) }
+                StatusPill(stringResource(R.string.tag_archived), PillVariant.Neutral)
+            } else if (status == StockStatus.LOW) {
+                StatusPill(stringResource(R.string.tag_low_stock), PillVariant.LowStock)
+            } else if (status == StockStatus.NEGATIVE) {
+                StatusPill(stringResource(R.string.tag_negative_stock), PillVariant.Cancelled)
             }
         }
-    )
-    HorizontalDivider()
+        if (archived) {
+            SmallOutlinedButton(stringResource(R.string.btn_restore), onRestore)
+        } else {
+            TextButton(onClick = onStock, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.btn_stock)) }
+        }
+    }
+    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
 }

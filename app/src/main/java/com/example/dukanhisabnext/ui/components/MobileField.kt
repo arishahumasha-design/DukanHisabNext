@@ -2,7 +2,6 @@ package com.example.dukanhisabnext.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -36,7 +35,7 @@ fun MobileField(
 
     val message: String? = error?.let { stringResource(it.messageRes()) } ?: warning
 
-    OutlinedTextField(
+    AppTextField(
         value = value,
         onValueChange = { typed ->
             val clean = sanitizePhoneInput(typed)

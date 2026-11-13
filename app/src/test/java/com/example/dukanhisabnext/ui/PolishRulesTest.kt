@@ -39,10 +39,10 @@ class PolishRulesTest {
         // The stock screen keeps its history list scrolling above the pinned bar:
         val stock = uiFile("products/StockAdjustScreen.kt")
         assertTrue(stock.contains("SaveBar(") && stock.contains("Modifier.weight(1f)") && stock.contains("imePadding()"))
-        // The ledger and expense forms already had the bar (a Surface above the keyboard):
+        // The ledger and expense forms use the same shared SaveBar above the keyboard (Design V2 part 2):
         for (file in listOf("customers/LedgerFormScreen.kt", "expense/ExpenseFormScreen.kt")) {
             val text = uiFile(file)
-            assertTrue("$file pinned bar", text.contains("Surface(tonalElevation = 3.dp") && text.contains("imePadding()"))
+            assertTrue("$file pinned bar", text.contains("SaveBar(") && text.contains("imePadding()"))
         }
     }
 

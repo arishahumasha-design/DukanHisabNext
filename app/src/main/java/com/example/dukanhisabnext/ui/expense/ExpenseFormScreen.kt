@@ -12,13 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,6 +41,10 @@ import com.example.dukanhisabnext.ui.components.DayField
 import com.example.dukanhisabnext.ui.components.DropdownField
 import com.example.dukanhisabnext.ui.components.ConfirmAmountDialog
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FormCard
+import com.example.dukanhisabnext.ui.components.SaveBar
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.DestructiveTextButton
 import com.example.dukanhisabnext.ui.components.needsMoneyConfirm
 import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.parseTakaToPaisa
@@ -96,6 +100,7 @@ fun ExpenseFormScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                FormCard {
                 // ---- Category (shown ones, plus the edited expense's own) ----
                 val selected = categories.firstOrNull { it.id == form.categoryId }
                 val hiddenWord = stringResource(R.string.cat_tag_hidden)
@@ -125,7 +130,7 @@ fun ExpenseFormScreen(
 
                 // ---- Amount ----
                 val amountError = errorsFor(ExpenseField.AMOUNT, ui.errors).firstOrNull()
-                OutlinedTextField(
+                AppTextField(
                     value = form.amountText,
                     onValueChange = { viewModel.onAmountChange(sanitizeNumberInput(it)) },
                     modifier = Modifier.fillMaxWidth(),
@@ -150,7 +155,7 @@ fun ExpenseFormScreen(
 
                 // ---- Reason (optional) with a counter ----
                 val reasonError = errorsFor(ExpenseField.REASON, ui.errors).firstOrNull()
-                OutlinedTextField(
+                AppTextField(
                     value = form.reason,
                     onValueChange = viewModel::onReasonChange,
                     modifier = Modifier.fillMaxWidth(),
@@ -173,6 +178,8 @@ fun ExpenseFormScreen(
                     }
                 )
 
+                }
+
                 // ---- Problems that are not about one box ----
                 ui.problem?.let {
                     Text(stringResource(it.messageRes()), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyLarge)
@@ -180,32 +187,21 @@ fun ExpenseFormScreen(
 
                 // ---- Delete (edit mode only) ----
                 if (showsDeleteButton(ui.isEdit)) {
-                    OutlinedButton(
+                    DestructiveTextButton(
+                        text = stringResource(R.string.expense_btn_delete),
                         onClick = viewModel::onDeleteClick,
                         enabled = !ui.busy,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Text(stringResource(R.string.expense_btn_delete), style = MaterialTheme.typography.titleMedium)
-                    }
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
             // ---- The save button: disabled while saving, so a double tap cannot save twice ----
-            Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
-                Button(
-                    onClick = {
-                        if (needsMoneyConfirm(amountPaisa, EXPENSE_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave()
-                    },
-                    enabled = !ui.busy && !ui.saved && ui.deletedId == null && ui.problem != ExpenseProblem.NOT_FOUND,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp).fillMaxWidth().heightIn(min = 56.dp)
-                ) {
-                    Text(
-                        stringResource(if (ui.busy) R.string.ledger_saving else R.string.btn_save),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+            SaveBar(
+                label = stringResource(if (ui.busy) R.string.ledger_saving else R.string.btn_save),
+                enabled = !ui.busy && !ui.saved && ui.deletedId == null && ui.problem != ExpenseProblem.NOT_FOUND,
+                onClick = { if (needsMoneyConfirm(amountPaisa, EXPENSE_CONFIRM_PAISA)) confirmOpen = true else viewModel.onSave() }
+            )
         }
     }
 
@@ -222,18 +218,15 @@ fun ExpenseFormScreen(
 
     // ---- "খরচটি মুছবেন?" ----
     if (ui.confirmDeleteOpen) {
-        AlertDialog(
+        AppAlertDialog(
             onDismissRequest = viewModel::onDeleteDismiss,
             title = { Text(stringResource(R.string.expense_delete_title)) },
             text = { Text(stringResource(R.string.expense_delete_text)) },
             confirmButton = {
-                Button(
-                    onClick = viewModel::onDeleteConfirm,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) { Text(stringResource(R.string.expense_delete_yes)) }
+                DestructiveTextButton(stringResource(R.string.expense_delete_yes), viewModel::onDeleteConfirm)
             },
             dismissButton = {
-                TextButton(onClick = viewModel::onDeleteDismiss) { Text(stringResource(R.string.cancel_no)) }
+                DialogTextButton(stringResource(R.string.cancel_no), viewModel::onDeleteDismiss)
             }
         )
     }

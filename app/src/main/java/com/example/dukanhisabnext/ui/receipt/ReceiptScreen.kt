@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
+import com.example.dukanhisabnext.ui.components.AppTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.cancel.CancelFeedback
@@ -56,6 +56,15 @@ import com.example.dukanhisabnext.receipt.receiptPaidLabel
 import com.example.dukanhisabnext.receipt.receiptQuantity
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.DashedDivider
+import com.example.dukanhisabnext.ui.components.DestructiveOutlinedButton
+import com.example.dukanhisabnext.ui.components.DestructiveTextButton
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.ui.components.PrimaryButton
+import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.theme.AppCard
+import com.example.dukanhisabnext.ui.theme.Spacing
+import androidx.compose.material3.CardDefaults
 import com.example.dukanhisabnext.util.toBengaliDigits
 
 /**
@@ -109,14 +118,12 @@ fun ReceiptScreen(
 
                     // Hidden once cancelled; disabled while a cancel is running.
                     if (showCancelButton(current.data)) {
-                        OutlinedButton(
+                        DestructiveOutlinedButton(
+                            text = stringResource(R.string.btn_cancel_sale),
                             onClick = viewModel::onCancelClick,
                             enabled = cancelButtonEnabled(cancelState.cancelling),
-                            modifier = Modifier.padding(top = 16.dp).fillMaxWidth().heightIn(min = 56.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Text(stringResource(R.string.btn_cancel_sale), style = MaterialTheme.typography.titleMedium)
-                        }
+                            modifier = Modifier.padding(top = Spacing.l).fillMaxWidth()
+                        )
                     }
                 }
                 if (cancelState.dialogOpen) {
@@ -146,12 +153,15 @@ private fun feedbackText(feedback: CancelFeedback): Int = when (feedback) {
 /** The red "বাতিল করা হয়েছে" banner with the Dhaka date and time and the reason (if any). */
 @Composable
 private fun CancelBanner(notice: CancelNotice) {
-    Surface(
-        color = MaterialTheme.colorScheme.errorContainer,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+    AppCard(
+        modifier = Modifier.fillMaxWidth().padding(bottom = Spacing.m),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer
+        ),
+        border = null
     ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(modifier = Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             Text(
                 text = notice.title,
                 style = MaterialTheme.typography.titleMedium,
@@ -173,7 +183,7 @@ private fun CancelDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
+    AppAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.cancel_dialog_title)) },
         text = {
@@ -189,7 +199,7 @@ private fun CancelDialog(
                         color = if (line.isWarning) MaterialTheme.colorScheme.error else Color.Unspecified
                     )
                 }
-                OutlinedTextField(
+                AppTextField(
                     value = state.reason,
                     onValueChange = onReasonChange,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -213,18 +223,14 @@ private fun CancelDialog(
             }
         },
         confirmButton = {
-            Button(
+            DestructiveTextButton(
+                text = stringResource(if (state.cancelling) R.string.cancel_in_progress else R.string.cancel_yes),
                 onClick = onConfirm,
-                enabled = !state.cancelling,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text(stringResource(if (state.cancelling) R.string.cancel_in_progress else R.string.cancel_yes))
-            }
+                enabled = !state.cancelling
+            )
         },
         dismissButton = {
-            TextButton(onClick = onDismiss, enabled = !state.cancelling) {
-                Text(stringResource(R.string.cancel_no))
-            }
+            DialogTextButton(stringResource(R.string.cancel_no), onDismiss, enabled = !state.cancelling)
         }
     )
 }
@@ -242,29 +248,24 @@ private fun NotFoundContent(onNewSale: () -> Unit, modifier: Modifier = Modifier
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center
         )
-        Button(
+        PrimaryButton(
+            text = stringResource(R.string.btn_back_to_sell),
             onClick = onNewSale,
-            modifier = Modifier.padding(top = 24.dp).fillMaxWidth().heightIn(min = 56.dp)
-        ) {
-            Text(stringResource(R.string.btn_back_to_sell), style = MaterialTheme.typography.titleMedium)
-        }
+            modifier = Modifier.padding(top = Spacing.xl).fillMaxWidth()
+        )
     }
 }
 
 /** The two buttons at the bottom: শেয়ার করুন (share as text) and নতুন বিক্রয়. */
 @Composable
 private fun ActionBar(onShare: () -> Unit, onNewSale: () -> Unit) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
+    Surface(color = MaterialTheme.colorScheme.surface, shadowElevation = 4.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(horizontal = Spacing.l, vertical = Spacing.m),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            OutlinedButton(onClick = onShare, modifier = Modifier.weight(1f).heightIn(min = 56.dp)) {
-                Text(stringResource(R.string.btn_share_receipt), style = MaterialTheme.typography.titleMedium)
-            }
-            Button(onClick = onNewSale, modifier = Modifier.weight(1f).heightIn(min = 56.dp)) {
-                Text(stringResource(R.string.btn_new_sale), style = MaterialTheme.typography.titleMedium)
-            }
+            SecondaryButton(text = stringResource(R.string.btn_share_receipt), onClick = onShare, modifier = Modifier.weight(1f))
+            PrimaryButton(text = stringResource(R.string.btn_new_sale), onClick = onNewSale, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -305,7 +306,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
             Text(
                 text = data.shopName ?: labels.shopPlaceholder,
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -319,7 +320,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
                     textAlign = TextAlign.Center
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 
             // ---- This sale ----
             KeyValue(labels.receiptNo, toBengaliDigits(data.receiptNo))
@@ -328,7 +329,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
                 KeyValue(labels.customer, name)
                 data.customerPhone?.let { KeyValue(labels.mobile, toBengaliDigits(it)) }
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 
             // ---- Product table: name (as sold), quantity with unit, unit price, line total ----
             TableRow(
@@ -346,7 +347,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
                     money(line.lineTotal)
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 
             // ---- Totals ----
             KeyValue(labels.subtotal, money(data.subtotal))
@@ -359,7 +360,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
             data.customerTotalDue?.let { KeyValue(labels.customerTotalDue, money(it), bold = true) }
 
             data.note?.let {
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
                 KeyValue(labels.note, it)
             }
         }

@@ -39,6 +39,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.components.DialogTextButton
 import com.example.dukanhisabnext.data.ReportRepository
 import com.example.dukanhisabnext.report.Dashboard
 import com.example.dukanhisabnext.ui.appViewModel
@@ -56,7 +57,7 @@ import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.toBengaliDigits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import androidx.compose.material3.AlertDialog
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.window.DialogProperties
 import com.example.dukanhisabnext.backup.BackupPrefs
@@ -175,18 +176,18 @@ fun HomeScreen(
     val showBackupNudge by viewModel.showBackupNudge.collectAsStateWithLifecycle()
 
     if (showBackupNudge) {
-        AlertDialog(
+        AppAlertDialog(
             properties = DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = viewModel::onNudgeLater,
             title = { Text(stringResource(R.string.backup_nudge_title)) },
             text = { Text(stringResource(R.string.backup_nudge_text), style = MaterialTheme.typography.bodyLarge) },
             confirmButton = {
-                TextButton(onClick = {
+                DialogTextButton(stringResource(R.string.btn_backup_now), {
                     viewModel.onNudgeBackupNow()
                     onOpenBackup()
-                }) { Text(stringResource(R.string.btn_backup_now)) }
+                })
             },
-            dismissButton = { TextButton(onClick = viewModel::onNudgeLater) { Text(stringResource(R.string.btn_later)) } }
+            dismissButton = { DialogTextButton(stringResource(R.string.btn_later), viewModel::onNudgeLater) }
         )
     }
     val taka = stringResource(R.string.unit_taka)

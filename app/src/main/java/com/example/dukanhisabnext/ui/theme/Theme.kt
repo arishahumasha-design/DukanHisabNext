@@ -42,7 +42,10 @@ internal val DarkColorScheme = darkColorScheme(
     surfaceContainerLow = DarkSurface,
     surfaceContainer = DarkSurface,
     surfaceContainerHigh = DarkSurface,
-    surfaceContainerHighest = DarkSurface
+    surfaceContainerHighest = DarkSurface,
+    inverseSurface = Color(0xFF2B3A31),
+    inverseOnSurface = DarkText,
+    inversePrimary = DarkPrimary
 )
 
 internal val LightColorScheme = lightColorScheme(
@@ -73,16 +76,19 @@ internal val LightColorScheme = lightColorScheme(
     surfaceContainerLow = LightSurface,
     surfaceContainer = LightSurface,
     surfaceContainerHigh = LightSurface,
-    surfaceContainerHighest = LightSurface
+    surfaceContainerHighest = LightSurface,
+    inverseSurface = Color(0xFF1F2A24),
+    inverseOnSurface = Color(0xFFFFFFFF),
+    inversePrimary = Color(0xFF7FD9AE)
 )
 
-/** Cards 16dp, buttons 14dp, chips and pills 10dp (one family, nothing sharp). */
+/** Cards 16dp, buttons 14dp, chips and pills 10dp, dialogs and sheets 20dp (one family, nothing sharp). */
 private val AppShapes = Shapes(
     extraSmall = RoundedCornerShape(10.dp),
     small = RoundedCornerShape(10.dp),
     medium = RoundedCornerShape(16.dp),
     large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp)
+    extraLarge = RoundedCornerShape(20.dp)
 )
 
 /** The shape of the buttons (14dp). */
