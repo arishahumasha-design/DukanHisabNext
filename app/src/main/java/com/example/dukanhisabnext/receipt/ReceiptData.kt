@@ -28,7 +28,7 @@ data class ReceiptData(
     val shopAddress: String?,
     val shopPhone: String?,
     val receiptNo: String,
-    val createdAt: Long,                // UTC millis; shown in Asia/Dhaka
+    val createdAt: Long,                // UTC millis: the real moment of saving
     // Customer, only if the sale has one.
     val customerName: String?,
     val customerPhone: String?,
@@ -54,7 +54,9 @@ data class ReceiptData(
     val customerBalance: Long? = null,
     /** When the sale was cancelled (UTC millis), or null while it is still active. */
     val cancelledAt: Long? = null,
-    val cancelReason: String? = null
+    val cancelReason: String? = null,
+    /** Version 5: the date the sale belongs to (UTC millis, shown in Asia/Dhaka). The receipt shows this date. */
+    val saleDate: Long = createdAt
 ) {
     val isCancelled: Boolean get() = cancelledAt != null
     val showChange: Boolean get() = shouldShowChange(change)
@@ -92,6 +94,7 @@ fun buildReceiptData(
     shopPhone = shop?.phone.orNullIfBlank(),
     receiptNo = sale.receiptNo,
     createdAt = sale.createdAt,
+    saleDate = sale.saleDate,
     customerName = customer?.name.orNullIfBlank(),
     customerPhone = if (customer == null) null else customer.phone.orNullIfBlank(),
     lines = items.map {

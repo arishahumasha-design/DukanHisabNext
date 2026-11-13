@@ -53,7 +53,7 @@ data class CostOfGoodsRow(
 interface ReportDao {
 
     /**
-     * The sales report of a window (start included, end excluded), by the sale's createdAt.
+     * The sales report of a window (start included, end excluded), by the sale date (saleDate).
      * The inner query marks each sale active or cancelled once (NOT_CANCELLED_SQL); the outer
      * query adds up only the active ones and counts the cancelled ones.
      */
@@ -71,7 +71,7 @@ interface ReportDao {
             SELECT s.subtotal, s.discount, s.deliveryCharge, s.total, s.paidAmount, s.dueAmount,
                    ($NOT_CANCELLED_SQL) AS active
             FROM sales s
-            WHERE s.createdAt >= :start AND s.createdAt < :end
+            WHERE $SALE_PERIOD_SQL
         )
         """
     )
@@ -86,7 +86,7 @@ interface ReportDao {
                COALESCE(SUM(CASE WHEN si.costPriceSnapshot IS NULL THEN si.lineTotal ELSE 0 END), 0) AS missingCostSales
         FROM sale_items si
         JOIN sales s ON s.id = si.saleId
-        WHERE s.createdAt >= :start AND s.createdAt < :end AND $NOT_CANCELLED_SQL
+        WHERE $SALE_PERIOD_SQL AND $NOT_CANCELLED_SQL
         """
     )
     fun observeCostOfGoods(start: Long, end: Long): Flow<CostOfGoodsRow>

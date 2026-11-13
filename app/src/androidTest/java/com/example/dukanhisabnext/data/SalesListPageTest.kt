@@ -45,8 +45,8 @@ class SalesListPageTest : DatabaseTestBase() {
                 val customer = when (i.mod(5)) { 0 -> "NULL"; else -> (i.mod(5)).toString() }
                 val receipt = "261112-" + (id).toString().padStart(3, '0')
                 w.execSQL(
-                    "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt) " +
-                        "VALUES ($id, '$receipt', $customer, ${1_000 + i}, 0, 0, ${1_000 + i}, ${1_000 + i}, 'CASH', 0, NULL, ${start + i * 1_000L})"
+                    "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt, saleDate) " +
+                        "VALUES ($id, '$receipt', $customer, ${1_000 + i}, 0, 0, ${1_000 + i}, ${1_000 + i}, 'CASH', 0, NULL, ${start + i * 1_000L}, ${start + i * 1_000L})"
                 )
                 if (i >= 0 && i % 37 == 0) w.execSQL("INSERT INTO sale_cancellations (saleId, reason, createdAt) VALUES ($id, NULL, ${start + i * 1_000L + 1})")
             }

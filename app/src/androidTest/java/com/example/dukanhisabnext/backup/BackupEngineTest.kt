@@ -109,12 +109,12 @@ class BackupEngineTest {
         "INSERT INTO stock_movements (id, productId, type, quantity, unitCost, referenceSaleId, note, createdAt) VALUES (1, 1, 'OPENING', 20000, NULL, NULL, NULL, 1)",
         "INSERT INTO stock_movements (id, productId, type, quantity, unitCost, referenceSaleId, note, createdAt) VALUES (2, 1, 'PURCHASE', 10500, 6800, NULL, 'হাট থেকে', 2)",
         "INSERT INTO customers (id, name, phone, address, note, createdAt, updatedAt) VALUES (1, 'করিম', '01811111111', 'বাজার রোড', NULL, 1, 1)",
-        "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt) VALUES (1, '261112-001', 1, 22500, 500, 0, 22000, 2000, 'BKASH', 20000, NULL, 3)",
+        "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt, saleDate) VALUES (1, '261112-001', 1, 22500, 500, 0, 22000, 2000, 'BKASH', 20000, NULL, 3, 3)",
         "INSERT INTO sale_items (id, saleId, productId, productNameSnapshot, quantity, unitPrice, costPriceSnapshot, lineTotal) VALUES (1, 1, 1, 'চাল', 3000, 7500, 6800, 22500)",
         "INSERT INTO stock_movements (id, productId, type, quantity, unitCost, referenceSaleId, note, createdAt) VALUES (3, 1, 'SALE', -3000, NULL, 1, NULL, 3)",
         "INSERT INTO ledger_entries (id, customerId, type, amount, paymentMethod, saleId, note, entryDate, createdAt) VALUES (1, 1, 'SALE_DUE', 20000, NULL, 1, NULL, 3, 3)",
         "INSERT INTO ledger_entries (id, customerId, type, amount, paymentMethod, saleId, note, entryDate, createdAt) VALUES (2, 1, 'PAYMENT_RECEIVED', 5000, 'CASH', NULL, 'আংশিক', 4, 4)",
-        "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt) VALUES (2, '261112-002', NULL, 4500, 0, 1000, 5500, 5500, 'CASH', 0, 'ভুল বিক্রি', 5)",
+        "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, paidAmount, paymentMethod, dueAmount, note, createdAt, saleDate) VALUES (2, '261112-002', NULL, 4500, 0, 1000, 5500, 5500, 'CASH', 0, 'ভুল বিক্রি', 5, 5)",
         "INSERT INTO sale_items (id, saleId, productId, productNameSnapshot, quantity, unitPrice, costPriceSnapshot, lineTotal) VALUES (2, 2, 2, 'সাবান', 1000, 4500, NULL, 4500)",
         "INSERT INTO sale_cancellations (id, saleId, reason, createdAt) VALUES (1, 2, NULL, 6)",
         "INSERT INTO expense_categories (id, name, isPersonal, isActive, systemKey) VALUES (1, 'ভাড়া', 0, 1, 'RENT')",
@@ -215,6 +215,8 @@ class BackupEngineTest {
         createDatabaseFromSchema(file, version).apply {
             insertShopData()
             if (version >= 2) execSQL("INSERT INTO sale_cancellations (id, saleId, reason, createdAt) VALUES (1, 1, 'ভুল', 6)")
+            // A version 5 file written by the app always has a real sale date.
+            if (version >= 5) execSQL("UPDATE sales SET saleDate = createdAt")
             rawQuery("PRAGMA journal_mode=DELETE", null).use { it.moveToFirst() }
             close()
         }
@@ -442,6 +444,12 @@ class BackupEngineTest {
         }
         assertEquals(if (version >= 2) 1L else 0L, liveCount("sale_cancellations"))
         assertEquals(3L, liveCount("expenses"))
+        // Every old sale keeps its date (version 5: saleDate = createdAt) and has no warranty.
+        db.openHelper.readableDatabase.query("SELECT createdAt, saleDate FROM sales").use {
+            assertTrue(it.count > 0)
+            while (it.moveToNext()) assertEquals(it.getLong(0), it.getLong(1))
+        }
+        assertEquals(0L, db.openHelper.readableDatabase.query("SELECT COUNT(*) FROM sale_items WHERE warrantyValue IS NOT NULL").use { it.moveToFirst(); it.getLong(0) })
         // Every backup ends up with the version 4 stock index.
         val hasStockIndex = db.openHelper.readableDatabase.query(
             "SELECT 1 FROM sqlite_master WHERE type = 'index' AND name = 'index_stock_movements_productId_quantity'"
@@ -459,9 +467,12 @@ class BackupEngineTest {
     fun aVersion3BackupIsBroughtUpToDate() = runBlocking { restoreOld(3) }
 
     @Test
-    fun aVersion4BackupIsAcceptedAsItIs() = runBlocking {
-        assertEquals(4, CURRENT_SCHEMA_VERSION)
-        restoreOld(4)
+    fun aVersion4BackupIsBroughtUpToDate() = runBlocking { restoreOld(4) }
+
+    @Test
+    fun aVersion5BackupIsAcceptedAsItIs() = runBlocking {
+        assertEquals(5, CURRENT_SCHEMA_VERSION)
+        restoreOld(5)
     }
 
     // =====================================================================================

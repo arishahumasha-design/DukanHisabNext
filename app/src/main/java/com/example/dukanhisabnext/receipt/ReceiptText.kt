@@ -94,7 +94,7 @@ fun buildReceiptText(data: ReceiptData, labels: ReceiptLabels): String = buildSt
 
     // ---- This sale ----
     appendLine("${labels.receiptNo}: ${toBengaliDigits(data.receiptNo)}")
-    appendLine("${labels.date}: ${receiptDateTime(data.createdAt, labels)}")
+    appendLine("${labels.date}: ${receiptDateTime(data.saleDate, labels)}")
     data.customerName?.let { name ->
         appendLine("${labels.customer}: $name")
         data.customerPhone?.let { appendLine("${labels.mobile}: ${toBengaliDigits(it)}") }

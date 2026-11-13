@@ -18,19 +18,29 @@ internal const val NOT_CANCELLED_SQL =
     "NOT EXISTS (SELECT 1 FROM sale_cancellations nc WHERE nc.saleId = s.id)"
 
 /**
+ * Version 5: THE period condition for sales (alias s): a sale belongs to the period of its sale date
+ * (saleDate), never of the moment it was saved (createdAt). Every list, total and report that cuts
+ * sales by time uses this one condition; SalePeriodGuardTest (PC) fails if a sales query filters
+ * or sorts by createdAt instead.
+ */
+internal const val SALE_PERIOD_SQL = "s.saleDate >= :start AND s.saleDate < :end"
+
+/**
  * One line of the sales list: a saved sale with its customer's name and mobile (null when the
  * sale has no customer). Only what the list shows, so thousands of rows stay light.
  */
 data class SaleListRow(
     val id: Long,
     val receiptNo: String,
-    val createdAt: Long,       // UTC millis; the list shows it in Asia/Dhaka time
+    val createdAt: Long,       // UTC millis: the real moment of saving (only to tell a back-dated sale)
     val total: Long,           // paisa
     val dueAmount: Long,       // paisa
     val customerName: String?,
     val customerPhone: String?,
     /** When the sale was cancelled (UTC millis), or null if it is not cancelled. */
-    val cancelledAt: Long? = null
+    val cancelledAt: Long? = null,
+    /** Version 5: the date the sale belongs to (UTC millis). The list groups, sorts and shows by it. */
+    val saleDate: Long = createdAt
 ) {
     val isCancelled: Boolean get() = cancelledAt != null
 }
@@ -109,15 +119,15 @@ interface SaleDao {
      */
     @Query(
         """
-        SELECT s.id AS id, s.receiptNo AS receiptNo, s.createdAt AS createdAt,
+        SELECT s.id AS id, s.receiptNo AS receiptNo, s.createdAt AS createdAt, s.saleDate AS saleDate,
                s.total AS total, s.dueAmount AS dueAmount,
                c.name AS customerName, c.phone AS customerPhone,
                sc.createdAt AS cancelledAt
         FROM sales s
         LEFT JOIN customers c ON c.id = s.customerId
         LEFT JOIN sale_cancellations sc ON sc.saleId = s.id
-        WHERE s.createdAt >= :start AND s.createdAt < :end
-        ORDER BY s.createdAt DESC, s.id DESC
+        WHERE $SALE_PERIOD_SQL
+        ORDER BY s.saleDate DESC, s.id DESC
         """
     )
     fun observeList(start: Long, end: Long): Flow<List<SaleListRow>>
@@ -129,16 +139,16 @@ interface SaleDao {
      */
     @Query(
         """
-        SELECT s.id AS id, s.receiptNo AS receiptNo, s.createdAt AS createdAt,
+        SELECT s.id AS id, s.receiptNo AS receiptNo, s.createdAt AS createdAt, s.saleDate AS saleDate,
                s.total AS total, s.dueAmount AS dueAmount,
                c.name AS customerName, c.phone AS customerPhone,
                sc.createdAt AS cancelledAt
         FROM sales s
         LEFT JOIN customers c ON c.id = s.customerId
         LEFT JOIN sale_cancellations sc ON sc.saleId = s.id
-        WHERE s.createdAt >= :start AND s.createdAt < :end
+        WHERE $SALE_PERIOD_SQL
           AND $SALES_SEARCH_SQL
-        ORDER BY s.createdAt DESC, s.id DESC
+        ORDER BY s.saleDate DESC, s.id DESC
         LIMIT :limit
         """
     )
@@ -164,7 +174,7 @@ interface SaleDao {
                COALESCE(SUM(CASE WHEN $NOT_CANCELLED_SQL THEN 0 ELSE 1 END), 0) AS cancelledExcluded
         FROM sales s
         LEFT JOIN customers c ON c.id = s.customerId
-        WHERE s.createdAt >= :start AND s.createdAt < :end
+        WHERE $SALE_PERIOD_SQL
           AND $SALES_SEARCH_SQL
         """
     )
@@ -185,7 +195,7 @@ interface SaleDao {
         """
         SELECT COUNT(*) AS count, COALESCE(SUM(s.total), 0) AS total
         FROM sales s
-        WHERE s.createdAt >= :start AND s.createdAt < :end
+        WHERE $SALE_PERIOD_SQL
           AND $NOT_CANCELLED_SQL
         """
     )
@@ -195,7 +205,7 @@ interface SaleDao {
     @Query("SELECT COUNT(*) FROM sales")
     fun observeCount(): Flow<Int>
 
-    /** Sales in a time window (start included, end excluded), newest first. */
-    @Query("SELECT * FROM sales WHERE createdAt >= :start AND createdAt < :end ORDER BY createdAt DESC")
+    /** Sales whose sale date is in a window (start included, end excluded), newest first. */
+    @Query("SELECT * FROM sales s WHERE $SALE_PERIOD_SQL ORDER BY s.saleDate DESC, s.id DESC")
     fun observeInRange(start: Long, end: Long): Flow<List<Sale>>
 }

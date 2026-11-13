@@ -6,8 +6,8 @@ version of the app (web, iOS) should be able to read and write a backup file wit
 it alone.
 
 - The table and column lists below are generated from the exported Room schema
-  `app/schemas/com.example.dukanhisabnext.data.AppDatabase/4.json` (database
-  version 4). A PC test (`DataFormatDocTest`) fails when a table or column of
+  `app/schemas/com.example.dukanhisabnext.data.AppDatabase/5.json` (database
+  version 5). A PC test (`DataFormatDocTest`) fails when a table or column of
   that file is missing here, so this file cannot silently fall behind.
 - The words "must" and "never" are rules the Android app keeps. Another app that
   writes this data must keep them too, or the Android app will show wrong numbers.
@@ -19,6 +19,7 @@ it alone.
 | Money | `INTEGER`, in **paisa** (1 taka = 100 paisa). ৳12.50 is `1250`. Never a decimal number. |
 | Quantity | `INTEGER`, in **thousandths** of the product's unit. 1.5 kg is `1500`, 3 pieces is `3000`. |
 | Timestamps | `INTEGER`, **UTC epoch milliseconds**. They are shown in the **Asia/Dhaka** time zone (UTC+6, no daylight saving). A "day" (today, this month, a report period) is always a Dhaka day. |
+| Calendar dates | `INTEGER`, an **epoch day**: the number of days since 1970-01-01 (`LocalDate.toEpochDay`), a plain Dhaka calendar date with no time. Only `sale_items.warrantyUntil` uses it. |
 | Booleans | `INTEGER` `0` or `1`. |
 | Enums | `TEXT`, the exact upper-case name (for example `CASH`). The lists are below each column. |
 | Text | UTF-8. Bengali text is stored as typed. Notes and reasons are trimmed and at most 200 characters. |
@@ -52,25 +53,63 @@ it alone.
   `isDeleted = 1`.
 - Expense categories are never deleted; hiding one sets `isActive = 0`.
 
+### Sale date and creation time (version 5)
+
+A sale has two times:
+
+- `sales.saleDate`: the date the sale **belongs to**. Today's sale: the moment it was
+  saved. A back-dated sale (an earlier day picked in the cart): that Dhaka day at the
+  Dhaka time of day of saving. It is never in the future and never before
+  2020-01-01. **Every** list, total and report cuts and sorts sales by `saleDate`;
+  the receipt number, the sale's `SALE` stock movements and its `SALE_DUE` ledger
+  entry use it too.
+- `sales.createdAt`: the real moment the row was saved. Never edited. A sale is
+  *back-dated* when the Dhaka day of `saleDate` differs from that of `createdAt`.
+
+Databases older than version 5 have no `saleDate`; the upgrade sets it to
+`createdAt` for every sale (nothing else changes).
+
 ### Receipt numbers
 
-`sales.receiptNo` is `YYMMDD-NNN`: the Asia/Dhaka date of the sale, a dash, and a
-daily counter of at least 3 digits (`261112-001`, …, `261112-999`, `261112-1000`).
-The next counter of a day is the highest counter used that day + 1, compared as a
-**number**, never by sorting the text. Numbers are unique (unique index) and never
-reused, also not after a cancel.
+`sales.receiptNo` is `YYMMDD-NNN`: the Asia/Dhaka date of the sale's **`saleDate`**,
+a dash, and a daily counter of at least 3 digits (`261112-001`, …, `261112-999`,
+`261112-1000`). The next counter of a day is the highest counter used **for that
+day** + 1, compared as a **number**, never by sorting the text. A back-dated sale
+gets the next free counter of its own day, so within a day the counter shows the
+order the sales were entered, not their time of day. Numbers are unique (unique
+index) and never reused, also not after a cancel.
+
+### Warranty (version 5)
+
+A product may have a default warranty (`products.warrantyValue` + `warrantyUnit`);
+each sale line stores its own copy (`sale_items.warrantyValue`, `warrantyUnit`,
+`warrantyUntil`), which never changes afterwards. Rules:
+
+- "No warranty" = every warranty column of the row is null. Otherwise all of them
+  are set (products: both; sale lines: all three).
+- `warrantyUnit` is `DAY`, `MONTH` or `YEAR`; `warrantyValue` is 1–999 days,
+  1–120 months or 1–50 years.
+- `warrantyUntil` (an epoch day) = the Dhaka date of the sale's `saleDate` plus
+  the period, counted on the calendar: a day that does not exist in the target
+  month becomes that month's last day (31 Jan + 1 month = 28 Feb, or 29 Feb in a
+  leap year; 29 Feb + 1 year = 28 Feb). The warranty covers up to and including
+  that day.
 
 ### What one sale writes (one transaction)
 
-1. one `sales` row; 2. one `sale_items` row per line; 3. one `stock_movements` row of
-type `SALE` per line, with the sold quantity as a negative number and
-`referenceSaleId` set; 4. if `dueAmount > 0`, one `ledger_entries` row of type
-`SALE_DUE` for that amount with `saleId` set (a sale with a due needs a customer).
+1. one `sales` row; 2. one `sale_items` row per line (with its warranty copy, if
+any); 3. one `stock_movements` row of type `SALE` per line, with the sold quantity
+as a negative number, `referenceSaleId` set and `createdAt` = the sale's
+`saleDate`; 4. if `dueAmount > 0`, one `ledger_entries` row of type `SALE_DUE` for
+that amount with `saleId` set, `entryDate` = the sale's `saleDate` and `createdAt`
+= the real moment of saving (a sale with a due needs a customer).
 
 Cancelling a sale (one transaction): one `sale_cancellations` row; one
 `stock_movements` row of type `SALE_CANCEL` per sale item (the sold quantity as a
 positive number, `referenceSaleId` set); and if the sale had a due, one
-`CORRECTION_MINUS` ledger entry of exactly that due, with `saleId` set.
+`CORRECTION_MINUS` ledger entry of exactly that due, with `saleId` set. All of these
+are dated by the moment of cancelling (also for a back-dated sale): a cancel is a
+new event on its own day. The cancelled sale leaves every total of its own period.
 
 ## 2. The backup file
 
@@ -101,7 +140,7 @@ the keys in this order; a reader must not depend on the order.
 | `format` | yes | Always `dokanhisab-backup`. Anything else: not a DokanHisab backup. |
 | `formatVersion` | yes | `1`. A reader refuses a higher number ("update the app"). |
 | `platform` | no | Who wrote it: `android` (later `web`, `ios`). For information only. |
-| `dbSchemaVersion` | yes | The database version inside (`PRAGMA user_version`): 1, 2, 3 or 4. |
+| `dbSchemaVersion` | yes | The database version inside (`PRAGMA user_version`): 1, 2, 3, 4 or 5. |
 | `appVersionCode` | no | The app's build number that wrote it. Information only. |
 | `appVersionName` | no | The app's version name that wrote it. Information only. |
 | `createdAt` | yes | When the backup was made, UTC epoch millis. |
@@ -176,11 +215,12 @@ INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES (42, '<hash>
 | 2 | `a0199054f2b523abb52d42a994cdb47d` |
 | 3 | `30f220f802126321712bf3fb6261abb3` |
 | 4 | `6ab4148f4da5d9eeecf6eecd00107348` |
+| 5 | `f335e70a02a4cdd6a344a20a70b58427` |
 
 The Android app also has a table `android_metadata` (one column `locale`); it is
 not part of the data and a reader may ignore it.
 
-## 3. Tables (database version 4)
+## 3. Tables (database version 5)
 
 Every table below, with its exact `CREATE` statement. "null" means the column may
 be empty (`NULL`).
@@ -230,13 +270,15 @@ The goods the shop sells. Never deleted; an archived product has `isActive = 0`.
 | `isActive` | INTEGER | no | 1 = for sale, 0 = archived (hidden from selling; old sales keep it). |
 | `createdAt` | INTEGER | no | When it was created, UTC millis. |
 | `updatedAt` | INTEGER | no | When it was last edited, UTC millis. |
+| `warrantyValue` | INTEGER | null | Version 5. The default warranty number for new sales (see "Warranty"), or null = no warranty. |
+| `warrantyUnit` | TEXT | null | Version 5. `DAY`, `MONTH` or `YEAR`; null exactly when `warrantyValue` is null. |
 
 Foreign keys: `categoryId` → `categories.id` (on delete SET NULL).
 
 Indexes: `name`; `categoryId`.
 
 ```sql
-CREATE TABLE IF NOT EXISTS `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `categoryId` INTEGER, `unit` TEXT NOT NULL, `sellPrice` INTEGER NOT NULL, `costPrice` INTEGER, `lowStockLevel` INTEGER, `isActive` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL );
+CREATE TABLE IF NOT EXISTS `products` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `categoryId` INTEGER, `unit` TEXT NOT NULL, `sellPrice` INTEGER NOT NULL, `costPrice` INTEGER, `lowStockLevel` INTEGER, `isActive` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, `warrantyValue` INTEGER, `warrantyUnit` TEXT, FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL );
 CREATE INDEX IF NOT EXISTS `index_products_name` ON `products` (`name`);
 CREATE INDEX IF NOT EXISTS `index_products_categoryId` ON `products` (`categoryId`);
 ```
@@ -254,7 +296,7 @@ Every change of stock. Append-only. Stock of a product = the sum of its `quantit
 | `unitCost` | INTEGER | null | Buying price per unit in paisa, filled for `PURCHASE`; otherwise null. |
 | `referenceSaleId` | INTEGER | null | `sales.id` for `SALE` and `SALE_CANCEL`; otherwise null. |
 | `note` | TEXT | null | Optional note. |
-| `createdAt` | INTEGER | no | When it happened, UTC millis. |
+| `createdAt` | INTEGER | no | When it happened, UTC millis. For a `SALE` row: the sale's `saleDate` (so a back-dated sale shows on its own day; the real moment of saving is the sale's `createdAt`). Every other type: the moment it was saved. |
 
 Foreign keys: `productId` → `products.id`; `referenceSaleId` → `sales.id`.
 
@@ -306,16 +348,18 @@ One row per completed sale. Never changed or deleted.
 | `paymentMethod` | TEXT | no | One of `CASH`, `BKASH`, `NAGAD`, `BANK`, `OTHER`. Only meaningful when `paidAmount > 0` (always filled; ignore it otherwise). |
 | `dueAmount` | INTEGER | no | `total - paidAmount`, paisa, never negative. When above 0 there is a `SALE_DUE` ledger entry for it. |
 | `note` | TEXT | null | Note, or null. |
-| `createdAt` | INTEGER | no | When the sale was made, UTC millis. Its Dhaka date is the receipt number's date. |
+| `createdAt` | INTEGER | no | The real moment the sale was saved, UTC millis. Never edited. |
+| `saleDate` | INTEGER | no | Version 5. The date the sale belongs to, UTC millis (section 1, "Sale date"). Its Dhaka date is the receipt number's date; every report and list uses it. Never in the future, never before 2020-01-01. The SQL default `0` exists only so the column could be added to old databases; a writer always sets it. |
 
 Foreign keys: `customerId` → `customers.id`.
 
-Indexes: unique `receiptNo`; `customerId`.
+Indexes: unique `receiptNo`; `customerId`; `saleDate`.
 
 ```sql
-CREATE TABLE IF NOT EXISTS `sales` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `receiptNo` TEXT NOT NULL, `customerId` INTEGER, `subtotal` INTEGER NOT NULL, `discount` INTEGER NOT NULL, `deliveryCharge` INTEGER NOT NULL, `total` INTEGER NOT NULL, `paidAmount` INTEGER NOT NULL, `paymentMethod` TEXT NOT NULL, `dueAmount` INTEGER NOT NULL, `note` TEXT, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`customerId`) REFERENCES `customers`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION );
+CREATE TABLE IF NOT EXISTS `sales` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `receiptNo` TEXT NOT NULL, `customerId` INTEGER, `subtotal` INTEGER NOT NULL, `discount` INTEGER NOT NULL, `deliveryCharge` INTEGER NOT NULL, `total` INTEGER NOT NULL, `paidAmount` INTEGER NOT NULL, `paymentMethod` TEXT NOT NULL, `dueAmount` INTEGER NOT NULL, `note` TEXT, `createdAt` INTEGER NOT NULL, `saleDate` INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(`customerId`) REFERENCES `customers`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION );
 CREATE UNIQUE INDEX IF NOT EXISTS `index_sales_receiptNo` ON `sales` (`receiptNo`);
 CREATE INDEX IF NOT EXISTS `index_sales_customerId` ON `sales` (`customerId`);
+CREATE INDEX IF NOT EXISTS `index_sales_saleDate` ON `sales` (`saleDate`);
 ```
 
 ### `sale_items`
@@ -332,13 +376,16 @@ The lines of a sale. Never changed or deleted.
 | `unitPrice` | INTEGER | no | Selling price per unit at the time of the sale, paisa. |
 | `costPriceSnapshot` | INTEGER | null | Buying price per unit at the time of the sale, paisa, or null when unknown. |
 | `lineTotal` | INTEGER | no | `(quantity * unitPrice + 500) / 1000`, paisa (half rounds up, once per line). |
+| `warrantyValue` | INTEGER | null | Version 5. This line's warranty number (a copy taken at the sale), or null = no warranty. |
+| `warrantyUnit` | TEXT | null | Version 5. `DAY`, `MONTH` or `YEAR`; null exactly when `warrantyValue` is null. |
+| `warrantyUntil` | INTEGER | null | Version 5. The last day the warranty covers, an epoch day (section 1, "Warranty"); null exactly when `warrantyValue` is null. |
 
 Foreign keys: `saleId` → `sales.id`; `productId` → `products.id`.
 
 Indexes: `saleId`; `productId`.
 
 ```sql
-CREATE TABLE IF NOT EXISTS `sale_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `saleId` INTEGER NOT NULL, `productId` INTEGER NOT NULL, `productNameSnapshot` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unitPrice` INTEGER NOT NULL, `costPriceSnapshot` INTEGER, `lineTotal` INTEGER NOT NULL, FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION );
+CREATE TABLE IF NOT EXISTS `sale_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `saleId` INTEGER NOT NULL, `productId` INTEGER NOT NULL, `productNameSnapshot` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unitPrice` INTEGER NOT NULL, `costPriceSnapshot` INTEGER, `lineTotal` INTEGER NOT NULL, `warrantyValue` INTEGER, `warrantyUnit` TEXT, `warrantyUntil` INTEGER, FOREIGN KEY(`saleId`) REFERENCES `sales`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`productId`) REFERENCES `products`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION );
 CREATE INDEX IF NOT EXISTS `index_sale_items_saleId` ON `sale_items` (`saleId`);
 CREATE INDEX IF NOT EXISTS `index_sale_items_productId` ON `sale_items` (`productId`);
 ```
@@ -446,8 +493,13 @@ migrations (`data/Migrations.kt`); another reader can do the same:
 - **Version 3 → 4**: adds one index, `index_stock_movements_productId_quantity`
   on `stock_movements (productId, quantity)`, so the stock sum is read from the
   index alone. No table, column, row or other index changes.
+- **Version 4 → 5**: adds `products.warrantyValue` and `warrantyUnit`;
+  `sale_items.warrantyValue`, `warrantyUnit` and `warrantyUntil` (all null = no
+  warranty); `sales.saleDate` (added with default 0, then set to each sale's own
+  `createdAt`, so every old sale keeps its date, receipt number, stock movements and
+  due entry); and the index `index_sales_saleDate`. Nothing is dropped or rebuilt.
 
-The full schemas of versions 1, 2 and 3 are in `app/schemas/.../1.json`, `2.json` and `3.json`.
+The full schemas of versions 1 to 4 are in `app/schemas/.../1.json` to `4.json`.
 
 ## 5. Reading a backup on another platform (summary)
 

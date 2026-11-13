@@ -37,7 +37,10 @@ data class Product(
     val lowStockLevel: Long? = null, // thousandths; null = no alert
     val isActive: Boolean = true,  // false = archived (hidden from selling)
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    /** Version 5: the default warranty for new sales. Both null = no warranty, or both set. */
+    val warrantyValue: Int? = null,
+    val warrantyUnit: WarrantyUnit? = null
 )
 
 /**
@@ -63,5 +66,10 @@ data class StockMovement(
     val unitCost: Long? = null,    // paisa; filled for PURCHASE
     val referenceSaleId: Long? = null,
     val note: String? = null,
+    /**
+     * When the change happened (UTC millis). For a SALE row this is the sale's saleDate (version 5),
+     * so a back-dated sale shows on its own day in the stock history; the real moment of saving is
+     * on the sale (referenceSaleId -> sales.createdAt). Every other type: the moment it was saved.
+     */
     val createdAt: Long
 )

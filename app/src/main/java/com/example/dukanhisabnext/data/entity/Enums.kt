@@ -6,6 +6,9 @@ package com.example.dukanhisabnext.data.entity
 
 enum class ProductUnit { PIECE, KG, LITRE, PACKET, DOZEN }
 
+/** The unit of a warranty (version 5): দিন, মাস or বছর. Stored as its name, like the other enums. */
+enum class WarrantyUnit { DAY, MONTH, YEAR }
+
 /**
  * SALE_CANCEL: stock coming back because a sale was cancelled (positive quantity, linked to the
  * sale). Room stores the name as text with no fixed list, so adding a value needs no schema change.

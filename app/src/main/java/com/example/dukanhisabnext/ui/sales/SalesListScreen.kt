@@ -152,7 +152,7 @@ fun SalesListScreen(
 
                                 is SalesListItem.Entry -> SaleRow(
                                     row = item.row,
-                                    timeText = saleTimeText(item.row.createdAt) { periodLabels.getValue(it) },
+                                    timeText = saleTimeText(item.row.saleDate) { periodLabels.getValue(it) },
                                     customer = customerLabel(item.row.customerName, walkIn),
                                     onClick = { onOpenSale(item.row.id) }
                                 )

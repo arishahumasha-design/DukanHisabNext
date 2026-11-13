@@ -21,10 +21,17 @@ import com.example.dukanhisabnext.data.dao.SaleListRow
 import com.example.dukanhisabnext.util.CartLine
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.ReceiptNumber
+import com.example.dukanhisabnext.data.entity.WarrantyUnit
+import com.example.dukanhisabnext.sale.SaleDayProblem
+import com.example.dukanhisabnext.sale.checkSaleDay
+import com.example.dukanhisabnext.sale.saleDateFor
+import com.example.dukanhisabnext.util.SaleError
+import com.example.dukanhisabnext.warranty.checkWarranty
+import com.example.dukanhisabnext.warranty.warrantyUntil
+import java.time.LocalDate
 import com.example.dukanhisabnext.util.SaleAmounts
 import com.example.dukanhisabnext.util.SaleCalculator
 import com.example.dukanhisabnext.util.SaleCheck
-import com.example.dukanhisabnext.util.SaleError
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.sync.Mutex
@@ -35,7 +42,10 @@ import kotlinx.coroutines.withContext
 data class SaleDraftLine(
     val productId: Long,
     val quantity: Long,  // thousandths
-    val unitPrice: Long  // paisa per 1 unit
+    val unitPrice: Long, // paisa per 1 unit
+    /** Version 5: this line's warranty (both null = none). The last day is worked out when saving. */
+    val warrantyValue: Int? = null,
+    val warrantyUnit: WarrantyUnit? = null
 )
 
 /**
@@ -51,7 +61,9 @@ data class SaleDraft(
     val received: Long,        // paisa, what the customer handed over
     val paymentMethod: PaymentMethod,
     val customerId: Long?,
-    val note: String? = null
+    val note: String? = null,
+    /** Version 5: the Dhaka day the sale belongs to; null = today (the day of saving). */
+    val saleDay: LocalDate? = null
 )
 
 /** What happened when we tried to save. */
@@ -280,9 +292,25 @@ class SaleRepository(
         }
         check(amounts.isConsistent()) { "Sale amounts do not add up: $amounts" } // never expected
 
-        // 4. The receipt number: today's highest counter + 1 (as a number). [now] was recorded in
-        //    the journal before the transaction, so a retry after a crash can find this sale.
-        val receiptNo = nextFreeReceiptNo(now)
+        // 3b. The sale date (version 5): never a future day, never before 1 Jan 2020. Today is
+        //     "now"; an earlier day is that day at the current time of day (saleDateFor).
+        val day = draft.saleDay ?: DhakaTime.localDate(now)
+        when (checkSaleDay(day, DhakaTime.localDate(now))) {
+            SaleDayProblem.FUTURE -> return SaleResult.Invalid(setOf(SaleError.FUTURE_DATE))
+            SaleDayProblem.BEFORE_MIN -> return SaleResult.Invalid(setOf(SaleError.DATE_BEFORE_MIN))
+            null -> Unit
+        }
+        val saleDate = saleDateFor(day, now)
+
+        // 3c. Every line warranty must be complete and within its limits.
+        if (draft.lines.any { checkWarranty(it.warrantyValue, it.warrantyUnit) != null }) {
+            return SaleResult.Invalid(setOf(SaleError.WARRANTY_INVALID))
+        }
+
+        // 4. The receipt number: the SALE DAY's highest counter + 1 (as a number). A back-dated
+        //    sale gets the next free number of its own day. [now] (createdAt) was recorded in the
+        //    journal before the transaction, so a retry after a crash can find this sale.
+        val receiptNo = nextFreeReceiptNo(saleDate)
 
         // 5. The sale itself.
         val saleId = saleDao.insertSale(
@@ -297,7 +325,8 @@ class SaleRepository(
                 paymentMethod = draft.paymentMethod,
                 dueAmount = amounts.dueAmount,
                 note = draft.note,
-                createdAt = now
+                createdAt = now,
+                saleDate = saleDate
             )
         )
         afterStep(SaveStep.SALE_SAVED)
@@ -314,7 +343,13 @@ class SaleRepository(
                     quantity = line.quantity,
                     unitPrice = line.unitPrice,
                     costPriceSnapshot = product.costPrice,
-                    lineTotal = amounts.lineTotals[index]
+                    lineTotal = amounts.lineTotals[index],
+                    // The warranty snapshot: counted from the sale day, never changed later.
+                    warrantyValue = line.warrantyValue,
+                    warrantyUnit = line.warrantyUnit,
+                    warrantyUntil = line.warrantyValue?.let { value ->
+                        warrantyUntil(day, value, line.warrantyUnit!!).toEpochDay()
+                    }
                 )
             }
         )
@@ -328,7 +363,7 @@ class SaleRepository(
                     type = StockMovementType.SALE,
                     quantity = -line.quantity,
                     referenceSaleId = saleId,
-                    createdAt = now
+                    createdAt = saleDate // a SALE movement is dated by the sale day (version 5)
                 )
             }
         )
@@ -342,7 +377,7 @@ class SaleRepository(
                     type = LedgerEntryType.SALE_DUE,
                     amount = amounts.dueAmount,
                     saleId = saleId,
-                    entryDate = now,
+                    entryDate = saleDate, // the sale's day; createdAt stays the real moment
                     createdAt = now
                 )
             )
@@ -353,12 +388,12 @@ class SaleRepository(
     }
 
     /**
-     * Today's next receipt number. If, against all odds, it is already taken
-     * (for example after a strange clock change), we simply move to the next counter.
+     * The next receipt number of the sale's day ([saleDate]). If, against all odds, it is already
+     * taken (for example after a strange clock change), we simply move to the next counter.
      * The unique index on receiptNo is the last safety net.
      */
-    private suspend fun nextFreeReceiptNo(now: Long): String {
-        val prefix = ReceiptNumber.datePrefix(now)
+    private suspend fun nextFreeReceiptNo(saleDate: Long): String {
+        val prefix = ReceiptNumber.datePrefix(saleDate)
         var candidate = ReceiptNumber.next(prefix, saleDao.receiptNumbersOfDay(prefix))
         while (saleDao.countWithReceiptNo(candidate) > 0) {
             val counter = ReceiptNumber.counterOf(candidate, prefix)!!

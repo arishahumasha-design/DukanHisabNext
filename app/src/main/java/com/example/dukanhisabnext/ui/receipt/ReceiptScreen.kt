@@ -324,7 +324,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
 
             // ---- This sale ----
             KeyValue(labels.receiptNo, toBengaliDigits(data.receiptNo))
-            KeyValue(labels.date, receiptDateTime(data.createdAt, labels))
+            KeyValue(labels.date, receiptDateTime(data.saleDate, labels))
             data.customerName?.let { name ->
                 KeyValue(labels.customer, name)
                 data.customerPhone?.let { KeyValue(labels.mobile, toBengaliDigits(it)) }

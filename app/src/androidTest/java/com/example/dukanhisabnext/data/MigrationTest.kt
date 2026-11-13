@@ -117,9 +117,9 @@ class MigrationTest {
 
         val room = openUpgraded()
         try {
-            // Opening runs 1 -> 2 -> 3 -> 4 and Room's full check against version 4.
+            // Opening runs 1 -> 2 -> 3 -> 4 -> 5 and Room's full check against version 5.
             val db = room.openHelper.writableDatabase
-            assertEquals(4, db.version)
+            assertEquals(5, db.version)
             assertSameRows(before, db)
             assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
 
@@ -198,7 +198,7 @@ class MigrationTest {
         val room = openUpgraded()
         try {
             val db = room.openHelper.writableDatabase
-            assertEquals(4, db.version)
+            assertEquals(5, db.version)
             assertSameRows(before, db)
             assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
             assertEquals(1, db.count("sale_cancellations"))
@@ -236,7 +236,7 @@ class MigrationTest {
             override fun migrate(db: SupportSQLiteDatabase) {}
         }
 
-        val room = openUpgraded(doesNothing, MIGRATION_2_3, MIGRATION_3_4)
+        val room = openUpgraded(doesNothing, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
         try {
             room.openHelper.writableDatabase
             fail("Room must refuse a database without the sale_cancellations table")
@@ -258,7 +258,7 @@ class MigrationTest {
             }
         }
 
-        val room = openUpgraded(MIGRATION_1_2, forgetsSystemKey, MIGRATION_3_4)
+        val room = openUpgraded(MIGRATION_1_2, forgetsSystemKey, MIGRATION_3_4, MIGRATION_4_5)
         try {
             room.openHelper.writableDatabase
             fail("Room must refuse a database without the systemKey column")
@@ -285,7 +285,7 @@ class MigrationTest {
         val room = openUpgraded()
         try {
             val db = room.openHelper.writableDatabase
-            assertEquals(4, db.version)
+            assertEquals(5, db.version)
             assertSameRows(before, db)
             assertEquals(1, db.count("sale_cancellations"))
             assertEquals(false, db.indexIsUnique("stock_movements", STOCK_INDEX))
@@ -311,12 +311,102 @@ class MigrationTest {
             override fun migrate(db: SupportSQLiteDatabase) {}
         }
 
-        val room = openUpgraded(MIGRATION_1_2, MIGRATION_2_3, doesNothing)
+        val room = openUpgraded(MIGRATION_1_2, MIGRATION_2_3, doesNothing, MIGRATION_4_5)
         try {
             room.openHelper.writableDatabase
             fail("Room must refuse a version 4 database without the stock index")
         } catch (expected: IllegalStateException) {
             assertTrue(expected.message.orEmpty(), expected.message.orEmpty().contains("stock_movements"))
+        } finally {
+            room.close()
+        }
+    }
+
+    // =====================================================================================
+    // 4 -> 5 (sale date and warranty)
+    // =====================================================================================
+
+    @Test
+    fun version4To5KeepsEveryRowAndEveryOldSaleKeepsItsDate() = runBlocking {
+        // A real-looking 13 Nov 2026 sale (12:23 Dhaka) next to the shared shop data, and a cancelled one.
+        val nov13 = 1_763_015_000_000L
+        val before = createSchema(4).let { db ->
+            db.insertShopData()
+            db.execSQL(
+                "INSERT INTO sales (id, receiptNo, customerId, subtotal, discount, deliveryCharge, total, " +
+                    "paidAmount, paymentMethod, dueAmount, createdAt) VALUES (2, '261113-003', NULL, 9000, 0, 0, 9000, 9000, 'CASH', 0, $nov13)"
+            )
+            db.execSQL(
+                "INSERT INTO sale_items (id, saleId, productId, productNameSnapshot, quantity, unitPrice, costPriceSnapshot, lineTotal) " +
+                    "VALUES (2, 2, 1, 'চাল', 1000, 9000, NULL, 9000)"
+            )
+            db.execSQL("INSERT INTO sale_cancellations (id, saleId, reason, createdAt) VALUES (1, 1, 'ভুল', 6)")
+            assertFalse("v4 has no sale date index", hasIndex(db, SALE_DATE_INDEX))
+            snapshot(db).also { db.close() }
+        }
+
+        val room = openUpgraded()
+        try {
+            val db = room.openHelper.writableDatabase
+            assertEquals(5, db.version)
+            assertSameRows(before, db) // every old column of every row is unchanged
+
+            // Every old sale got its own createdAt as its sale date; none is left at the default 0.
+            db.query("SELECT id, createdAt, saleDate, receiptNo FROM sales ORDER BY id").use {
+                val rows = buildList { while (it.moveToNext()) add(listOf(it.getLong(0), it.getLong(1), it.getLong(2))) }
+                assertEquals(listOf(listOf(1L, 2L, 2L), listOf(2L, nov13, nov13)), rows)
+            }
+            assertEquals(0, db.query("SELECT COUNT(*) FROM sales WHERE saleDate = 0 AND createdAt != 0").use { it.moveToFirst(); it.getInt(0) })
+
+            // No warranty anywhere yet.
+            assertEquals(0, db.query("SELECT COUNT(*) FROM products WHERE warrantyValue IS NOT NULL OR warrantyUnit IS NOT NULL").use { it.moveToFirst(); it.getInt(0) })
+            assertEquals(
+                0,
+                db.query("SELECT COUNT(*) FROM sale_items WHERE warrantyValue IS NOT NULL OR warrantyUnit IS NOT NULL OR warrantyUntil IS NOT NULL")
+                    .use { it.moveToFirst(); it.getInt(0) }
+            )
+            assertEquals(false, db.indexIsUnique("sales", SALE_DATE_INDEX))
+
+            // The lists and reports read the old sales on their old days.
+            val (start, end) = com.example.dukanhisabnext.util.DhakaTime.today(nov13).let { it.startMillis to it.endMillisExclusive }
+            val row = room.saleDao().observeList(start, end).first().single()
+            assertEquals("261113-003", row.receiptNo)
+            assertEquals(nov13, row.saleDate)
+            assertEquals(9_000L, room.reportDao().observeSalesReport(start, end).first().total)
+            // Stock and balance are the same sums as before (the cancelled sale's due still counts:
+            // these rows were written by hand, without the cancel's own reversal entry).
+            assertEquals(7_000L, room.stockMovementDao().getStock(1))
+            assertEquals(20_000L, room.ledgerDao().getBalance(1))
+
+            // A new sale on 9 Nov 2026 continues that day's numbering after the old 261109-001.
+            val nov9Noon = java.time.Instant.parse("2026-11-09T06:00:00Z").toEpochMilli()
+            val saved = SaleRepository(room, { nov9Noon }).completeSale(
+                SaleDraft("after-upgrade", listOf(SaleDraftLine(1, 1_000, 10_000)), 0, 0, 10_000, com.example.dukanhisabnext.data.entity.PaymentMethod.CASH, null)
+            ) as SaleResult.Saved
+            assertEquals("261109-002", saved.receiptNo)
+        } finally {
+            room.close()
+        }
+    }
+
+    @Test
+    fun a4To5MigrationThatForgetsTheSaleDateIsRefused() {
+        createSchema(4).apply { insertShopData(); close() }
+        val forgetsSaleDate = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `products` ADD COLUMN `warrantyValue` INTEGER")
+                db.execSQL("ALTER TABLE `products` ADD COLUMN `warrantyUnit` TEXT")
+                db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyValue` INTEGER")
+                db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyUnit` TEXT")
+                db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyUntil` INTEGER")
+            }
+        }
+        val room = openUpgraded(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, forgetsSaleDate)
+        try {
+            room.openHelper.writableDatabase
+            fail("Room must refuse a version 5 database without sales.saleDate")
+        } catch (expected: IllegalStateException) {
+            assertTrue(expected.message.orEmpty(), expected.message.orEmpty().contains("sales"))
         } finally {
             room.close()
         }
@@ -345,3 +435,6 @@ class MigrationTest {
 
 /** The covering index added in version 4. */
 private const val STOCK_INDEX = "index_stock_movements_productId_quantity"
+
+/** The sale date index added in version 5. */
+private const val SALE_DATE_INDEX = "index_sales_saleDate"

@@ -174,13 +174,13 @@ fun showDueTag(row: SaleListRow): Boolean = !row.isCancelled && row.dueAmount > 
 data class SalesDayGroup(val date: LocalDate, val rows: List<SaleListRow>)
 
 /**
- * Groups sales by their Asia/Dhaka calendar day, newest day first and newest sale first inside a
+ * Groups sales by the Asia/Dhaka calendar day of their sale date (saleDate), newest day first and newest sale first inside a
  * day. A sale at 23:30 and one at 00:10 land on different days.
  */
 fun groupByDhakaDay(rows: List<SaleListRow>): List<SalesDayGroup> =
     rows
-        .sortedWith(compareByDescending<SaleListRow> { it.createdAt }.thenByDescending { it.id })
-        .groupBy { DhakaTime.localDate(it.createdAt) } // a LinkedHashMap: keeps the newest day first
+        .sortedWith(compareByDescending<SaleListRow> { it.saleDate }.thenByDescending { it.id })
+        .groupBy { DhakaTime.localDate(it.saleDate) } // a LinkedHashMap: keeps the newest day first
         .map { (date, dayRows) -> SalesDayGroup(date, dayRows) }
 
 /** "১০ নভেম্বর ২০২৬": the day header. [monthNames] are the 12 Bengali month names, January first. */

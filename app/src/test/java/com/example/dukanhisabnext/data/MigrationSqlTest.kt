@@ -77,15 +77,15 @@ class MigrationSqlTest {
     }
 
     @Test
-    fun theMigrationsFormOneUnbrokenChainUpToVersion4() {
+    fun theMigrationsFormOneUnbrokenChainUpToVersion5() {
         assertEquals(1, ALL_MIGRATIONS.first().startVersion)
         ALL_MIGRATIONS.toList().zipWithNext { a, b -> assertEquals(a.endVersion, b.startVersion) }
-        assertEquals(4, ALL_MIGRATIONS.last().endVersion)
+        assertEquals(5, ALL_MIGRATIONS.last().endVersion)
         // The newest schema file must be the version the last migration reaches.
         val newest = schemaDir.listFiles()!!.mapNotNull { it.nameWithoutExtension.toIntOrNull() }.max()
         assertEquals(newest, ALL_MIGRATIONS.last().endVersion)
         // And there is a schema file for every version on the way.
-        for (v in 1..4) assertTrue("$v.json", File(schemaDir, "$v.json").exists())
+        for (v in 1..5) assertTrue("$v.json", File(schemaDir, "$v.json").exists())
     }
 
     // =====================================================================================
@@ -190,6 +190,78 @@ class MigrationSqlTest {
         assertEquals(tableNames(2).sorted(), tableNames(3).sorted()) // no table added or removed
         for (table in tableNames(3) - setOf("expense_categories", "expenses")) {
             assertEquals(table, createSqlOf(2, table), createSqlOf(3, table))
+        }
+    }
+
+    // =====================================================================================
+    // Version 4 -> 5 (sale date and warranty): added columns, one backfill, one index
+    // =====================================================================================
+
+    /** The column definitions version 5 adds, per table, exactly as Room writes them in 5.json. */
+    private val addedIn5 = mapOf(
+        "products" to listOf("`warrantyValue` INTEGER", "`warrantyUnit` TEXT"),
+        "sale_items" to listOf("`warrantyValue` INTEGER", "`warrantyUnit` TEXT", "`warrantyUntil` INTEGER"),
+        "sales" to listOf("`saleDate` INTEGER NOT NULL DEFAULT 0")
+    )
+
+    @Test
+    fun migration4To5RunsExactlyTheExpectedSql() {
+        val saleDateIndex = createSqlOf(5, "sales").single { it.contains("index_sales_saleDate") }
+        assertEquals(
+            listOf(
+                "ALTER TABLE `products` ADD COLUMN `warrantyValue` INTEGER",
+                "ALTER TABLE `products` ADD COLUMN `warrantyUnit` TEXT",
+                "ALTER TABLE `sale_items` ADD COLUMN `warrantyValue` INTEGER",
+                "ALTER TABLE `sale_items` ADD COLUMN `warrantyUnit` TEXT",
+                "ALTER TABLE `sale_items` ADD COLUMN `warrantyUntil` INTEGER",
+                "ALTER TABLE `sales` ADD COLUMN `saleDate` INTEGER NOT NULL DEFAULT 0",
+                "UPDATE `sales` SET `saleDate` = `createdAt`",
+                saleDateIndex
+            ),
+            sqlOf(MIGRATION_4_5)
+        )
+        assertEquals("CREATE INDEX IF NOT EXISTS `index_sales_saleDate` ON `sales` (`saleDate`)", saleDateIndex)
+    }
+
+    @Test
+    fun everyAddedColumnIsExactlyTheOneInTheVersion5Schema() {
+        val migrationSql = sqlOf(MIGRATION_4_5)
+        for ((table, columns) in addedIn5) {
+            val v5Table = createSqlOf(5, table).first()
+            for (column in columns) {
+                assertTrue("$table: $column in 5.json", v5Table.contains(", $column,") || v5Table.contains(", $column)"))
+                assertTrue("$table: $column added", migrationSql.contains("ALTER TABLE `$table` ADD COLUMN $column"))
+            }
+            // Taking the added columns out of the version 5 table gives exactly the version 4 table.
+            var stripped = v5Table
+            for (column in columns) stripped = stripped.replace(", $column", "")
+            assertEquals(table, createSqlOf(4, table).first(), stripped)
+        }
+    }
+
+    @Test
+    fun migration4To5NeverDropsRenamesOrRebuildsAnything() {
+        for (sql in sqlOf(MIGRATION_4_5)) {
+            assertTrue(sql, sql.startsWith("ALTER TABLE") && sql.contains(" ADD COLUMN ") || sql.startsWith("CREATE INDEX") || sql.startsWith("UPDATE `sales` SET `saleDate`"))
+            assertTrue(sql, !sql.contains("DROP", ignoreCase = true))
+            assertTrue(sql, !sql.contains("RENAME", ignoreCase = true))
+        }
+    }
+
+    @Test
+    fun everyOtherTableAndIndexIsExactlyTheSameInVersion4And5() {
+        assertEquals(tableNames(4), tableNames(5)) // no table added or removed
+        for (table in tableNames(5)) {
+            val v4 = createSqlOf(4, table)
+            val v5 = createSqlOf(5, table)
+            if (table == "sales") {
+                // The table gets saleDate; its old indexes are kept and one index is added.
+                assertEquals(v4.drop(1), v5.drop(1).filterNot { it.contains("index_sales_saleDate") })
+            } else if (table in addedIn5) {
+                assertEquals(table, v4.drop(1), v5.drop(1)) // the indexes are unchanged
+            } else {
+                assertEquals(table, v4, v5)
+            }
         }
     }
 }

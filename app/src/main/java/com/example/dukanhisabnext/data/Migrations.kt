@@ -65,5 +65,27 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+/**
+ * Version 4 -> 5 (sale date and warranty): only ADDS, nothing is changed or dropped.
+ *  - products gets warrantyValue / warrantyUnit (null = no warranty);
+ *  - sale_items gets warrantyValue / warrantyUnit / warrantyUntil (null = no warranty);
+ *  - sales gets saleDate. SQLite can only add a NOT NULL column with a default, so it is added with
+ *    DEFAULT 0 and then filled with each sale's own createdAt: every old sale keeps its date, and
+ *    its receipt number, stock movements and due entry stay exactly as they were;
+ *  - an index on sales.saleDate (every list and report filters by it).
+ */
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `products` ADD COLUMN `warrantyValue` INTEGER")
+        db.execSQL("ALTER TABLE `products` ADD COLUMN `warrantyUnit` TEXT")
+        db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyValue` INTEGER")
+        db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyUnit` TEXT")
+        db.execSQL("ALTER TABLE `sale_items` ADD COLUMN `warrantyUntil` INTEGER")
+        db.execSQL("ALTER TABLE `sales` ADD COLUMN `saleDate` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("UPDATE `sales` SET `saleDate` = `createdAt`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_sales_saleDate` ON `sales` (`saleDate`)")
+    }
+}
+
 /** Every migration, in order. AppDatabase passes them to Room. */
-val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+val ALL_MIGRATIONS = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)

@@ -232,7 +232,7 @@ private fun SalesBody(body: ReportBody.Sales, onOpenReceipt: (Long) -> Unit) {
             }
             group.rows.forEach { row ->
                 item(key = "sale-${row.id}") {
-                    SaleRow(row, saleTimeText(row.createdAt) { periods.getValue(it) }, customerLabel(row.customerName, walkIn)) { onOpenReceipt(row.id) }
+                    SaleRow(row, saleTimeText(row.saleDate) { periods.getValue(it) }, customerLabel(row.customerName, walkIn)) { onOpenReceipt(row.id) }
                 }
             }
         }

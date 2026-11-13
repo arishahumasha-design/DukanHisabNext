@@ -15,7 +15,10 @@ enum class SaleError {
     NEGATIVE_AMOUNT,       // discount, delivery charge or amount received below 0
     DISCOUNT_TOO_LARGE,    // discount more than the subtotal (SPEC section 5)
     CUSTOMER_REQUIRED,     // there is a due but no customer (SPEC section 5)
-    TOO_LARGE              // a number so big the math would overflow (a typo)
+    TOO_LARGE,             // a number so big the math would overflow (a typo)
+    FUTURE_DATE,           // version 5: the sale date is after today (Dhaka)
+    DATE_BEFORE_MIN,       // version 5: the sale date is before 1 January 2020
+    WARRANTY_INVALID       // version 5: a line warranty is incomplete or out of range
 }
 
 /**
