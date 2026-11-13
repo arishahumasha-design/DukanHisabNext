@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.settings
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -86,7 +86,7 @@ fun SettingsScreen(
 /** A clear green "saved" message. */
 @Composable
 fun SavedMessage(text: String) {
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
     ) {
@@ -110,7 +110,7 @@ private fun OwnerCard(ui: SettingsUi, onEdit: () -> Unit) {
     val name = ownerDisplayName(ui.ownerName, stringResource(R.string.owner_name_placeholder))
     val phone = ownerPhoneDisplay(ui.ownerPhone)
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(
@@ -202,7 +202,7 @@ private fun BackupRow(onClick: () -> Unit) {
         labelFormat = { time -> lastTemplate.replace(PLACEHOLDER, time) },
         periodWord = periodWords()
     )
-    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+    AppCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
         Row(
             modifier = Modifier.padding(16.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically,

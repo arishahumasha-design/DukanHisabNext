@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.backup
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
@@ -18,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -112,7 +112,7 @@ fun BackupScreen(onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            AppCard(modifier = Modifier.fillMaxWidth()) {
                 Text(lastText, modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
 
@@ -129,7 +129,7 @@ fun BackupScreen(onBack: () -> Unit) {
                 TextButton(onClick = manager::dismiss) { Text(stringResource(R.string.backup_ok)) }
             }
             ui.failure?.let { problem ->
-                Card(
+                AppCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {

@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.shop
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -95,7 +95,7 @@ fun ShopScreen(
 
             // A clear "saved" message. It goes away as soon as something is edited again.
             if (state.saved) {
-                Card(
+                AppCard(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                 ) {

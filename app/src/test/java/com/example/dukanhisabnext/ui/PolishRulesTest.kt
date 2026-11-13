@@ -1,8 +1,8 @@
 package com.example.dukanhisabnext.ui
 
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.toArgb
+import com.example.dukanhisabnext.ui.theme.DarkColorScheme
+import com.example.dukanhisabnext.ui.theme.LightColorScheme
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -101,6 +101,20 @@ class PolishRulesTest {
         }
     }
 
+    @Test
+    fun oneNamePerThing() {
+        val strings = res("values/strings.xml")
+        // M9 group C: the shopkeeper chose one word for each of these.
+        assertFalse("ক্যাটাগরি everywhere", strings.contains("ক্যাটেগরি"))
+        assertFalse("ক্রয়মূল্য everywhere", strings.contains("কেনা দাম"))
+        assertFalse("রসিদ নম্বর everywhere", strings.contains("রসিদ নং"))
+        assertFalse("লেনদেন in the restore summary", strings.contains("খাতার এন্ট্রি"))
+        assertTrue(strings.contains("<string name=\"count_ledger\">লেনদেন</string>"))
+        assertTrue(strings.contains("<string name=\"receipt_no\">রসিদ নম্বর</string>"))
+        // These stay as they are (the shopkeeper's decision): both total words and the two "নগদ" labels.
+        assertTrue(strings.contains("সর্বমোট") && strings.contains("মোট প্রদেয়") && strings.contains("সাব-টোটাল"))
+    }
+
     // ---- sorting ----
 
     @Test
@@ -136,8 +150,8 @@ class PolishRulesTest {
         assertTrue(night.contains("windowBackground"))
 
         fun colorOf(xml: String) = Regex("""name="window_background">#([0-9A-Fa-f]{8})<""").find(xml)!!.groupValues[1].toLong(16).toInt()
-        // The window colour is the colour the Compose theme draws as "background" (Theme.kt uses Material's defaults).
-        assertEquals(lightColorScheme().background.toArgb(), colorOf(res("values/colors.xml")))
-        assertEquals(darkColorScheme().background.toArgb(), colorOf(res("values-night/colors.xml")))
+        // The window colour is the colour the Compose theme draws as "background" (Theme.kt).
+        assertEquals(LightColorScheme.background.toArgb(), colorOf(res("values/colors.xml")))
+        assertEquals(DarkColorScheme.background.toArgb(), colorOf(res("values-night/colors.xml")))
     }
 }

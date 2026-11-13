@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,7 +9,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -97,7 +97,7 @@ fun CheckoutErrorCard(error: PaymentError, onBackToCart: () -> Unit) {
     }
     val needsCartFix = error is PaymentError.ProductsUnavailable || error == PaymentError.SaleInvalid
 
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {

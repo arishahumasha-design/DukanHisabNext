@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.khata
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -25,7 +26,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -355,7 +355,7 @@ private fun SummaryLine.labelRes(): Int = when (this) {
 /** "সব": পাবো, অগ্রিম and নিট for the whole shop. */
 @Composable
 internal fun AllSummaryCard(summary: KhataAllSummary) {
-    Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             SummaryColumn(stringResource(R.string.khata_sum_receivable), summary.receivable, BalanceStatus.OWES, Modifier.weight(1f))
             SummaryColumn(stringResource(R.string.khata_sum_advance), summary.advance, BalanceStatus.ADVANCE, Modifier.weight(1f))
@@ -386,7 +386,7 @@ private fun SummaryColumn(label: String, amount: Long, status: BalanceStatus, mo
 @Composable
 internal fun PeriodSummaryCard(summary: PeriodSummary) {
     val taka = stringResource(R.string.unit_taka)
-    Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             shownSummaryLines(summary).forEach { line ->
                 if (line == SummaryLine.NET) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))

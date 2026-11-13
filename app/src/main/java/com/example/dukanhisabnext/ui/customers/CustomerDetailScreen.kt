@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.customers
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -18,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -120,7 +120,7 @@ fun CustomerDetailScreen(
                     Text(c.name, style = MaterialTheme.typography.headlineMedium)
 
                     // Balance: always computed from the ledger, never stored on the customer.
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(stringResource(R.string.label_balance), style = MaterialTheme.typography.labelLarge)
                             BalanceText(balance = balance ?: 0L, style = MaterialTheme.typography.headlineMedium)

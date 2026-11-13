@@ -8,3 +8,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Review screenshots of M9 group C (kept on disk, not in Git)
+/screenshots-m9c/

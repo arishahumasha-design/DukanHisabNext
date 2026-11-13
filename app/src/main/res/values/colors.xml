@@ -7,6 +7,6 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <!-- Material 3 light "background" (what the Compose theme draws in light mode). -->
-    <color name="window_background">#FFFEF7FF</color>
+    <!-- The light "background" of Theme.kt (warm off-white). -->
+    <color name="window_background">#FFFAF8F2</color>
 </resources>

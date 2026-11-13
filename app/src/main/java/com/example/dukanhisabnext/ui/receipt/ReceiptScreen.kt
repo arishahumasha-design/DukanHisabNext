@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.receipt
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -30,7 +31,6 @@ import com.example.dukanhisabnext.cancel.showCancelButton
 import com.example.dukanhisabnext.receipt.CancelNotice
 import com.example.dukanhisabnext.receipt.cancelNotice
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -299,7 +299,7 @@ private fun shareText(context: Context, title: String, text: String) {
 private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
     fun money(paisa: Long) = receiptMoney(paisa, labels)
 
-    Card(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             // ---- Shop ----
             Text(

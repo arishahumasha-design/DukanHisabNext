@@ -2,6 +2,13 @@ package com.example.dukanhisabnext.ui.screens
 
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
+import com.example.dukanhisabnext.ui.theme.Spacing
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,13 +17,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -166,8 +171,8 @@ fun HomeScreen(
     val taka = stringResource(R.string.unit_taka)
 
     Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
         Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineMedium)
 
@@ -177,59 +182,74 @@ fun HomeScreen(
             return@Column
         }
 
-        DashboardCard.entries.forEach { card ->
-            when (card) {
-                DashboardCard.TODAY_SALES -> StatCard(
-                    title = stringResource(R.string.home_card_sales),
-                    value = "$taka ${formatTaka(d.todaySalesTotal)}",
-                    hint = if (showsSalesCount(d)) {
-                        stringResource(R.string.home_sales_count, toBengaliDigits(d.todaySalesCount.toString()))
-                    } else {
-                        stringResource(R.string.home_sales_none)
-                    },
-                    valueColor = Color.Unspecified,
-                    onClick = { onOpen(targetOf(card)) }
-                )
+        // 1. Today's sales: the green hero card.
+        HeroSalesCard(
+            title = stringResource(R.string.home_card_sales),
+            amount = "$taka ${formatTaka(d.todaySalesTotal)}",
+            hint = if (showsSalesCount(d)) {
+                stringResource(R.string.home_sales_count, toBengaliDigits(d.todaySalesCount.toString()))
+            } else {
+                stringResource(R.string.home_sales_none)
+            },
+            onClick = { onOpen(targetOf(DashboardCard.TODAY_SALES)) }
+        )
 
-                DashboardCard.TODAY_EXPENSE -> StatCard(
-                    title = stringResource(R.string.home_card_expense),
-                    value = "$taka ${formatTaka(d.todayExpenseTotal)}",
-                    hint = if (showsExpenseSplit(d)) {
-                        stringResource(
-                            R.string.home_expense_split,
-                            "$taka ${formatTaka(d.todayShopExpense)}",
-                            "$taka ${formatTaka(d.todayPersonalExpense)}"
-                        )
-                    } else {
-                        null
-                    },
-                    valueColor = Color.Unspecified,
-                    onClick = { onOpen(targetOf(card)) }
-                )
-
-                DashboardCard.RECEIVABLE -> StatCard(
-                    title = stringResource(R.string.home_card_receivable),
-                    value = "$taka ${formatTaka(d.totalReceivable)}",
-                    hint = null,
-                    valueColor = BalanceStatus.OWES.color(),
-                    onClick = { onOpen(targetOf(card)) }
-                )
-
-                DashboardCard.LOW_STOCK -> StatCard(
-                    title = stringResource(R.string.home_card_low_stock),
-                    value = when (lowStockState(d)) {
-                        LowStockState.NEEDS_ATTENTION -> stringResource(R.string.home_low_stock_count, toBengaliDigits(d.lowStockCount.toString()))
-                        LowStockState.ALL_GOOD -> stringResource(R.string.home_low_stock_ok)
-                    },
-                    hint = null,
-                    valueColor = when (lowStockState(d)) {
-                        LowStockState.NEEDS_ATTENTION -> BalanceStatus.OWES.color()
-                        LowStockState.ALL_GOOD -> BalanceStatus.ADVANCE.color()
-                    },
-                    onClick = { onOpen(targetOf(card)) }
-                )
+        // 2. Today's expense and the total receivable: two smaller cards side by side (stacked when the
+        //    phone's font is very large, so a big number never gets squeezed).
+        val expenseCard: @Composable (Modifier) -> Unit = { m ->
+            SmallStatCard(
+                title = stringResource(R.string.home_card_expense),
+                value = "$taka ${formatTaka(d.todayExpenseTotal)}",
+                valueColor = MaterialTheme.colorScheme.onSurface,
+                icon = ExpenseIcon,
+                hint = if (showsExpenseSplit(d)) {
+                    stringResource(
+                        R.string.home_expense_split,
+                        "$taka ${formatTaka(d.todayShopExpense)}",
+                        "$taka ${formatTaka(d.todayPersonalExpense)}"
+                    )
+                } else {
+                    null
+                },
+                onClick = { onOpen(targetOf(DashboardCard.TODAY_EXPENSE)) },
+                modifier = m
+            )
+        }
+        val receivableCard: @Composable (Modifier) -> Unit = { m ->
+            SmallStatCard(
+                title = stringResource(R.string.home_card_receivable),
+                value = "$taka ${formatTaka(d.totalReceivable)}",
+                valueColor = BalanceStatus.OWES.color(),
+                icon = ReceivableIcon,
+                hint = null,
+                onClick = { onOpen(targetOf(DashboardCard.RECEIVABLE)) },
+                modifier = m
+            )
+        }
+        if (LocalDensity.current.fontScale > 1.3f) {
+            expenseCard(Modifier.fillMaxWidth())
+            receivableCard(Modifier.fillMaxWidth())
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+                horizontalArrangement = Arrangement.spacedBy(Spacing.m)
+            ) {
+                expenseCard(Modifier.weight(1f).fillMaxHeight())
+                receivableCard(Modifier.weight(1f).fillMaxHeight())
             }
         }
+
+        // 3. Low stock: amber when something needs attention, a calm green when all is well.
+        val low = lowStockState(d)
+        LowStockCard(
+            title = stringResource(R.string.home_card_low_stock),
+            value = when (low) {
+                LowStockState.NEEDS_ATTENTION -> stringResource(R.string.home_low_stock_count, toBengaliDigits(d.lowStockCount.toString()))
+                LowStockState.ALL_GOOD -> stringResource(R.string.home_low_stock_ok)
+            },
+            needsAttention = low == LowStockState.NEEDS_ATTENTION,
+            onClick = { onOpen(targetOf(DashboardCard.LOW_STOCK)) }
+        )
 
         // A small line, not a notification: no backup for more than 7 days (or ever) and there is data.
         if (showBackupReminder) {
@@ -238,22 +258,8 @@ fun HomeScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenBackup).padding(vertical = 12.dp)
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onOpenBackup).heightIn(min = 48.dp).padding(vertical = Spacing.m)
             )
-        }
-    }
-}
-
-/** One dashboard card: a label, a big value and an optional small line. A tap opens the matching screen. */
-@Composable
-private fun StatCard(title: String, value: String, hint: String?, valueColor: Color, onClick: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = MaterialTheme.typography.labelLarge)
-            Text(value, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = valueColor)
-            hint?.let {
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
         }
     }
 }

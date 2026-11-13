@@ -56,11 +56,11 @@
     <string name="title_product_new">নতুন পণ্য</string>
     <string name="title_product_edit">পণ্য সম্পাদনা</string>
     <string name="field_name">পণ্যের নাম</string>
-    <string name="field_category">ক্যাটেগরি</string>
-    <string name="category_none">ক্যাটেগরি নেই</string>
-    <string name="category_new">+ নতুন ক্যাটেগরি</string>
-    <string name="dialog_category_title">নতুন ক্যাটেগরি</string>
-    <string name="field_category_name">ক্যাটেগরির নাম</string>
+    <string name="field_category">ক্যাটাগরি</string>
+    <string name="category_none">ক্যাটাগরি নেই</string>
+    <string name="category_new">+ নতুন ক্যাটাগরি</string>
+    <string name="dialog_category_title">নতুন ক্যাটাগরি</string>
+    <string name="field_category_name">ক্যাটাগরির নাম</string>
     <string name="field_unit">একক</string>
     <string name="unit_locked_hint">পণ্য তৈরির পর একক বদলানো যায় না</string>
     <string name="field_sell_price">বিক্রয়মূল্য (৳)</string>
@@ -78,7 +78,7 @@
     <string name="mode_purchase">স্টক যোগ (কেনা)</string>
     <string name="mode_correction">স্টক সংশোধন</string>
     <string name="field_quantity">কত যোগ হলো</string>
-    <string name="field_unit_cost">কেনা দাম, প্রতি একক (৳) — ঐচ্ছিক</string>
+    <string name="field_unit_cost">ক্রয়মূল্য, প্রতি একক (৳) — ঐচ্ছিক</string>
     <string name="checkbox_update_cost">পণ্যের ক্রয়মূল্যও আপডেট করুন</string>
     <string name="field_counted_stock">আসলে কত স্টক আছে (গুনে দেখুন)</string>
     <string name="correction_preview">এখন %1$s → নতুন %2$s (পার্থক্য %3$s)</string>
@@ -166,7 +166,7 @@
     <string name="title_receipt">রসিদ</string>
     <string name="receipt_shop_placeholder">বিক্রয় রসিদ</string>
     <string name="receipt_mobile">মোবাইল</string>
-    <string name="receipt_no">রসিদ নং</string>
+    <string name="receipt_no">রসিদ নম্বর</string>
     <string name="receipt_date">তারিখ</string>
     <string name="receipt_customer">কাস্টমার</string>
     <string name="receipt_col_product">পণ্য</string>
@@ -549,7 +549,7 @@
     <string name="count_customers">কাস্টমার</string>
     <string name="count_products">পণ্য</string>
     <string name="count_expenses">খরচ</string>
-    <string name="count_ledger">খাতার এন্ট্রি</string>
+    <string name="count_ledger">লেনদেন</string>
     <string name="restoring_title">রিস্টোর হচ্ছে…</string>
     <string name="restoring_hint">অ্যাপ বন্ধ করবেন না। কাজ শেষ হলে অ্যাপ নিজে থেকে আবার খুলবে।</string>
     <string name="restore_done_title">ডেটা ফিরিয়ে আনা হয়েছে</string>

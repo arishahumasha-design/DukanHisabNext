@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -236,7 +236,7 @@ fun ExpenseListScreen(
 /** দোকানের খরচ, ব্যক্তিগত and মোট of the whole period, then every category (largest first, personal ones marked). */
 @Composable
 internal fun SummaryCard(summary: ExpenseSummary, taka: String) {
-    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (line in expenseSummaryLines()) {
                 val (label, amount) = when (line) {

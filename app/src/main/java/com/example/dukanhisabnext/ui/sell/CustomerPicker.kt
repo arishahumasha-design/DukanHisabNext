@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +22,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -108,7 +108,7 @@ fun CustomerPickerSection(viewModel: CheckoutViewModel, onAddCustomer: () -> Uni
 
             // Suggestions while typing. Tapping one selects that customer.
             if (suggestions.isNotEmpty()) {
-                Card(modifier = Modifier.fillMaxWidth()) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
                     suggestions.forEachIndexed { index, customer ->
                         if (index > 0) HorizontalDivider()
                         CustomerRow(customer) {
@@ -172,7 +172,7 @@ private fun PersonPlusIcon(contentDescription: String) {
 /** The selected customer: name, mobile, address, and "বদলান" to clear the choice. */
 @Composable
 private fun SelectedCustomerCard(customer: Customer, onChange: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically

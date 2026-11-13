@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -168,7 +168,7 @@ fun PaymentScreen(
                     // Switched off = no customer for this sale. A due still needs one, so say so
                     // and offer to switch it on again.
                     state.customerNeededFor?.let { due ->
-                        Card(
+                        AppCard(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                         ) {

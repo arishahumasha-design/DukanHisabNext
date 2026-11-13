@@ -785,6 +785,30 @@ built on the shared conditions above:
 
 ## 6. Screens and navigation
 
+Look and wording (M9 group C):
+- One word for each thing (the shopkeeper's choice): "ক্যাটাগরি" (never ক্যাটেগরি),
+  "ক্রয়মূল্য" (never কেনা দাম), "রসিদ নম্বর" (never রসিদ নং), "লেনদেন" for ledger entries in
+  the restore summary. These stay as they are: "সর্বমোট", "মোট প্রদেয়", "সাব-টোটাল" and the two
+  "নগদ" labels. A PC test (`PolishRulesTest`) guards the list.
+- Colours (`ui/theme/Color.kt`, `Theme.kt`): a calm green (#2E7D32) on a warm off-white page
+  (#FAF8F2; dark #12130E), white cards (dark #1F201B). Every card is the one `AppCard`
+  (`ui/theme/AppCard.kt`): white, a soft 2dp shadow and 16dp corners; a card with a message
+  (error, "saved") passes its own colour but keeps the same shape and shadow. Rounded corners come
+  from the theme (8, 12, 16, 20, 28dp). The spacing scale is `Spacing` (4, 8, 12, 16, 24dp).
+- Home (`ui/screens/HomeCards.kt`): a green hero card for today's sales (the amount, the sale
+  count, a shopping-cart icon); two smaller cards side by side (today's expense with the shop /
+  personal split, and মোট পাবো in amber; stacked when the system font scale is above 1.3); and a
+  low-stock card, amber with a warning icon when something needs attention, a calm green "সব ঠিক
+  আছে" with a check icon when not. Every card opens the same screen as before; the backup line and
+  the one-time nudge are unchanged. Touch targets are at least 48dp.
+- Icons are only from the built-in Material set (`material-icons-core`, no extended library):
+  Home, ShoppingCart, Person, Menu, Add, Warning, CheckCircle, Search, Share, Settings, List,
+  AccountBox, Call, DateRange, ExitToApp and similar. The More list shows one in green per row.
+- Launcher icon (`res/drawable/ic_launcher_*.xml`, adaptive, all vector): a green background, a
+  white notebook with binder holes and the taka sign ৳ cut out of its cover (the outline of the
+  sign is taken from the app's own Noto Sans Bengali font), and a monochrome layer for themed
+  icons. The name under the icon stays "দোকান হিসাব". The old robot image files are gone.
+
 Bottom navigation: **Home**, **Sell** (new sale), **Khata** (the tab is "খাতা", the screen heading "বাকির খাতা"; no other name),
 **More** (products, contacts, sales list, expenses, reports, settings).
 
@@ -951,7 +975,7 @@ Backup and restore screens (M8 part 2; the engine is section 5):
   confirm dialog. A cancelled picker is not an error.
 - Restore flow: pick → progress line (ফাইল পড়া হচ্ছে… / ফাইল যাচাই হচ্ছে…) →
   summary dialog "এই ব্যাকআপ দিয়ে বদলে দেবেন?" with the backup's date and the
-  counts of বিক্রি, কাস্টমার, পণ্য, খরচ and খাতার এন্ট্রি in the backup next to
+  counts of বিক্রি, কাস্টমার, পণ্য, খরচ and লেনদেন in the backup next to
   the counts now (raw table rows), and the sentence that the current data is
   kept as a safety copy; buttons "হ্যাঁ, এই ব্যাকআপ দিয়ে বদলে দিন" and
   "বাতিল" (a tap outside does not close it; cancelling throws the prepared copy

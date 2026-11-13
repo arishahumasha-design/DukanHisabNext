@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.report
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
@@ -228,7 +228,7 @@ private fun SalesBody(body: ReportBody.Sales, onOpenReceipt: (Long) -> Unit) {
 @Composable
 private fun SalesBox(report: SalesReport) {
     val taka = stringResource(R.string.unit_taka)
-    Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+    AppCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             SalesLine.entries.forEach { line ->
                 if (line == SalesLine.TOTAL) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -390,7 +390,7 @@ private fun ProfitBody(report: ProfitReport) {
     val taka = stringResource(R.string.unit_taka)
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item(key = "box") {
-            Card(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
+            AppCard(modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     profitLines(report).forEach { line ->
                         if (line.kind == ProfitLineKind.NET_PROFIT) HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -444,7 +444,7 @@ private fun ProfitBody(report: ProfitReport) {
         // ---- "আনুমানিক": some sold lines had no cost price ----
         approximateNote(report)?.let { note ->
             item(key = "approx") {
-                Card(
+                AppCard(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
                     modifier = Modifier.fillMaxWidth().padding(16.dp)
                 ) {

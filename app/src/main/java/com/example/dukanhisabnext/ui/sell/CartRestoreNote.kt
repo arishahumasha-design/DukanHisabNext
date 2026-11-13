@@ -1,10 +1,10 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.theme.AppCard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,7 +28,7 @@ fun CartRestoreNote(modifier: Modifier = Modifier) {
     val cart = (LocalContext.current.applicationContext as DokanHisabApp).cartStore
     val removed by cart.removedOnRestart.collectAsStateWithLifecycle()
     if (removed.isEmpty()) return
-    Card(
+    AppCard(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
     ) {

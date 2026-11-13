@@ -1,5 +1,7 @@
 package com.example.dukanhisabnext.ui.sell
 
+import com.example.dukanhisabnext.ui.theme.AppCard
+import com.example.dukanhisabnext.ui.theme.appCardColors
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -232,13 +233,13 @@ private fun CartLineCard(line: CartLineView, stock: Long, unavailable: Boolean, 
     val input = line.input
     val unitText = stringResource(input.unit.labelRes())
 
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
         // A line the sale could not accept (archived product) is drawn in red until it is removed.
         colors = if (unavailable) {
             CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
         } else {
-            CardDefaults.cardColors()
+            appCardColors() // the one card colour of the app
         }
     ) {
         Column(modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 12.dp)) {
