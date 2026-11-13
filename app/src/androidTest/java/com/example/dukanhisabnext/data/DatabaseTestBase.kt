@@ -8,6 +8,7 @@ import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.Product
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.Sale
+import com.example.dukanhisabnext.testing.IsolatedContext
 import org.junit.After
 import org.junit.Assert.fail
 import org.junit.Before
@@ -19,19 +20,26 @@ import org.junit.Before
 abstract class DatabaseTestBase {
     protected lateinit var db: AppDatabase
 
+    /**
+     * The context of every test built on this class: its files, cache and databases are in a
+     * temporary folder (cache/isolated-phone-tests), never the app's real ones (IsolatedContext).
+     */
+    protected lateinit var testContext: IsolatedContext
+
     // A fixed "now" so results never depend on when the test runs.
     protected val now = 1_762_700_000_000L
 
     @Before
     fun createDb() {
-        db = Room.inMemoryDatabaseBuilder(
-            ApplicationProvider.getApplicationContext(),
-            AppDatabase::class.java
-        ).build()
+        testContext = IsolatedContext.create(ApplicationProvider.getApplicationContext(), "db-" + javaClass.simpleName)
+        db = Room.inMemoryDatabaseBuilder(testContext, AppDatabase::class.java).build()
     }
 
     @After
-    fun closeDb() = db.close()
+    fun closeDb() {
+        db.close()
+        testContext.cleanUp()
+    }
 
     // ---- Small helpers to create test rows ----
 

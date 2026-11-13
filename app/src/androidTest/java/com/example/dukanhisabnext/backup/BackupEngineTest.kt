@@ -10,6 +10,7 @@ import com.example.dukanhisabnext.data.ALL_MIGRATIONS
 import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.createDatabaseFromSchema
 import com.example.dukanhisabnext.data.insertShopData
+import com.example.dukanhisabnext.testing.IsolatedContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -36,15 +37,18 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Phone test of the backup engine with REAL files. It uses its own database name
- * ("backup-test-live.db") and its own folders, never the shop's dokan_hisab.db.
+ * Phone test of the backup engine with REAL files, in an isolated context (a temporary folder, not the app's data;
+ * see IsolatedContext). It uses its own database name ("backup-test-live.db") and never the shop's dokan_hisab.db.
  *
  * "A" is the data in the backup, "B" the data on the phone when the restore starts.
  */
 @RunWith(AndroidJUnit4::class)
 class BackupEngineTest {
 
-    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    // Its database, its work folders and every backup file live in an isolated context of the test
+    // package: the engine's own defaults (the app's real database name and files folder) can never be reached.
+    private val isolated = IsolatedContext.create(InstrumentationRegistry.getInstrumentation().targetContext, "backup-engine")
+    private val context: Context = isolated
     private val liveName = "backup-test-live.db"
     private val workRoot = File(context.filesDir, "backup-test-root")
     private val files = File(context.cacheDir, "backup-test-files")
@@ -91,6 +95,7 @@ class BackupEngineTest {
     fun tearDown() {
         cleanAll()
         files.deleteRecursively()
+        isolated.cleanUp()
     }
 
     // ---- data ----

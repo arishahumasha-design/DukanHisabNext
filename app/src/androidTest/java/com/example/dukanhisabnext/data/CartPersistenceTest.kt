@@ -26,15 +26,16 @@ import org.junit.runner.RunWith
 /**
  * M9: the cart survives Android closing the app ("process death"), and a cart that comes back can
  * never be saved twice. A "restart" here = new CartStore / SaleRepository objects reading the same
- * files, exactly what a new app process does. Uses its own files, never the app's real cart.
+ * files, exactly what a new app process does. Uses its own files in an isolated context, never the app's real cart.
  */
 @RunWith(AndroidJUnit4::class)
 class CartPersistenceTest : DatabaseTestBase() {
 
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dir = File(context.cacheDir, "cart-persistence-test")
-    private val cartFile = File(dir, "cart.json")
-    private val journalFile = File(dir, "sale-attempts.txt")
+    // The cart and the journal files of these tests live in the isolated context (DatabaseTestBase.testContext),
+    // never in the app's real files folder.
+    private val dir get() = File(testContext.cacheDir, "cart-persistence-test")
+    private val cartFile get() = File(dir, "cart.json")
+    private val journalFile get() = File(dir, "sale-attempts.txt")
     private var ids = 0
 
     @Before

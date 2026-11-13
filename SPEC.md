@@ -1128,6 +1128,13 @@ Finish and test each milestone on a real phone, then commit to Git.
 - Do not add libraries, change the architecture, or add features outside this
   spec without asking first.
 - If an error appears, explain the cause in simple words before fixing it.
+- Phone (instrumented) tests never touch the app's real data and never run on a real phone: they get
+  every file, cache and database from `IsolatedContext` (a temporary folder, `cache/isolated-phone-tests`),
+  the runner `SafeTestRunner` stops the whole run on a device that is not an emulator ("Do not run phone
+  tests on a real phone"), `RealDataIsolationTest` proves the real database, shop info, settings, cart file
+  and sale-attempts file are unchanged after a sample of tests, and `PhoneTestIsolationGuardTest` (PC) fails
+  if a phone test uses the app's context, singletons or real files directly. Run them only with
+  `adb -s emulator-5554`.
 
 ## 10. After the MVP (ideas, not now)
 

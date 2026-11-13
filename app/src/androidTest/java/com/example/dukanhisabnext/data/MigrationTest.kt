@@ -10,6 +10,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.dukanhisabnext.expense.DefaultCategory
+import com.example.dukanhisabnext.testing.IsolatedContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -37,7 +38,10 @@ import org.junit.runner.RunWith
 class MigrationTest {
 
     private val testDb = "migration-test"
-    private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
+    // Every file of this test (its database "migration-test") lives in an isolated context of the test
+    // package, never in the app's real databases folder.
+    private val isolated = IsolatedContext.create(InstrumentationRegistry.getInstrumentation().targetContext, "migration")
+    private val context: Context = isolated
 
     private val defaultNames = listOf("বেতন", "ভাড়া", "বিল", "চা-নাস্তা", "যাতায়াত", "পরিবার", "অন্যান্য")
     private fun nameOf(d: DefaultCategory) = defaultNames[d.ordinal]
@@ -50,6 +54,7 @@ class MigrationTest {
     @After
     fun cleanAfter() {
         context.deleteDatabase(testDb)
+        isolated.cleanUp()
     }
 
     /** An empty database of [version] built from its saved schema file (shared helper in SchemaFiles.kt). */

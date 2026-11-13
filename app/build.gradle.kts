@@ -23,7 +23,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // SafeTestRunner = AndroidJUnitRunner + "never on a real phone" (see testing/SafeTestRunner.kt)
+        testInstrumentationRunner = "com.example.dukanhisabnext.testing.SafeTestRunner"
     }
 
     buildTypes {
