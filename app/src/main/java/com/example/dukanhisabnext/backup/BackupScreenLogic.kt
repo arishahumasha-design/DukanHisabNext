@@ -3,7 +3,7 @@ package com.example.dukanhisabnext.backup
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.dayPeriod
 import com.example.dukanhisabnext.util.formatDate
-import com.example.dukanhisabnext.util.formatTime12
+import com.example.dukanhisabnext.util.clockText
 
 // The decisions of the backup screens, as plain functions (PC-tested). The Bengali words come
 // from strings.xml; they are passed in.
@@ -43,7 +43,7 @@ fun hasShopData(sales: Long, customers: Long, products: Long): Boolean = sales >
 
 /** "১২/১১/২০২৬ দুপুর ১২:০৯": the Dhaka date, the part of the day and the 12-hour time, Bengali digits. */
 fun backupDateTimeText(epochMillis: Long, periodWord: (DayPeriod) -> String): String =
-    "${formatDate(epochMillis)} ${periodWord(dayPeriod(epochMillis))} ${formatTime12(epochMillis)}"
+    "${formatDate(epochMillis)} ${clockText(epochMillis, periodWord)}"
 
 /** The Settings row's second line: the last backup time, or "no backup yet". [labelFormat] puts the time into "শেষ ব্যাকআপ: %s". */
 fun lastBackupText(

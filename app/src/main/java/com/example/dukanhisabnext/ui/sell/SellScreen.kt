@@ -28,7 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
@@ -49,7 +49,7 @@ import com.example.dukanhisabnext.ui.products.labelRes
 import com.example.dukanhisabnext.ui.products.stockStatus
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * Screen A of the বিক্রি tab: the product picker. Search and category chips on top, the full
@@ -201,7 +201,7 @@ private fun ProductPickRow(item: ProductWithStock, inCartText: String?, onClick:
         // Feedback for the tap: how much of this product is in the cart now.
         if (inCartText != null) {
             StatusPill(
-                text = stringResource(R.string.in_cart, toBengaliDigits(inCartText)),
+                text = stringResource(R.string.in_cart, localDigits(inCartText)),
                 variant = PillVariant.Paid
             )
         }
@@ -242,7 +242,7 @@ private fun PickerBottomBar(total: Long, lineCount: Int, onOpenCart: () -> Unit)
                 ) {
                     Icon(painterResource(R.drawable.ic_sell), contentDescription = null, modifier = Modifier.size(20.dp))
                     Text(
-                        text = toBengaliDigits(lineCount.toString()),
+                        text = localDigits(lineCount.toString()),
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )

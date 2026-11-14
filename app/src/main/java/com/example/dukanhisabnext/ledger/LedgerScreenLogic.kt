@@ -6,7 +6,7 @@ import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.formatDate
 import com.example.dukanhisabnext.util.parseTakaToPaisa
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -147,7 +147,7 @@ private const val SEPARATOR = " · "
 fun historyTitle(row: LedgerHistoryRow, labels: HistoryLabels, method: (PaymentMethod) -> String): String {
     val entry = row.entry
     val kind = historyKind(entry)
-    val receipt = row.receiptNo?.let { toBengaliDigits(it) }
+    val receipt = row.receiptNo?.let { localDigits(it) }
     return when (kind) {
         HistoryKind.OPENING_DUE -> labels.openingDue
         HistoryKind.MANUAL_DUE -> labels.manualDue

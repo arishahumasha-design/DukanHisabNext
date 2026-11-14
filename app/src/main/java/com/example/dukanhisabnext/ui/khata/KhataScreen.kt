@@ -58,7 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -92,7 +92,7 @@ import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.ui.sales.saleTimeText
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import kotlin.math.abs
 
 /**
@@ -457,7 +457,7 @@ private fun CustomerDueRow(row: KhataCustomerRow, lastText: String?, onClick: ()
         Column(modifier = Modifier.weight(1f)) {
             Text(row.customer.name, style = MaterialTheme.typography.titleMedium)
             row.customer.phone?.let {
-                Text(toBengaliDigits(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(localDigits(it), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             lastText?.let {
                 Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -590,7 +590,7 @@ private fun CustomerPickDialog(
                                 ) {
                                     Text(row.customer.name, style = MaterialTheme.typography.titleMedium)
                                     row.customer.phone?.let {
-                                        Text(toBengaliDigits(it), style = MaterialTheme.typography.bodyMedium)
+                                        Text(localDigits(it), style = MaterialTheme.typography.bodyMedium)
                                     }
                                 }
                                 HorizontalDivider()

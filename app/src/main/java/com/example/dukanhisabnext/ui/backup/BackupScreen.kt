@@ -36,7 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -66,7 +66,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import com.example.dukanhisabnext.ui.settings.SavedMessage
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import java.io.File
 
 /** Which question dialog is open. Saved with rememberSaveable so a rotation keeps it. */
@@ -309,8 +309,8 @@ private fun RestoreSummaryDialog(
                 for (row in summaryRows(summary)) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(summaryTableLabelRes(row.table)), modifier = Modifier.weight(1.2f))
-                        Text(toBengaliDigits(row.inBackup.toString()), modifier = Modifier.weight(1f))
-                        Text(toBengaliDigits(row.now.toString()), modifier = Modifier.weight(1f))
+                        Text(localDigits(row.inBackup.toString()), modifier = Modifier.weight(1f))
+                        Text(localDigits(row.now.toString()), modifier = Modifier.weight(1f))
                     }
                 }
                 Text(

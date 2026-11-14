@@ -27,8 +27,8 @@ fun customRangeText(from: LocalDate?, to: LocalDate?): String? {
  */
 fun customRangeLongText(from: LocalDate?, to: LocalDate?, monthNames: List<String>): String? {
     if (from == null || to == null) return null
-    fun full(d: LocalDate) = "${com.example.dukanhisabnext.util.toBengaliDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]} ${com.example.dukanhisabnext.util.toBengaliDigits(d.year.toString())}"
-    fun noYear(d: LocalDate) = "${com.example.dukanhisabnext.util.toBengaliDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]}"
+    fun full(d: LocalDate) = "${com.example.dukanhisabnext.util.localDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]} ${com.example.dukanhisabnext.util.localDigits(d.year.toString())}"
+    fun noYear(d: LocalDate) = "${com.example.dukanhisabnext.util.localDigits(d.dayOfMonth.toString())} ${monthNames[d.monthValue - 1]}"
     return when {
         from == to -> full(from)
         from.year == to.year -> noYear(from) + " – " + full(to)

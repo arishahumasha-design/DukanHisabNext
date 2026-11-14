@@ -32,8 +32,8 @@ class PdfFonts private constructor(val regular: Typeface, val bold: Typeface) {
                         file.outputStream().use { input.copyTo(it) }
                     }
                 }
-                val regular = Typeface.Builder(file).setFontVariationSettings("'wght' 400").build()
-                val bold = Typeface.Builder(file).setFontVariationSettings("'wght' 600").build()
+                val regular = Typeface.Builder(file).setWeight(400).setFontVariationSettings("'wght' 400").build()
+                val bold = Typeface.Builder(file).setWeight(600).setFontVariationSettings("'wght' 600").build()
                 if (regular != null && bold != null) PdfFonts(regular, bold) else system()
             } catch (e: Exception) {
                 system()

@@ -33,7 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -69,7 +69,7 @@ import com.example.dukanhisabnext.util.parseTakaToPaisa
 import com.example.dukanhisabnext.ui.components.LEDGER_CONFIRM_PAISA
 import com.example.dukanhisabnext.ui.components.sanitizeNumberInput
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * The ONE entry form for টাকা পেলাম, বাকি দিলাম, পুরনো বাকি, সংশোধন and অগ্রিম ফেরত দিলাম:
@@ -227,8 +227,8 @@ fun LedgerFormScreen(
                             Text(
                                 stringResource(
                                     R.string.ledger_note_counter,
-                                    toBengaliDigits(noteLength(form.note).toString()),
-                                    toBengaliDigits(MAX_LEDGER_NOTE_LENGTH.toString())
+                                    localDigits(noteLength(form.note).toString()),
+                                    localDigits(MAX_LEDGER_NOTE_LENGTH.toString())
                                 )
                             )
                         }

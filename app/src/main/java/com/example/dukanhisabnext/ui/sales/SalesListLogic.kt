@@ -8,8 +8,8 @@ import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.dayPeriod
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.formatTime12
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.clockText
+import com.example.dukanhisabnext.util.localDigits
 import com.example.dukanhisabnext.util.toLatinDigits
 import java.time.LocalDate
 
@@ -177,9 +177,9 @@ fun salesSummaryLine(
     summaryText: (count: String, total: String) -> String,
     excludedText: (count: String) -> String
 ): String {
-    val main = summaryText(toBengaliDigits(summary.count.toString()), formatTaka(summary.total))
+    val main = summaryText(localDigits(summary.count.toString()), formatTaka(summary.total))
     return if (summary.cancelledExcluded > 0) {
-        main + " " + excludedText(toBengaliDigits(summary.cancelledExcluded.toString()))
+        main + " " + excludedText(localDigits(summary.cancelledExcluded.toString()))
     } else {
         main
     }
@@ -196,7 +196,7 @@ fun SaleListRow.isBackDated(): Boolean = DhakaTime.localDate(saleDate) != DhakaT
  * receipt number alone for a back-dated sale (the day header above already shows its date).
  */
 fun saleRowTitle(row: SaleListRow, timeText: String): String =
-    toBengaliDigits(row.receiptNo) + if (row.isBackDated()) "" else "  ·  $timeText"
+    localDigits(row.receiptNo) + if (row.isBackDated()) "" else "  ·  $timeText"
 
 /** The small grey "বাতিল" tag is shown on cancelled rows; the red due tag is not (a cancelled sale owes nothing). */
 fun showCancelledTag(row: SaleListRow): Boolean = row.isCancelled
@@ -220,12 +220,12 @@ fun groupByDhakaDay(rows: List<SaleListRow>): List<SalesDayGroup> =
 
 /** "১০ নভেম্বর ২০২৬": the day header. [monthNames] are the 12 Bengali month names, January first. */
 fun dayHeaderText(date: LocalDate, monthNames: List<String>): String =
-    "${toBengaliDigits(date.dayOfMonth.toString())} ${monthNames[date.monthValue - 1]} " +
-        toBengaliDigits(date.year.toString())
+    "${localDigits(date.dayOfMonth.toString())} ${monthNames[date.monthValue - 1]} " +
+        localDigits(date.year.toString())
 
 /** "রাত ১১:৩০": the Dhaka time of a sale, with the part of the day. */
 fun saleTimeText(createdAt: Long, period: (DayPeriod) -> String): String =
-    "${period(dayPeriod(createdAt))} ${formatTime12(createdAt)}"
+    clockText(createdAt, period)
 
 /** The customer's name, or the neutral word (সাধারণ কাস্টমার) when the sale has no customer. */
 fun customerLabel(name: String?, walkIn: String): String = name?.trim()?.ifEmpty { null } ?: walkIn

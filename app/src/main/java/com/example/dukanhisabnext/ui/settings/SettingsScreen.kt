@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,6 +43,25 @@ import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.PrimaryButton
 import com.example.dukanhisabnext.ui.components.SecondaryButton
+import com.example.dukanhisabnext.ui.components.SegmentedControl
+import com.example.dukanhisabnext.MainActivity
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.RadioButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.Role
+import com.example.dukanhisabnext.ui.components.AppAlertDialog
+import com.example.dukanhisabnext.ui.components.DialogTextButton
+import com.example.dukanhisabnext.util.AppCurrency
+import com.example.dukanhisabnext.util.CurrentCurrency
+import com.example.dukanhisabnext.util.sampleMoney
+import kotlinx.coroutines.launch
+import com.example.dukanhisabnext.util.AppLanguage
+import com.example.dukanhisabnext.util.CurrentLanguage
 
 /**
  * Settings: an owner card (avatar, name, "মালিক", mobile, "এডিট করুন") and a big shop button.
@@ -77,6 +96,8 @@ fun SettingsScreen(
 
                 OwnerCard(ui = current, onEdit = onEditOwner)
                 ShopNameCard(shopName = current.shopName)
+                LanguageCard()
+                CurrencyCard()
                 BackupRow(onClick = onOpenBackup)
                 ShopButton(shopName = current.shopName, onClick = onOpenShop)
             }
@@ -231,5 +252,150 @@ private fun BackupRow(onClick: () -> Unit) {
             }
             Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
         }
+    }
+}
+
+/**
+ * "Language / ভাষা": the app language, বাংলা or English. The title and the two names are the same in both
+ * languages, so they can be read whichever one is on. Choosing one redraws the whole app at once
+ * (MainActivity.switchLanguage); the choice is kept in its own small file and is not part of a backup.
+ */
+@Composable
+private fun LanguageCard() {
+    val context = LocalContext.current
+    val languages = listOf(AppLanguage.BENGALI, AppLanguage.ENGLISH)
+    val labels = listOf(stringResource(R.string.language_bengali), stringResource(R.string.language_english))
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.settings_language_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            SegmentedControl(
+                labels = labels,
+                selectedIndex = languages.indexOf(CurrentLanguage.value),
+                onSelect = { index -> context.findMainActivity()?.switchLanguage(languages[index]) }
+            )
+        }
+    }
+}
+
+/** The MainActivity behind this context (a Compose context may be wrapped). */
+private tailrec fun android.content.Context.findMainActivity(): MainActivity? = when (this) {
+    is MainActivity -> this
+    is android.content.ContextWrapper -> baseContext.findMainActivity()
+    else -> null
+}
+
+/** The name of a currency (from strings.xml), for the list. */
+private fun AppCurrency.nameRes(): Int = when (this) {
+    AppCurrency.BDT -> R.string.currency_name_bdt
+    AppCurrency.INR -> R.string.currency_name_inr
+    AppCurrency.PKR -> R.string.currency_name_pkr
+    AppCurrency.NPR -> R.string.currency_name_npr
+    AppCurrency.USD -> R.string.currency_name_usd
+    AppCurrency.EUR -> R.string.currency_name_eur
+    AppCurrency.GBP -> R.string.currency_name_gbp
+    AppCurrency.SAR -> R.string.currency_name_sar
+    AppCurrency.AED -> R.string.currency_name_aed
+    AppCurrency.QAR -> R.string.currency_name_qar
+    AppCurrency.KWD -> R.string.currency_name_kwd
+    AppCurrency.OMR -> R.string.currency_name_omr
+    AppCurrency.MYR -> R.string.currency_name_myr
+    AppCurrency.SGD -> R.string.currency_name_sgd
+    AppCurrency.CAD -> R.string.currency_name_cad
+    AppCurrency.AUD -> R.string.currency_name_aud
+}
+
+/**
+ * "Currency / মুদ্রা": the symbol and number style the app shows. It only relabels: no amount is ever converted
+ * and the database is not touched. Tapping the card opens the list; if the shop already has records, a
+ * warning says so before the change is made.
+ */
+@Composable
+private fun CurrencyCard() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var listOpen by remember { mutableStateOf(false) }
+    var asking by remember { mutableStateOf<AppCurrency?>(null) }
+    val current = CurrentCurrency.value
+
+    AppCard(modifier = Modifier.fillMaxWidth().clickable { listOpen = true }) {
+        Row(
+            modifier = Modifier.padding(16.dp).heightIn(min = 48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(stringResource(R.string.settings_currency_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    "${current.symbol} · ${stringResource(current.nameRes())} (${current.code})",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Icon(painterResource(R.drawable.ic_chevron_right), contentDescription = null)
+        }
+    }
+
+    if (listOpen) {
+        AppAlertDialog(
+            onDismissRequest = { listOpen = false },
+            title = { Text(stringResource(R.string.currency_dialog_title)) },
+            text = {
+                Column {
+                    Text(
+                        stringResource(R.string.currency_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    LazyColumn(modifier = Modifier.heightIn(max = 380.dp)) {
+                        items(AppCurrency.entries) { currency ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                                    .selectable(selected = currency == current, role = Role.RadioButton, onClick = {
+                                        listOpen = false
+                                        if (currency == current) return@selectable
+                                        // Records already exist? Then warn first: amounts are relabelled, never converted.
+                                        scope.launch {
+                                            val app = context.applicationContext as DokanHisabApp
+                                            if (app.hasShopData()) asking = currency else context.findMainActivity()?.switchCurrency(currency)
+                                        }
+                                    }),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(selected = currency == current, onClick = null)
+                                Text(
+                                    "${currency.symbol} · ${stringResource(currency.nameRes())} (${currency.code})",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { DialogTextButton(stringResource(R.string.btn_close_dialog), onClick = { listOpen = false }) }
+        )
+    }
+
+    asking?.let { target ->
+        AppAlertDialog(
+            onDismissRequest = { asking = null },
+            title = { Text(stringResource(R.string.currency_warning_title)) },
+            text = {
+                Text(
+                    stringResource(R.string.currency_warning_text, sampleMoney(current), sampleMoney(target)),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                DialogTextButton(stringResource(R.string.currency_warning_yes), onClick = {
+                    asking = null
+                    context.findMainActivity()?.switchCurrency(target)
+                })
+            },
+            dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), onClick = { asking = null }) }
+        )
     }
 }

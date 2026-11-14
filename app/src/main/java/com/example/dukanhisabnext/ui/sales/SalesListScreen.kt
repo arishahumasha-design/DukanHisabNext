@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.sales
 
+import com.example.dukanhisabnext.util.withCurrency
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -58,7 +59,7 @@ import com.example.dukanhisabnext.ui.theme.Spacing
 import androidx.compose.material3.ListItemDefaults
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * "বিক্রির তালিকা": the saved sales, newest first, grouped by Dhaka day. Read-only: tapping a sale
@@ -81,7 +82,7 @@ fun SalesListScreen(
     // The words from strings.xml, handed to the plain functions.
     val monthNames = stringArrayResource(R.array.months_bn).toList()
     val walkIn = stringResource(R.string.walk_in_customer)
-    val summaryTemplate = stringResource(R.string.sales_summary, "{count}", "{total}")
+    val resources = androidx.compose.ui.platform.LocalContext.current.resources
     val excludedTemplate = stringResource(R.string.sales_summary_cancelled_note, "{count}")
     val periodLabels = mapOf(
         DayPeriod.MORNING to stringResource(R.string.period_morning),
@@ -154,7 +155,7 @@ fun SalesListScreen(
                 Text(
                     text = salesSummaryLine(
                         current.summary,
-                        summaryText = { count, total -> summaryTemplate.replace("{count}", count).replace("{total}", total) },
+                        summaryText = { count, total -> resources.getQuantityString(R.plurals.sales_summary, current.summary.count, count, total).withCurrency() },
                         excludedText = { count -> excludedTemplate.replace("{count}", count) }
                     ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),

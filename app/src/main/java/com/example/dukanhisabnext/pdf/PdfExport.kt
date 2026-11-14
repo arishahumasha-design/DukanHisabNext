@@ -19,11 +19,14 @@ import com.example.dukanhisabnext.report.ProfitLineKind
 import com.example.dukanhisabnext.ui.report.ReportBody
 import com.example.dukanhisabnext.ui.report.ReportTab
 import com.example.dukanhisabnext.ui.report.SalesLine
+import com.example.dukanhisabnext.util.CurrentLanguage
 import com.example.dukanhisabnext.util.DhakaTime
+import com.example.dukanhisabnext.util.withCurrency
+import com.example.dukanhisabnext.util.withLanguage
 import com.example.dukanhisabnext.util.formatDate
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import java.io.File
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +50,7 @@ fun clearPdfFolder(cacheDir: File) {
 
 /** "১৩ নভেম্বর ২০২৬" for the "তৈরির তারিখ" line. */
 fun longDateText(date: LocalDate, monthNames: List<String>): String =
-    "${toBengaliDigits(date.dayOfMonth.toString())} ${monthNames[date.monthValue - 1]} ${toBengaliDigits(date.year.toString())}"
+    "${localDigits(date.dayOfMonth.toString())} ${monthNames[date.monthValue - 1]} ${localDigits(date.year.toString())}"
 
 /**
  * The period line of a report: "এই মাস · ০১/১১/২০২৬ – ৩০/১১/২০২৬" ("আজ · ১৩/১১/২০২৬" for one day). [chipLabel] is the
@@ -63,9 +66,9 @@ fun reportPeriodText(chipLabel: String?, range: DhakaTime.TimeRange?, date: (Lon
 
 /** The words of the four documents, from strings.xml. */
 fun pdfLabels(res: Resources): PdfLabels {
-    fun s(id: Int) = res.getString(id)
-    fun s(id: Int, vararg args: Any) = res.getString(id, *args)
-    fun digits(n: Long) = toBengaliDigits(n.toString())
+    fun s(id: Int) = res.getString(id).withCurrency()
+    fun s(id: Int, vararg args: Any) = res.getString(id, *args).withCurrency()
+    fun digits(n: Long) = localDigits(n.toString())
     return PdfLabels(
         shopPlaceholder = s(R.string.pdf_shop_placeholder),
         mobileLabel = s(R.string.pdf_mobile),
@@ -134,7 +137,7 @@ fun pdfLabels(res: Resources): PdfLabels {
         expenseShop = s(R.string.expense_sum_shop), expensePersonal = s(R.string.expense_sum_personal),
         expenseTotal = s(R.string.expense_sum_total), expenseByCategory = s(R.string.expense_by_category),
         categoryHeader = s(R.string.pdf_col_category), count = s(R.string.pdf_col_count), personalMark = s(R.string.expense_personal_tag),
-        expenseCount = { s(R.string.expense_count, digits(it)) },
+        expenseCount = { res.getQuantityString(R.plurals.expense_count, it.toInt(), digits(it)).withCurrency() },
         profitLine = { kind, loss ->
             s(
                 when (kind) {
@@ -148,7 +151,7 @@ fun pdfLabels(res: Resources): PdfLabels {
         },
         deliveryInfo = { s(R.string.report_profit_delivery_info, it) },
         personalInfo = { s(R.string.report_profit_personal_info, it) },
-        approximate = { lines, sales -> s(R.string.report_approximate, digits(lines), sales) },
+        approximate = { lines, sales -> res.getQuantityString(R.plurals.report_approximate, lines.toInt(), digits(lines), sales).withCurrency() },
         statementTitle = s(R.string.pdf_title_statement), customerLine = { s(R.string.pdf_customer_line, it) },
         description = s(R.string.pdf_col_description), amount = s(R.string.pdf_col_amount), balance = s(R.string.pdf_col_balance),
         currentDue = s(R.string.pdf_current_due), currentAdvance = s(R.string.pdf_current_advance), currentClear = s(R.string.pdf_current_clear)
@@ -157,11 +160,11 @@ fun pdfLabels(res: Resources): PdfLabels {
 
 /** Bengali digits, taka sign and dates, the same as the screens. */
 fun pdfFormat(res: Resources) = PdfFormat(
-    money = { res.getString(R.string.price_format, formatTaka(it)) },
+    money = { res.getString(R.string.price_format, formatTaka(it)).withCurrency() },
     date = ::formatDate,
-    number = { toBengaliDigits(it.toString()) },
+    number = { localDigits(it.toString()) },
     quantity = ::formatQuantity,
-    taka = res.getString(R.string.unit_taka)
+    taka = res.getString(R.string.unit_taka).withCurrency()
 )
 
 private fun historyLabels(res: Resources) = HistoryLabels(
@@ -173,7 +176,7 @@ private fun historyLabels(res: Resources) = HistoryLabels(
     correctionMinus = res.getString(R.string.hist_correction_minus),
     saleCancel = res.getString(R.string.hist_sale_cancel),
     advanceReturned = res.getString(R.string.hist_advance_returned),
-    taka = res.getString(R.string.unit_taka)
+    taka = res.getString(R.string.unit_taka).withCurrency()
 )
 
 private fun methodName(res: Resources, m: PaymentMethod): String = res.getString(
@@ -198,11 +201,12 @@ class PdfExportService(
     private val products: ProductRepository,
     private val clock: () -> Long = System::currentTimeMillis
 ) {
-    private val res: Resources get() = context.resources
+    /** The strings of the language chosen in Settings (this context has no screen, so it is not localized by itself). */
+    private val res: Resources get() = context.withLanguage(CurrentLanguage.value).resources
 
     private suspend fun header(labels: PdfLabels): PdfHeader {
         val profile = shop.get()
-        return PdfHeader(profile?.name.orEmpty().ifBlank { labels.shopPlaceholder }, profile?.address?.takeIf { it.isNotBlank() }, profile?.phone?.let { toBengaliDigits(it) })
+        return PdfHeader(profile?.name.orEmpty().ifBlank { labels.shopPlaceholder }, profile?.address?.takeIf { it.isNotBlank() }, profile?.phone?.let { localDigits(it) })
     }
 
     private fun today(): LocalDate = DhakaTime.localDate(clock())
@@ -217,7 +221,7 @@ class PdfExportService(
                 val fonts = PdfFonts.load(context)
                 val measure = PaintMeasure(fonts)
                 val pages = layoutDocument(build.content, measure) { page, total ->
-                    res.getString(R.string.pdf_footer, toBengaliDigits(page.toString()), toBengaliDigits(total.toString()))
+                    res.getString(R.string.pdf_footer, localDigits(page.toString()), localDigits(total.toString()))
                 }
                 val file = File(File(context.cacheDir, PDF_FOLDER), pdfFileName(kind, today(), customerId))
                 writePdf(pages, measure, file)

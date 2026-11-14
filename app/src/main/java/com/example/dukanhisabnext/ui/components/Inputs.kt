@@ -21,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
@@ -29,7 +29,7 @@ import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.ui.products.FormError
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import com.example.dukanhisabnext.util.toLatinDigits
 
 /**
@@ -53,7 +53,7 @@ fun sanitizePhoneInput(text: String): String =
  */
 object BengaliDigitsTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText =
-        TransformedText(AnnotatedString(toBengaliDigits(text.text)), OffsetMapping.Identity)
+        TransformedText(AnnotatedString(localDigits(text.text)), OffsetMapping.Identity)
 }
 
 /** The Bengali message for each error code. */

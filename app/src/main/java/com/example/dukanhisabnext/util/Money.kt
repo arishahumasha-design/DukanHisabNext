@@ -17,13 +17,13 @@ fun formatTaka(paisa: Long): String {
     val restPaisa = abs(paisa % PAISA_PER_TAKA)
 
     val sign = if (paisa < 0) "-" else ""
-    val wholeText = groupBangladeshi(taka.toString())
+    val wholeText = groupDigits(taka.toString(), CurrentCurrency.value.lakhGrouping)
     val text = if (restPaisa == 0L) {
         wholeText
     } else {
         "$wholeText.${restPaisa.toString().padStart(2, '0')}"
     }
-    return toBengaliDigits(sign + text)
+    return localDigits(sign + text)
 }
 
 /**
@@ -45,17 +45,4 @@ fun formatTakaPlain(paisa: Long): String {
     } else {
         "$taka." + restPaisa.toString().padStart(2, '0').trimEnd('0')
     }
-}
-
-/**
- * Bangladesh groups numbers as 12,34,56,789: the last 3 digits together,
- * then groups of 2 going left.
- */
-internal fun groupBangladeshi(digits: String): String {
-    if (digits.length <= 3) return digits
-    val lastThree = digits.takeLast(3)
-    val head = digits.dropLast(3)
-    // Walk the head from the right in pairs, then put the pairs back in order.
-    val pairs = head.reversed().chunked(2).map { it.reversed() }.reversed()
-    return pairs.joinToString(",") + "," + lastThree
 }

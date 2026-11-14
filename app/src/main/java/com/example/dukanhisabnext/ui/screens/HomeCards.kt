@@ -123,10 +123,10 @@ fun QuickActionsRow(
     onNewExpense: () -> Unit,
     onNewProduct: () -> Unit
 ) {
-    val newSale = androidx.compose.ui.res.stringResource(R.string.home_quick_new_sale)
-    val receive = androidx.compose.ui.res.stringResource(R.string.home_quick_receive)
-    val newExpense = androidx.compose.ui.res.stringResource(R.string.home_quick_new_expense)
-    val newProduct = androidx.compose.ui.res.stringResource(R.string.home_quick_new_product)
+    val newSale = com.example.dukanhisabnext.ui.components.stringResource(R.string.home_quick_new_sale)
+    val receive = com.example.dukanhisabnext.ui.components.stringResource(R.string.home_quick_receive)
+    val newExpense = com.example.dukanhisabnext.ui.components.stringResource(R.string.home_quick_new_expense)
+    val newProduct = com.example.dukanhisabnext.ui.components.stringResource(R.string.home_quick_new_product)
     // With a very large system font the four actions wrap into a 2x2 grid, so no label is cut off.
     if (LocalDensity.current.fontScale > 1.3f) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {

@@ -39,7 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.pluralStringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -62,7 +63,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.ui.components.customRangeText
 import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import kotlinx.coroutines.delay
 
 /** The id that means "no expense was just deleted". */
@@ -283,7 +284,7 @@ internal fun SummaryCard(summary: ExpenseSummary, taka: String) {
                         Text(category.name, style = MaterialTheme.typography.bodyMedium)
                         if (showsPersonalMark(category.isPersonal)) PersonalTag()
                         Text(
-                            stringResource(R.string.expense_count, toBengaliDigits(category.count.toString())),
+                            pluralStringResource(R.plurals.expense_count, category.count, localDigits(category.count.toString())),
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant

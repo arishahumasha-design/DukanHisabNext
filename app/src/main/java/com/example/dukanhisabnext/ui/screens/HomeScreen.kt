@@ -22,7 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.pluralStringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.remember
@@ -54,7 +55,7 @@ import com.example.dukanhisabnext.ui.report.showsSalesCount
 import com.example.dukanhisabnext.ui.report.targetOf
 import com.example.dukanhisabnext.util.DhakaTime
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import com.example.dukanhisabnext.ui.components.AppAlertDialog
@@ -223,7 +224,7 @@ fun HomeScreen(
             title = stringResource(R.string.home_card_sales),
             amount = "$taka ${formatTaka(d.todaySalesTotal)}",
             hint = if (showsSalesCount(d)) {
-                stringResource(R.string.home_sales_count, toBengaliDigits(d.todaySalesCount.toString()))
+                pluralStringResource(R.plurals.home_sales_count, d.todaySalesCount, localDigits(d.todaySalesCount.toString()))
             } else {
                 stringResource(R.string.home_sales_none)
             },
@@ -278,7 +279,7 @@ fun HomeScreen(
         LowStockTile(
             title = stringResource(R.string.home_card_low_stock),
             value = when (low) {
-                LowStockState.NEEDS_ATTENTION -> stringResource(R.string.home_low_stock_count, toBengaliDigits(d.lowStockCount.toString()))
+                LowStockState.NEEDS_ATTENTION -> pluralStringResource(R.plurals.home_low_stock_count, d.lowStockCount, localDigits(d.lowStockCount.toString()))
                 LowStockState.ALL_GOOD -> stringResource(R.string.home_low_stock_ok)
             },
             needsAttention = low == LowStockState.NEEDS_ATTENTION,

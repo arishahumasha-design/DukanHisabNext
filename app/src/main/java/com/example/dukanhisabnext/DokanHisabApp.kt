@@ -46,6 +46,7 @@ class DokanHisabApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        displaySettings.resolveAtStart() // before anything formats a number or reads a string
         startupRecovery = try {
             BackupEngine.recover(BackupPaths(getDatabasePath(AppDatabase.FILE_NAME), filesDir))
         } catch (e: java.io.IOException) {
@@ -116,6 +117,12 @@ class DokanHisabApp : Application() {
         }
     }
 
+    /** True when the shop already has sales, customers or products (the currency warning uses it). */
+    suspend fun hasShopData(): Boolean {
+        val counts = countShopRows()
+        return com.example.dukanhisabnext.backup.hasShopData(counts["sales"] ?: 0, counts["customers"] ?: 0, counts["products"] ?: 0)
+    }
+
     /** After a restore the repositories still hold the closed database: start the app again from scratch. */
     private fun restartProcess() {
         val intent = packageManager.getLaunchIntentForPackage(packageName)
@@ -141,6 +148,24 @@ class DokanHisabApp : Application() {
     val reportRepository: ReportRepository by lazy { ReportRepository(database) }
 
     val shopRepository: ShopRepository by lazy { ShopRepository(database) }
+
+    /**
+     * The app language (Bengali or English). On Android 13+ the system's per-app language setting is read
+     * too, because the user may also change it in the phone's own settings. The choice is kept in its own
+     * small file (language_prefs), which is not part of any backup.
+     */
+    val displaySettings: com.example.dukanhisabnext.util.DisplaySettings by lazy {
+        com.example.dukanhisabnext.util.DisplaySettings(
+            store = com.example.dukanhisabnext.util.SharedPrefsDisplayStore(this),
+            systemTag = {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    getSystemService(android.app.LocaleManager::class.java).applicationLocales.takeIf { !it.isEmpty }?.get(0)?.toLanguageTag()
+                } else {
+                    null
+                }
+            }
+        )
+    }
 
     /** Makes the PDF documents (read-only) into cache/pdf/. */
     val pdfService: com.example.dukanhisabnext.pdf.PdfExportService by lazy {

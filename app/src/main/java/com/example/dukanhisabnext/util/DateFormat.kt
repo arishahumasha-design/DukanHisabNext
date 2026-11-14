@@ -9,14 +9,14 @@ private val CLOCK_12_HOUR: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm
 
 /** UTC millis -> Bengali date in Dhaka time, for example "১০/১১/২০২৬". */
 fun formatDate(epochMillis: Long): String =
-    toBengaliDigits(DAY_MONTH_YEAR.format(DhakaTime.localDate(epochMillis)))
+    localDigits(DAY_MONTH_YEAR.format(DhakaTime.localDate(epochMillis)))
 
 /**
  * UTC millis -> Bengali 12-hour clock time in Dhaka, for example "১১:৪৫".
  * Use it together with [dayPeriod] ("রাত ১১:৪৫"); the period word comes from strings.xml.
  */
 fun formatTime12(epochMillis: Long): String =
-    toBengaliDigits(CLOCK_12_HOUR.format(Instant.ofEpochMilli(epochMillis).atZone(DhakaTime.ZONE)))
+    localDigits(CLOCK_12_HOUR.format(Instant.ofEpochMilli(epochMillis).atZone(DhakaTime.ZONE)))
 
 /** The part of the day, as people in Bangladesh say it (সকাল, দুপুর, বিকাল, সন্ধ্যা, রাত). */
 enum class DayPeriod { MORNING, NOON, AFTERNOON, EVENING, NIGHT }
@@ -33,3 +33,15 @@ fun dayPeriodOfHour(hour: Int): DayPeriod = when (hour) {
 /** The part of the day for a moment, in Dhaka time. */
 fun dayPeriod(epochMillis: Long): DayPeriod =
     dayPeriodOfHour(Instant.ofEpochMilli(epochMillis).atZone(DhakaTime.ZONE).hour)
+
+/**
+ * The time of day as shown next to a date. Bengali: the part of the day first, "রাত ৮:১৭". English:
+ * the clock with am or pm after it, "8:17 pm". [periodWord] gives the word of a part of the day from
+ * strings.xml; English only uses the words of MORNING (before noon: "am") and NOON (from noon: "pm").
+ */
+fun clockText(epochMillis: Long, periodWord: (DayPeriod) -> String): String {
+    val time = formatTime12(epochMillis)
+    if (CurrentLanguage.value.usesBengaliDigits) return "${periodWord(dayPeriod(epochMillis))} $time"
+    val hour = Instant.ofEpochMilli(epochMillis).atZone(DhakaTime.ZONE).hour
+    return "$time ${periodWord(if (hour < 12) DayPeriod.MORNING else DayPeriod.NOON)}"
+}

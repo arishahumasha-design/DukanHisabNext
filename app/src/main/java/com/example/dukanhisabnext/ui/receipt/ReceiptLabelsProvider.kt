@@ -1,7 +1,7 @@
 package com.example.dukanhisabnext.ui.receipt
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.WarrantyUnit
 import com.example.dukanhisabnext.ui.products.labelRes

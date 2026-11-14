@@ -41,7 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -68,7 +68,7 @@ import com.example.dukanhisabnext.ui.components.SecondaryButton
 import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.theme.Spacing
 import androidx.compose.material3.CardDefaults
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * The receipt of a SAVED sale (loaded by the id in the route, never from the cart).
@@ -211,8 +211,8 @@ private fun CancelDialog(
                         Text(
                             stringResource(
                                 R.string.cancel_reason_counter,
-                                toBengaliDigits(reasonLength(state.reason).toString()),
-                                toBengaliDigits(MAX_CANCEL_REASON_LENGTH.toString())
+                                localDigits(reasonLength(state.reason).toString()),
+                                localDigits(MAX_CANCEL_REASON_LENGTH.toString())
                             )
                         )
                     },
@@ -318,7 +318,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
             }
             data.shopPhone?.let {
                 Text(
-                    text = "${labels.mobile}: ${toBengaliDigits(it)}",
+                    text = "${labels.mobile}: ${localDigits(it)}",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -326,7 +326,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
             DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 
             // ---- This sale ----
-            KeyValue(labels.receiptNo, toBengaliDigits(data.receiptNo))
+            KeyValue(labels.receiptNo, localDigits(data.receiptNo))
             KeyValue(labels.date, receiptSaleDate(data, labels))
             // Version 5: a back-dated sale says when it was really written (not in the shared text).
             receiptWrittenOn(data, labels)?.let { written ->
@@ -340,7 +340,7 @@ private fun ReceiptBody(data: ReceiptData, labels: ReceiptLabels) {
             }
             data.customerName?.let { name ->
                 KeyValue(labels.customer, name)
-                data.customerPhone?.let { KeyValue(labels.mobile, toBengaliDigits(it)) }
+                data.customerPhone?.let { KeyValue(labels.mobile, localDigits(it)) }
             }
             DashedDivider(modifier = Modifier.padding(vertical = Spacing.xs))
 

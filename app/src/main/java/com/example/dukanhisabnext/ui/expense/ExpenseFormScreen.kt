@@ -29,7 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,7 +50,7 @@ import com.example.dukanhisabnext.util.formatTaka
 import com.example.dukanhisabnext.util.parseTakaToPaisa
 import com.example.dukanhisabnext.ui.components.EXPENSE_CONFIRM_PAISA
 import com.example.dukanhisabnext.ui.components.sanitizeNumberInput
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * The ONE expense form (add and edit): category, amount, date (today by default, never a future
@@ -170,8 +170,8 @@ fun ExpenseFormScreen(
                             Text(
                                 stringResource(
                                     R.string.ledger_note_counter,
-                                    toBengaliDigits(reasonLength(form.reason).toString()),
-                                    toBengaliDigits(MAX_EXPENSE_REASON_LENGTH.toString())
+                                    localDigits(reasonLength(form.reason).toString()),
+                                    localDigits(MAX_EXPENSE_REASON_LENGTH.toString())
                                 )
                             )
                         }

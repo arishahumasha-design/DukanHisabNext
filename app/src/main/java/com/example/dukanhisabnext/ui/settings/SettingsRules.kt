@@ -1,6 +1,6 @@
 package com.example.dukanhisabnext.ui.settings
 
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 // Small decisions of the Settings screen, as plain Kotlin (no Android) so they can be
 // unit-tested on the PC. The words themselves come from strings.xml.
@@ -48,4 +48,4 @@ fun ownerDisplayName(ownerName: String?, placeholder: String): String =
 
 /** The owner's mobile in Bengali digits for the card, or null when there is none (then nothing is shown). */
 fun ownerPhoneDisplay(phone: String?): String? =
-    phone?.trim()?.ifEmpty { null }?.let { toBengaliDigits(it) }
+    phone?.trim()?.ifEmpty { null }?.let { localDigits(it) }

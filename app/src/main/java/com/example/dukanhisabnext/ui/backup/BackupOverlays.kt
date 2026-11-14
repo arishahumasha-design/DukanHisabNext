@@ -21,7 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,7 +33,7 @@ import com.example.dukanhisabnext.backup.StartupNote
 import com.example.dukanhisabnext.backup.backupDateTimeText
 import com.example.dukanhisabnext.backup.blocksApp
 import com.example.dukanhisabnext.backup.summaryRows
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import com.example.dukanhisabnext.ui.components.PrimaryButton
 
 /**
@@ -119,7 +119,7 @@ private fun RestoredBody(note: StartupNote.Restored) {
     for (row in summaryRows(RestoreSummary(note.backupCreatedAt, note.counts, emptyMap()))) {
         Row(modifier = Modifier.fillMaxWidth(0.7f), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(stringResource(summaryTableLabelRes(row.table)), style = MaterialTheme.typography.bodyLarge)
-            Text(toBengaliDigits(row.inBackup.toString()), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+            Text(localDigits(row.inBackup.toString()), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
         }
     }
 }

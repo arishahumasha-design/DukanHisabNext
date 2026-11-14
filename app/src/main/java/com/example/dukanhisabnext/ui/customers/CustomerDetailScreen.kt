@@ -50,7 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -74,7 +74,7 @@ import com.example.dukanhisabnext.ui.sales.dayHeaderText
 import com.example.dukanhisabnext.ui.sales.saleTimeText
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import kotlinx.coroutines.delay
 
 /**
@@ -176,7 +176,7 @@ fun CustomerDetailScreen(
                                         Icon(painterResource(R.drawable.ic_phone), contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                                         Column {
                                             Text(
-                                                text = toBengaliDigits(phone),
+                                                text = localDigits(phone),
                                                 style = MaterialTheme.typography.titleMedium,
                                                 color = MaterialTheme.colorScheme.primary
                                             )

@@ -27,7 +27,7 @@ fun formatQuantityPlain(thousandths: Long): String {
  * Thousandths -> Bengali text. Trailing zeros after the dot are dropped.
  *   1000 -> "১", 250 -> "০.২৫", 1500 -> "১.৫", 1005 -> "১.০০৫"
  */
-fun formatQuantity(thousandths: Long): String = toBengaliDigits(formatQuantityPlain(thousandths))
+fun formatQuantity(thousandths: Long): String = localDigits(formatQuantityPlain(thousandths))
 
 /** Like [formatQuantity], but positive numbers get a plus sign: 2000 -> "+২", -250 -> "-০.২৫". */
 fun formatSignedQuantity(thousandths: Long): String =

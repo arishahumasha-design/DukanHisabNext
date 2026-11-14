@@ -1,7 +1,7 @@
 package com.example.dukanhisabnext.warranty
 
 import com.example.dukanhisabnext.data.entity.WarrantyUnit
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import java.time.LocalDate
 
 // The words of a warranty, as plain Kotlin (no Android) so they can be unit-tested on the PC. The
@@ -9,11 +9,11 @@ import java.time.LocalDate
 
 /** "৬ মাস": the number in Bengali digits and the unit's name. */
 fun warrantyPeriodText(value: Int, unit: WarrantyUnit, unitName: (WarrantyUnit) -> String): String =
-    "${toBengaliDigits(value.toString())} ${unitName(unit)}"
+    "${localDigits(value.toString())} ${unitName(unit)}"
 
 /** "১৩ মে ২০২৭": a Dhaka calendar day. [monthNames] are the 12 Bengali month names, January first. */
 fun warrantyDayText(day: LocalDate, monthNames: List<String>): String =
-    "${toBengaliDigits(day.dayOfMonth.toString())} ${monthNames[day.monthValue - 1]} ${toBengaliDigits(day.year.toString())}"
+    "${localDigits(day.dayOfMonth.toString())} ${monthNames[day.monthValue - 1]} ${localDigits(day.year.toString())}"
 
 /** [warrantyDayText] of a stored epoch day (sale_items.warrantyUntil). */
 fun warrantyUntilDayText(untilEpochDay: Long, monthNames: List<String>): String =

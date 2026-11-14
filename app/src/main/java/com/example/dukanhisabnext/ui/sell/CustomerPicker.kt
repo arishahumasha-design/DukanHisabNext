@@ -35,7 +35,7 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -49,7 +49,7 @@ import com.example.dukanhisabnext.data.entity.Customer
 import com.example.dukanhisabnext.ui.components.MobileField
 import com.example.dukanhisabnext.ui.components.messageRes
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * THE customer picker, used on both the payment screen and the "নতুন বাকি" screen.
@@ -180,7 +180,7 @@ private fun SelectedCustomerCard(customer: Customer, onChange: () -> Unit) {
                 Text(customer.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 customer.phone?.let {
                     Text(
-                        text = stringResource(R.string.phone_country_prefix) + toBengaliDigits(it),
+                        text = stringResource(R.string.phone_country_prefix) + localDigits(it),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -203,7 +203,7 @@ private fun CustomerRow(customer: Customer, onClick: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Text(customer.name, style = MaterialTheme.typography.titleMedium)
-        customer.phone?.let { Text(toBengaliDigits(it), style = MaterialTheme.typography.bodyMedium) }
+        customer.phone?.let { Text(localDigits(it), style = MaterialTheme.typography.bodyMedium) }
     }
 }
 

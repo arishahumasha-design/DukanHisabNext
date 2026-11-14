@@ -24,3 +24,4 @@ secrets.properties
 # R8 mapping files (kept by hand for every release, see docs/RELEASE.md), and built bundles
 mapping.txt
 *.aab
+.kotlin/

@@ -39,7 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
+import com.example.dukanhisabnext.ui.components.pluralStringResource
+import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -81,7 +82,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.ui.sales.showDueTag
 import com.example.dukanhisabnext.util.DayPeriod
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.localDigits
 import kotlin.math.abs
 
 /**
@@ -281,7 +282,7 @@ private fun SalesBox(report: SalesReport) {
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
                     )
                     Text(
-                        text = if (isMoneyLine(line)) "$taka ${formatTaka(amount)}" else stringResource(R.string.report_sales_count_value, toBengaliDigits(amount.toString())),
+                        text = if (isMoneyLine(line)) "$taka ${formatTaka(amount)}" else stringResource(R.string.report_sales_count_value, localDigits(amount.toString())),
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
                     )
@@ -289,7 +290,7 @@ private fun SalesBox(report: SalesReport) {
             }
             if (showsCancelledNote(report)) {
                 Text(
-                    text = stringResource(R.string.report_cancelled_note, toBengaliDigits(report.cancelledCount.toString())),
+                    text = stringResource(R.string.report_cancelled_note, localDigits(report.cancelledCount.toString())),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -382,7 +383,7 @@ private fun OwingRow(row: KhataCustomerRow, onClick: () -> Unit) {
         modifier = Modifier.clickable(onClick = onClick),
         leadingContent = { InitialAvatar(name = row.customer.name) },
         headlineContent = { Text(row.customer.name, style = MaterialTheme.typography.titleMedium) },
-        supportingContent = row.customer.phone?.let { phone -> { Text(toBengaliDigits(phone), style = MaterialTheme.typography.bodyMedium) } },
+        supportingContent = row.customer.phone?.let { phone -> { Text(localDigits(phone), style = MaterialTheme.typography.bodyMedium) } },
         trailingContent = { BalanceText(balance = row.balance, style = MaterialTheme.typography.titleMedium) }
     )
     HorizontalDivider()
@@ -509,9 +510,10 @@ private fun ProfitBody(report: ProfitReport) {
         approximateNote(report)?.let { note ->
             item(key = "approx") {
                 InfoCard(
-                    text = stringResource(
-                        R.string.report_approximate,
-                        toBengaliDigits(note.missingCostLines.toString()),
+                    text = pluralStringResource(
+                        R.plurals.report_approximate,
+                        note.missingCostLines,
+                        localDigits(note.missingCostLines.toString()),
                         "$taka ${formatTaka(note.missingCostSales)}"
                     ),
                     modifier = Modifier.fillMaxWidth().padding(Spacing.l)

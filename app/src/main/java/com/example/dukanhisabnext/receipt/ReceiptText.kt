@@ -10,8 +10,8 @@ import com.example.dukanhisabnext.util.dayPeriod
 import com.example.dukanhisabnext.util.formatDate
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
-import com.example.dukanhisabnext.util.formatTime12
-import com.example.dukanhisabnext.util.toBengaliDigits
+import com.example.dukanhisabnext.util.clockText
+import com.example.dukanhisabnext.util.localDigits
 
 /**
  * All the words a receipt needs. They come from strings.xml on the phone (so no Bengali text is
@@ -41,8 +41,8 @@ data class ReceiptLabels(
     // ---- Version 5: the warranty caption under a product ("ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)") ----
     val warrantyUnit: (WarrantyUnit) -> String = { it.name },
     val monthNames: List<String> = emptyList(),   // the 12 Bengali month names, January first
-    val warrantyUntil: (day: String) -> String = { "$it পর্যন্ত" },        // "১৩ মে ২০২৭ পর্যন্ত"
-    val warrantyCaption: (period: String, until: String) -> String = { p, u -> "ওয়ারেন্টি: $p ($u)" }
+    val warrantyUntil: (day: String) -> String = { it },                   // the real text comes from strings.xml (warranty_until)
+    val warrantyCaption: (period: String, until: String) -> String = { p, u -> "$p ($u)" } // the real text: receipt_warranty
 )
 
 /** "৳ ১,২৩৪.৫০": the taka sign, then Bengali digits with Bangladeshi grouping. */
@@ -54,7 +54,7 @@ fun receiptQuantity(line: ReceiptLine, labels: ReceiptLabels): String =
 
 /** "১০/১১/২০২৬ রাত ১১:৪৫": the Asia/Dhaka date and 12-hour time, in Bengali digits. */
 fun receiptDateTime(createdAt: Long, labels: ReceiptLabels): String =
-    "${formatDate(createdAt)} ${labels.period(dayPeriod(createdAt))} ${formatTime12(createdAt)}"
+    "${formatDate(createdAt)} ${clockText(createdAt, labels.period)}"
 
 /**
  * The caption under a product that has a warranty: "ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)". null when
@@ -125,21 +125,21 @@ fun buildReceiptText(data: ReceiptData, labels: ReceiptLabels): String = buildSt
     // ---- Shop ----
     appendLine(data.shopName ?: labels.shopPlaceholder)
     data.shopAddress?.let { appendLine(it) }
-    data.shopPhone?.let { appendLine("${labels.mobile}: ${toBengaliDigits(it)}") }
+    data.shopPhone?.let { appendLine("${labels.mobile}: ${localDigits(it)}") }
     appendLine(SEPARATOR)
 
     // ---- This sale ----
-    appendLine("${labels.receiptNo}: ${toBengaliDigits(data.receiptNo)}")
+    appendLine("${labels.receiptNo}: ${localDigits(data.receiptNo)}")
     appendLine("${labels.date}: ${receiptSaleDate(data, labels)}")
     data.customerName?.let { name ->
         appendLine("${labels.customer}: $name")
-        data.customerPhone?.let { appendLine("${labels.mobile}: ${toBengaliDigits(it)}") }
+        data.customerPhone?.let { appendLine("${labels.mobile}: ${localDigits(it)}") }
     }
     appendLine(SEPARATOR)
 
     // ---- Items ----
     data.lines.forEachIndexed { index, line ->
-        appendLine("${toBengaliDigits((index + 1).toString())}. ${line.name}")
+        appendLine("${localDigits((index + 1).toString())}. ${line.name}")
         appendLine("   ${receiptQuantity(line, labels)} × ${money(line.unitPrice)} = ${money(line.lineTotal)}")
         receiptWarrantyCaption(line, labels)?.let { appendLine("   $it") }
     }
