@@ -1150,6 +1150,22 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
 - A sideloaded APK (signed with the upload key) and the Play Store app (signed by Google) cannot
   update each other: switching means backup, uninstall, install, restore.
 
+### Language and currency (English as a second language)
+
+- **Two languages:** Bengali (default) and English, chosen in Settings ("Language / ভাষা"), kept in
+  `display_prefs.xml` (not in the backup), applied at once. On Android 13+ the per-app language of the
+  phone is kept in step and wins when it names one of the two. New install: Bengali.
+- **Strings:** `values/strings.xml` (Bengali) and `values-en/strings.xml` (English) have the same keys
+  (`StringsParityTest`). Counts are `<plurals>`. No visible text in Kotlin.
+- **Digits and dates:** Bengali digits and "১৪/১১/২০২৬" / "১৪ নভেম্বর ২০২৬" / "রাত ১১:৪৫" in Bengali;
+  Western digits and "14 Nov 2026" / "11:45 pm" in English. Typed input accepts both digit styles in both
+  languages. Receipts, reports, Khata, dashboards, pickers and the four PDFs follow the language; the PDF
+  keeps Noto Sans Bengali, so Bengali names render in an English PDF.
+- **Currency (display only):** 16 currencies, default BDT ৳. Only the symbol and the grouping change
+  (1,00,000 for ৳ ₹ Rs; 100,000 for the others); amounts are never converted and the database is not
+  touched. A warning dialog appears when records exist. Not part of the backup.
+- Details and the rules in full: `docs/LANGUAGE.md`.
+
 ## 7. Out of scope for the MVP
 
 Bluetooth/thermal printing, bKash/Nagad QR, SMS, subscriptions, online shop,
