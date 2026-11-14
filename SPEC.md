@@ -1126,6 +1126,30 @@ confirm dialog says "এই PDF-তে কাস্টমারের নাম,
 পাঠান।" (the product list has only the cost-price switch). When there is nothing to export a short
 message is shown instead of an empty PDF. The PDF is built on a background thread with a loading dialog.
 
+### App identity, release and the one-time data move (Group D1)
+
+- **Permanent app id:** `com.taqwatech.dokanhisab` (never changes once published). Debug build:
+  `com.taqwatech.dokanhisab.debug`, label "দোকান হিসাব (ডিবাগ)", a separate app with its own data. The
+  Kotlin namespace and source packages stay `com.example.dukanhisabnext` (names inside the code only).
+- **Version** 1.0.0 (versionCode 1), minSdk 26, targetSdk 37. App name "দোকান হিসাব".
+- **Signing:** the release reads the upload key from `keystore.properties` (git-ignored; passwords may
+  come from `DOKAN_STORE_PASSWORD` / `DOKAN_KEY_PASSWORD`). Without a complete setup the release builds
+  unsigned. No key or password is ever in the project. Google Play App Signing holds the app signing key.
+  Details, the keytool command and the mapping.txt rule: `docs/RELEASE.md`.
+- **Manifest:** no INTERNET or other user permission, no analytics, ads or network library; the
+  contact picker needs no READ_CONTACTS; the emoji-font start-up step is removed; not debuggable in
+  release; the app writes no logs. The only exported components are the launcher activity and the
+  profile installer receiver (system DUMP permission).
+- **The one-time data move** from the old test id `com.example.dukanhisabnext`: a new id is a new app,
+  so data moves only through our own backup and restore. Order: (1) update the OLD app in place over its
+  data with the latest code (`-PoldAppId=true`, `adb install -r`; never uninstall; it runs the
+  migrations from database version 1); (2) make a backup in the old app and save it to Google Drive;
+  (3) note the old app's numbers; (4) install the new app; (5) restore the backup in the new app and
+  compare every number, then make a first backup in the new app; (6) only then remove the old app.
+  Step by step for the shop owner and with the technical details: `docs/MOVE_TO_NEW_APP.md`.
+- A sideloaded APK (signed with the upload key) and the Play Store app (signed by Google) cannot
+  update each other: switching means backup, uninstall, install, restore.
+
 ## 7. Out of scope for the MVP
 
 Bluetooth/thermal printing, bKash/Nagad QR, SMS, subscriptions, online shop,
