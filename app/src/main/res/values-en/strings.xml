@@ -1,0 +1,711 @@
+<resources>
+    <!-- English (the second language). Same keys as values/strings.xml (Bengali, the default).
+         Shop terms: খাতা = "Due Book", বাকি = "due", পাবো = "to receive". Numbers are written with
+         Western digits and the money keeps the ৳ sign. The count strings are <plurals>. -->
+
+    <!-- App name shown under the launcher icon -->
+    <string name="app_name">Dokan Hisab</string>
+    <string name="app_name_debug">Dokan Hisab (Debug)</string>
+    <string name="app_name_old">Dokan Hisab (Old)</string>
+
+    <!-- Bottom navigation tab names -->
+    <string name="tab_home">Home</string>
+    <string name="tab_sell">Sell</string>
+    <string name="tab_khata">Due Book</string>
+    <string name="tab_more">More</string>
+
+    <!-- Screen titles -->
+    <string name="title_home">Home</string>
+    <string name="title_sell">New Sale</string>
+    <string name="title_more">More</string>
+
+    <!-- More screen -->
+    <string name="more_products">Products</string>
+    <!-- Common -->
+    <string name="back">Go back</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_add">Add</string>
+
+    <!-- Units -->
+    <string name="unit_piece">pcs</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_litre">litre</string>
+    <string name="unit_packet">packet</string>
+    <string name="unit_dozen">dozen</string>
+
+    <!-- Form errors (shown under a box) -->
+    <string name="error_required">Please fill in this box</string>
+    <string name="error_invalid_number">Enter a valid number</string>
+    <string name="error_must_be_positive">Must be more than 0</string>
+    <string name="error_duplicate">This name already exists</string>
+    <string name="error_no_change">There is no change in stock</string>
+
+    <!-- Product list -->
+    <string name="title_products">Products</string>
+    <string name="search_products">Search products</string>
+    <string name="clear_search">Clear search</string>
+    <string name="chip_all">All</string>
+    <string name="tag_archived">Archived</string>
+    <string name="show_archived">Show archived products</string>
+    <string name="empty_products">No products yet. Add a new product.</string>
+    <string name="empty_archived">No archived products.</string>
+    <string name="empty_search">No products found.</string>
+    <string name="add_product">New Product</string>
+    <string name="btn_stock">Stock</string>
+    <string name="btn_restore">Restore</string>
+    <string name="price_format">৳ %1$s</string>
+    <string name="stock_label">Stock: %1$s %2$s</string>
+    <string name="tag_low_stock">Low stock</string>
+    <string name="tag_negative_stock">Stock below zero</string>
+
+    <!-- Product add / edit -->
+    <string name="title_product_new">New Product</string>
+    <string name="title_product_edit">Edit Product</string>
+    <string name="field_name">Product name</string>
+    <string name="field_category">Category</string>
+    <string name="category_none">No category</string>
+    <string name="category_new">+ New category</string>
+    <string name="dialog_category_title">New Category</string>
+    <string name="field_category_name">Category name</string>
+    <string name="field_unit">Unit</string>
+    <string name="unit_locked_hint">The unit cannot be changed after the product is created</string>
+    <string name="field_sell_price">Selling price (৳)</string>
+    <string name="field_cost_price">Cost price (৳) — optional</string>
+    <string name="field_opening_stock">Opening stock — optional</string>
+    <string name="field_low_stock">Low stock level — optional</string>
+    <string name="name_duplicate_warning">Another product has this name</string>
+    <string name="btn_archive">Archive</string>
+    <string name="archive_confirm_title">Archive this product?</string>
+    <string name="archive_confirm_text">An archived product will not appear in the sell list. Old sales stay as they are.</string>
+
+    <!-- Stock screen -->
+    <string name="title_stock">Change Stock</string>
+    <string name="stock_current">Stock now: %1$s %2$s</string>
+    <string name="mode_purchase">Add stock (purchase)</string>
+    <string name="mode_correction">Correct stock</string>
+    <string name="field_quantity">How much was added</string>
+    <string name="field_unit_cost">Cost price per unit (৳) — optional</string>
+    <string name="checkbox_update_cost">Also update the product’s cost price</string>
+    <string name="field_counted_stock">How much stock there really is (count it)</string>
+    <string name="correction_preview">Now %1$s → new %2$s (difference %3$s)</string>
+    <string name="field_note">Note — optional</string>
+    <string name="history_title">Stock history</string>
+    <string name="history_empty">No stock changes yet</string>
+    <string name="movement_opening">Opening stock</string>
+    <string name="movement_purchase">Purchase</string>
+    <string name="movement_sale">Sale</string>
+    <string name="movement_adjustment">Correction</string>
+    <string name="movement_sale_cancel">Sale cancelled</string>
+    <string name="movement_line">%1$s · %2$s</string>
+
+    <!-- Sell screen -->
+    <string name="in_cart">In cart: %1$s</string>
+    <string name="cart_title">Cart</string>
+    <string name="cart_removed_on_restart">These products can no longer be sold (archived or deleted while the app was closed), so they were removed from the cart: %1$s</string>
+    <string name="cart_empty_screen">The cart is empty. Go back and choose products.</string>
+    <string name="btn_open_cart">View cart</string>
+    <string name="field_line_quantity">Quantity</string>
+    <string name="field_line_price">Price</string>
+    <string name="label_line_total">Total</string>
+    <string name="btn_remove_line">Remove from cart</string>
+    <string name="stock_warning_line">Only %1$s %2$s in stock — it can still be sold</string>
+    <string name="field_discount">Discount</string>
+    <string name="field_delivery">Delivery charge</string>
+    <string name="label_cart_subtotal">Total</string>
+    <string name="label_grand_total">Grand total</string>
+    <string name="field_discount_amount">Discount amount</string>
+    <string name="field_delivery_amount">Charge amount</string>
+    <string name="unit_taka">৳</string>
+    <string name="unit_percent">%</string>
+    <string name="discount_amount_line">Discount = ৳ %1$s</string>
+    <string name="error_percent_range">The percentage must be between 0 and 100</string>
+    <string name="btn_continue">Continue</string>
+    <string name="error_too_large">The number is too large</string>
+    <string name="error_discount_too_large">The discount cannot be more than the subtotal</string>
+
+    <!-- Cart: a line that could not be sold -->
+    <string name="line_unavailable">This product is no longer for sale (it was archived). Remove it from the cart.</string>
+
+    <!-- Payment screen "Confirm payment" -->
+    <string name="title_payment">Confirm Payment</string>
+    <string name="field_received">Received</string>
+    <string name="change_line">Give back ৳ %1$s</string>
+    <string name="due_preview_line">৳ %1$s will be due — a customer is needed</string>
+    <string name="btn_pay_cash">Cash</string>
+    <string name="btn_pay_due">On due</string>
+    <string name="btn_pay_mobile">bKash / Nagad (mobile)</string>
+    <string name="dialog_mobile_title">How did you receive it?</string>
+    <string name="method_bkash">bKash</string>
+    <string name="method_nagad_full">Nagad</string>
+    <string name="field_sale_note">Note</string>
+    <string name="switch_customer_info">Customer details</string>
+    <string name="phone_country_prefix">+88 </string>
+    <string name="field_customer_name_search">Name or mobile (matches appear as you type)</string>
+    <string name="btn_open_customer_list">Customer list</string>
+    <string name="dialog_customer_list_title">Customer List</string>
+    <string name="btn_close_dialog">Close</string>
+    <string name="btn_add_customer_dialog">Add customer</string>
+    <string name="btn_change_customer">Change</string>
+    <string name="btn_from_phonebook">Pick from phonebook</string>
+    <string name="title_sale_add_customer">Add Customer</string>
+    <string name="customer_off_needed">৳ %1$s will be due. A due needs a customer, but “Customer details” is switched off.</string>
+    <string name="btn_turn_on_customer">Switch on customer details</string>
+    <string name="customer_needed_for_due">৳ %1$s will be due. Please enter the customer’s name, otherwise the sale cannot be saved.</string>
+    <string name="saving_sale">Saving…</string>
+
+    <!-- "New due" screen -->
+    <string name="title_due">New Due</string>
+    <string name="field_due_amount">Due amount</string>
+    <string name="paid_line">Paid: ৳ %1$s</string>
+    <string name="label_customer_required">Customer (required)</string>
+    <string name="btn_confirm_due">Confirm due</string>
+    <string name="error_due_more_than_total">The due cannot be more than the grand total</string>
+    <string name="payment_cart_invalid">The cart is empty or wrong. Go back and fix it.</string>
+    <string name="btn_back_to_cart">Back to cart</string>
+    <string name="error_save_failed">Could not save. Nothing was saved, please try again.</string>
+    <string name="error_products_unavailable">These products are no longer for sale: %1$s. Go back to the cart and remove them.</string>
+    <string name="error_customer_not_found">Customer not found. Please choose again.</string>
+    <string name="error_customer_required">Please choose a customer when there is a due.</string>
+    <string name="error_sale_invalid">There is a problem with the sale amounts. Go back to the cart and fix it.</string>
+
+    <!-- Receipt -->
+    <string name="title_receipt">Receipt</string>
+    <string name="receipt_shop_placeholder">Sales Receipt</string>
+    <string name="receipt_mobile">Mobile</string>
+    <string name="receipt_no">Receipt no.</string>
+    <string name="receipt_date">Date</string>
+    <string name="receipt_customer">Customer</string>
+    <string name="receipt_col_product">Product</string>
+    <string name="receipt_col_quantity">Qty</string>
+    <string name="receipt_col_price">Price</string>
+    <string name="receipt_col_total">Total</string>
+    <string name="receipt_subtotal">Subtotal</string>
+    <string name="receipt_discount">Discount</string>
+    <string name="receipt_delivery">Delivery charge</string>
+    <string name="receipt_grand_total">Amount payable</string>
+    <string name="receipt_paid">Paid</string>
+    <string name="receipt_change">Change</string>
+    <string name="receipt_sale_due">Due on this sale</string>
+    <string name="receipt_customer_total_due">Your total due</string>
+    <string name="receipt_note">Note</string>
+    <string name="receipt_method_cash">Cash</string>
+    <string name="receipt_method_bkash">bKash</string>
+    <string name="receipt_method_nagad">Nagad (mobile)</string>
+    <string name="receipt_method_bank">Bank</string>
+    <string name="receipt_method_other">Other</string>
+    <!-- English writes the time as "8:17 pm": only "am" (before noon) and "pm" (after) are used,
+         see clockText() in util/DateFormat.kt. The other three words are never shown. -->
+    <string name="period_morning">am</string>
+    <string name="period_noon">pm</string>
+    <string name="period_afternoon">pm</string>
+    <string name="period_evening">pm</string>
+    <string name="period_night">pm</string>
+    <string name="btn_share_receipt">Share</string>
+    <string name="btn_new_sale">New sale</string>
+    <string name="share_chooser_title">Share receipt</string>
+    <string name="receipt_not_found">This receipt could not be found.</string>
+    <string name="btn_back_to_sell">Back to the sell page</string>
+
+    <!-- Cancel a sale -->
+    <string name="btn_cancel_sale">Cancel this sale</string>
+    <string name="cancel_dialog_title">Cancel this sale?</string>
+    <string name="cancel_reason_label">Reason for cancelling (optional)</string>
+    <string name="cancel_reason_counter">%1$s / %2$s</string>
+    <string name="cancel_stock_back">The stock will go back</string>
+    <string name="cancel_refund">Give %1$s back to the customer</string>
+    <string name="cancel_due_reduced">The due will go down by %1$s</string>
+    <string name="cancel_advance_warning">The customer’s balance will become an advance of %1$s</string>
+    <string name="cancel_no">No, leave it</string>
+    <string name="cancel_yes">Yes, cancel it</string>
+    <string name="cancel_in_progress">Cancelling…</string>
+    <string name="cancelled_notice">Cancelled</string>
+    <string name="cancel_reason_prefix">Reason</string>
+    <string name="cancel_err_not_found">This sale could not be found. Nothing was changed.</string>
+    <string name="cancel_err_reason_long">The reason can be at most 200 characters. Nothing was changed.</string>
+    <string name="cancel_err_unexpected">Something went wrong. Nothing was changed. Please try again.</string>
+
+    <!-- Sales list -->
+    <string name="title_sales">Sales</string>
+    <string name="search_sales">Search by receipt number, name or mobile</string>
+    <string name="filter_today">Today</string>
+    <string name="filter_month">This month</string>
+    <string name="filter_all">All</string>
+    <string name="search_all_note">Searching across all sales</string>
+    <plurals name="sales_summary">
+        <item quantity="one">%1$s sale · total ৳ %2$s</item>
+        <item quantity="other">%1$s sales · total ৳ %2$s</item>
+    </plurals>
+    <string name="walk_in_customer">Walk-in customer</string>
+    <string name="sale_due_tag">Due ৳ %1$s</string>
+    <string name="sale_cancelled_tag">Cancelled</string>
+    <string name="sales_summary_cancelled_note">(%1$s cancelled not counted)</string>
+    <string name="sales_show_more">Show more</string>
+    <string name="empty_sales_none">No sales have been made yet.</string>
+    <string name="empty_sales_match">No sale matches this search or filter.</string>
+    <!-- The 12 month names, January first (short, so a date reads "14 Nov 2026") -->
+    <string-array name="months_bn">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
+    <!-- Shop info -->
+    <string name="more_sales">Sales</string>
+    <string name="more_expenses">Expenses</string>
+    <string name="more_reports">Reports</string>
+    <string name="more_settings">Settings</string>
+    <string name="title_settings">Settings</string>
+    <string name="owner_label">Owner</string>
+    <string name="owner_name_placeholder">Enter the owner’s name</string>
+    <string name="btn_edit_owner">Edit</string>
+    <string name="title_owner">Owner Details</string>
+    <string name="owner_saved">The owner’s details were saved.</string>
+    <string name="btn_add_shop">Add shop</string>
+    <string name="btn_change_shop">Change shop</string>
+    <string name="title_shop">Shop Details</string>
+    <string name="field_shop_name">Shop name</string>
+    <string name="field_owner_name">Owner’s name — optional</string>
+    <string name="shop_saved">The shop details were saved.</string>
+
+    <!-- Khata (customers) -->
+    <string name="total_receivable">Total to receive</string>
+    <string name="search_customers">Search customers</string>
+    <string name="add_customer">New Customer</string>
+    <string name="empty_customers">No customers yet. Add a new customer.</string>
+    <string name="empty_customer_search">No customers found.</string>
+    <string name="balance_clear">No due</string>
+    <string name="balance_advance">Advance ৳ %1$s</string>
+
+    <!-- Khata: filter chips -->
+    <string name="khata_filter_all">Everyone</string>
+    <string name="khata_filter_owing">With a due</string>
+    <string name="empty_customers_owing">No customer has a due.</string>
+
+    <!-- Khata tab: the Due Book (chips, summaries, sort, empty states) -->
+    <string name="khata_title">Due Book</string>
+    <string name="khata_chip_all">All</string>
+    <string name="khata_chip_today">Today</string>
+    <string name="khata_chip_7days">7 days</string>
+    <string name="khata_chip_month">This month</string>
+    <string name="khata_chip_year">This year</string>
+    <string name="khata_chip_custom">Pick dates</string>
+    <string name="khata_pick_from_title">From which date?</string>
+    <string name="khata_pick_to_title">Until which date?</string>
+    <string name="khata_pick_next">Next</string>
+    <string name="khata_sum_receivable">To receive</string>
+    <string name="khata_sum_advance">Advance</string>
+    <string name="khata_sum_net">Net</string>
+    <string name="khata_line_due_given">Given on due</string>
+    <string name="khata_line_due_breakdown">On sales %1$s · by hand %2$s</string>
+    <string name="khata_line_received">Payments received</string>
+    <string name="khata_line_opening">Old due</string>
+    <string name="khata_line_advance_returned">Advance returned</string>
+    <string name="khata_line_correction">Corrections (net)</string>
+    <string name="khata_line_sale_cancel">Sales cancelled</string>
+    <string name="khata_line_net">Net change</string>
+    <string name="khata_sort_button">Sort</string>
+    <string name="khata_sort_title">How to sort?</string>
+    <string name="khata_sort_newest">Latest entry first</string>
+    <string name="khata_sort_oldest">Oldest entry first</string>
+    <string name="khata_sort_low">Amount low to high</string>
+    <string name="khata_sort_high">Amount high to low</string>
+    <string name="khata_until">Until %1$s</string>
+    <string name="khata_new_due">New Due</string>
+    <string name="khata_empty_customers">No customers yet. Use the “New Due” button to add a customer.</string>
+    <string name="khata_empty_entries">No entries in this period.</string>
+    <string name="khata_empty_entries_match">No entry matches this search.</string>
+    <string name="khata_empty_pick_dates">Tap “Pick dates” above and choose a start and an end date.</string>
+
+    <!-- Expenses: the default categories, in the order of DefaultCategory (ExpenseRules.kt):
+         SALARY, RENT, BILL, TEA_SNACKS, TRANSPORT, FAMILY (personal), OTHER. -->
+    <string-array name="expense_default_categories">
+        <item>Salary</item>
+        <item>Rent</item>
+        <item>Bills</item>
+        <item>Tea &amp; snacks</item>
+        <item>Transport</item>
+        <item>Family</item>
+        <item>Other</item>
+    </string-array>
+
+    <!-- Product list: the low-stock chip -->
+    <string name="chip_low_stock">Low stock</string>
+    <string name="empty_low_stock">No product is low on stock. All good.</string>
+
+    <!-- Reports -->
+    <string name="title_reports">Reports</string>
+    <string name="report_tab_sales">Sales</string>
+    <string name="report_tab_due">Due</string>
+    <string name="report_tab_expenses">Expenses</string>
+    <string name="report_tab_profit">Profit/Loss</string>
+    <string name="report_pick_dates">Tap “Pick dates” above and choose a start and an end date.</string>
+    <string name="report_sales_count">Number of sales</string>
+    <string name="report_sales_net">Net sales (subtotal − discount)</string>
+    <string name="report_sales_delivery">Delivery charge</string>
+    <string name="report_sales_total">Total sales</string>
+    <string name="report_sales_paid">Paid</string>
+    <string name="report_sales_due">Due</string>
+    <string name="report_sales_count_value">%1$s</string>
+    <string name="report_cancelled_note">(%1$s cancelled not counted)</string>
+    <string name="report_sales_list_title">Sales in this period</string>
+    <string name="report_empty_sales">No sales in this period.</string>
+    <string name="report_due_now_title">Total due right now</string>
+    <string name="report_due_owing_title">Customers with a due</string>
+    <string name="report_due_period_title">Entries in this period</string>
+    <string name="report_empty_owing">Nobody owes anything right now.</string>
+    <string name="report_empty_expenses">No expenses in this period.</string>
+    <string name="report_profit_net_sales">Net sales</string>
+    <string name="report_profit_cost">Cost of goods</string>
+    <string name="report_profit_gross">Gross profit</string>
+    <string name="report_profit_gross_loss">Gross loss</string>
+    <string name="report_profit_shop_expenses">Shop expenses</string>
+    <string name="report_profit_net">Net profit</string>
+    <string name="report_profit_net_loss">Net loss</string>
+    <string name="report_profit_delivery_info">Delivery charge %1$s (not counted in profit)</string>
+    <string name="report_profit_personal_info">Personal expenses %1$s (not taken off the shop’s profit)</string>
+    <plurals name="report_approximate">
+        <item quantity="one">Approximate: the cost price of %1$s product line is unknown (sales %2$s), so the profit may look higher than it really is.</item>
+        <item quantity="other">Approximate: the cost price of %1$s product lines is unknown (sales %2$s), so the profit may look higher than it really is.</item>
+    </plurals>
+
+    <!-- Home dashboard -->
+    <string name="home_title">Today’s Summary</string>
+    <string name="home_quick_new_sale">New sale</string>
+    <string name="home_quick_receive">Payment received</string>
+    <string name="home_quick_new_expense">New expense</string>
+    <string name="home_quick_new_product">New product</string>
+    <string name="home_card_sales">Today’s sales</string>
+    <string name="home_card_expense">Today’s expenses</string>
+    <string name="home_card_receivable">Total to receive</string>
+    <string name="home_card_low_stock">Low stock</string>
+    <plurals name="home_sales_count">
+        <item quantity="one">%1$s sale</item>
+        <item quantity="other">%1$s sales</item>
+    </plurals>
+    <string name="home_sales_none">No sales yet</string>
+    <string name="home_expense_split">Shop %1$s · personal %2$s</string>
+    <plurals name="home_low_stock_count">
+        <item quantity="one">%1$s product</item>
+        <item quantity="other">%1$s products</item>
+    </plurals>
+    <string name="home_low_stock_ok">All good</string>
+
+    <!-- Expenses: list -->
+    <string name="title_expenses">Expenses</string>
+    <string name="expense_search_hint">Search by reason or category</string>
+    <string name="expense_sum_shop">Shop expenses</string>
+    <string name="expense_sum_personal">Personal</string>
+    <string name="expense_sum_total">Total</string>
+    <string name="expense_by_category">By category</string>
+    <string name="expense_personal_tag">Personal</string>
+    <plurals name="expense_count">
+        <item quantity="one">%1$s entry</item>
+        <item quantity="other">%1$s entries</item>
+    </plurals>
+    <string name="expense_btn_new">New expense</string>
+    <string name="expense_btn_categories">Categories</string>
+    <string name="expense_empty">No expenses in this period.</string>
+    <string name="expense_empty_match">No expense matches this search.</string>
+    <string name="expense_deleted">The expense was deleted.</string>
+    <string name="expense_undo">Undo</string>
+
+    <!-- Expenses: form -->
+    <string name="title_expense_new">New Expense</string>
+    <string name="title_expense_edit">Edit Expense</string>
+    <string name="expense_category_label">Category</string>
+    <string name="expense_amount_label">Amount</string>
+    <string name="expense_reason_label">Reason (optional)</string>
+    <string name="expense_btn_delete">Delete</string>
+    <string name="expense_delete_title">Delete this expense?</string>
+    <string name="expense_delete_text">It will disappear from the list and the totals. For a few seconds after deleting you can undo it.</string>
+    <string name="expense_delete_yes">Yes, delete</string>
+    <string name="err_expense_category_missing">Please choose a category.</string>
+    <string name="err_expense_category_hidden">This category is hidden. Choose another category.</string>
+    <string name="err_expense_reason_long">The reason can be at most 200 characters.</string>
+    <string name="err_expense_not_found">This expense could not be found, it may have been deleted. Nothing was saved.</string>
+
+    <!-- Expenses: categories -->
+    <string name="title_expense_categories">Expense Categories</string>
+    <string name="cat_btn_add">New category</string>
+    <string name="cat_title_add">New Category</string>
+    <string name="cat_title_edit">Edit Category</string>
+    <string name="cat_name_label">Category name</string>
+    <string name="cat_personal_checkbox">Not a shop expense (personal)</string>
+    <string name="cat_hide">Hide</string>
+    <string name="cat_show">Show</string>
+    <string name="cat_tag_hidden">Hidden</string>
+    <string name="cat_tag_personal">Personal</string>
+    <string name="cat_empty">No categories.</string>
+    <string name="err_cat_name_missing">Enter a category name.</string>
+    <string name="err_cat_name_long">The name can be at most 40 characters.</string>
+    <string name="err_cat_name_duplicate">A category with this name already exists (hidden ones count too).</string>
+    <string name="err_cat_last_visible">At least one category must stay visible, so this one cannot be hidden.</string>
+    <string name="err_cat_not_found">The category could not be found. Nothing was changed.</string>
+
+    <!-- More tab: Contacts (address book) -->
+    <string name="more_contacts">Contacts</string>
+    <string name="title_contacts">Contacts</string>
+
+    <!-- Khata: customer detail buttons and history -->
+    <string name="ledger_btn_payment">Payment received</string>
+    <string name="ledger_btn_manual_due">Gave on due</string>
+    <string name="ledger_btn_opening_due">Old due</string>
+    <string name="ledger_btn_correction">Correction</string>
+    <string name="ledger_btn_advance_return">Advance returned</string>
+    <string name="ledger_history_title">Transaction History</string>
+    <string name="ledger_history_empty">No transactions yet.</string>
+    <string name="ledger_written_on">Written on %1$s</string>
+    <string name="ledger_saved">Saved.</string>
+    <string name="hist_opening_due">Old due (from the paper khata)</string>
+    <string name="hist_sale_due">Due on a sale</string>
+    <string name="hist_manual_due">Gave on due</string>
+    <string name="hist_payment">Payment received</string>
+    <string name="hist_correction_plus">Correction (+)</string>
+    <string name="hist_correction_minus">Correction (−)</string>
+    <string name="hist_sale_cancel">Sale cancelled</string>
+    <string name="hist_advance_returned">Advance returned</string>
+
+    <!-- Khata: the shared entry form -->
+    <string name="ledger_title_payment">Payment Received</string>
+    <string name="ledger_title_manual_due">Gave on Due</string>
+    <string name="ledger_title_opening_due">Old Due (from the paper khata)</string>
+    <string name="ledger_title_correction">Correction</string>
+    <string name="ledger_title_advance_return">Advance Returned</string>
+    <string name="ledger_amount_label">Amount</string>
+    <string name="ledger_date_label">Date</string>
+    <string name="ledger_pick_date">Choose a date</string>
+    <string name="ledger_date_ok">OK</string>
+    <string name="ledger_method_label">How</string>
+    <string name="ledger_note_label">Note (optional)</string>
+    <string name="ledger_note_label_required">Note (a reason is required)</string>
+    <string name="ledger_note_counter">%1$s / %2$s</string>
+    <string name="ledger_correction_plus">(+) The due goes up</string>
+    <string name="ledger_correction_minus">(−) The due goes down</string>
+    <string name="ledger_current_balance">Due now</string>
+    <string name="ledger_after_balance">Balance after this</string>
+    <string name="ledger_advance_warning">It will be an advance of %1$s</string>
+    <string name="ledger_advance_max">At most %1$s can be returned</string>
+    <string name="ledger_saving">Saving…</string>
+    <string name="err_ledger_amount_missing">Enter an amount (more than 0).</string>
+    <string name="err_ledger_amount_too_large">At most {max} can be entered at a time.</string>
+    <string name="err_ledger_date_future">A future date cannot be used.</string>
+    <string name="err_ledger_method_required">Choose how the payment was made.</string>
+    <string name="err_ledger_note_required">The reason for a correction must be written in the note.</string>
+    <string name="err_ledger_note_too_long">The note can be at most 200 characters.</string>
+    <string name="err_ledger_opening_exists">This customer’s old due is already written. It can only be written once per customer. Nothing was saved.</string>
+    <string name="err_ledger_no_advance">This customer has no advance.</string>
+    <string name="err_ledger_more_than_advance">You cannot return more than the advance.</string>
+    <string name="err_ledger_customer_missing">This customer could not be found. Nothing was saved.</string>
+    <string name="err_ledger_unexpected">Something went wrong. Nothing was saved. Please try again.</string>
+    <string name="title_customer_new">New Customer</string>
+    <string name="title_customer_edit">Edit Customer</string>
+    <string name="title_customer_detail">Customer</string>
+    <string name="field_customer_name">Name</string>
+    <string name="field_phone">Mobile number — optional</string>
+    <string name="field_address">Address — optional</string>
+    <string name="phone_duplicate_warning">Another customer has this number</string>
+    <string name="error_invalid_phone">Enter a valid mobile number (11 digits, starting with 01)</string>
+    <string name="label_balance">Current due</string>
+    <string name="label_phone">Mobile</string>
+    <string name="label_address">Address</string>
+    <string name="label_note">Note</string>
+    <string name="btn_edit">Edit</string>
+    <string name="tap_to_call">Tap to call</string>
+    <!-- Backup and restore: one message per BackupProblem (ui/backup/BackupLabels.kt). -->
+    <string name="err_backup_no_space">There is not enough space on the phone. Delete some photos or videos and try again. Your data was not changed.</string>
+    <string name="err_backup_file_too_large">The file is very large. It does not look like a Dokan Hisab backup. Your data was not changed.</string>
+    <string name="err_backup_cannot_read">The file could not be read. Choose it again from another place. Your data was not changed.</string>
+    <string name="err_backup_not_a_zip">This is not a Dokan Hisab backup file, or the file is damaged or incomplete. Your data was not changed.</string>
+    <string name="err_backup_unsafe_zip">The file contains something unknown or unsafe, so it was not opened. Your data was not changed.</string>
+    <string name="err_backup_manifest_missing">The file is incomplete: the backup information page is missing. Your data was not changed.</string>
+    <string name="err_backup_manifest_bad">The backup information in the file is not right. The file may be damaged. Your data was not changed.</string>
+    <string name="err_backup_not_dokan">This is not a Dokan Hisab backup file. Your data was not changed.</string>
+    <string name="err_backup_format_too_new">This backup was made by a newer version of the app. Update the app first. Your data was not changed.</string>
+    <string name="err_backup_schema_too_new">This backup was made by a newer version of the app. Update the app first. Your data was not changed.</string>
+    <string name="err_backup_hash_mismatch">The file is damaged or incomplete (something was lost while copying). Choose another backup. Your data was not changed.</string>
+    <string name="err_backup_db_damaged">The records inside the backup are damaged, so they cannot be restored. Choose another backup. Your data was not changed.</string>
+    <string name="err_backup_not_this_app">The records in this file do not belong to the Dokan Hisab app. Your data was not changed.</string>
+    <string name="err_backup_migration_failed">This backup could not be brought up to the app’s current version. Your data was not changed.</string>
+    <string name="err_backup_counts_mismatch">The numbers of records in the backup do not match. The file may be damaged. Your data was not changed.</string>
+    <string name="err_backup_unexpected">Something went wrong. Your data was not changed. Please try again.</string>
+    <string name="backup_recovered_not_finished">The last restore did not finish (the app was closed). Your previous data is fine, nothing was changed.</string>
+    <string name="backup_recovered_finished">The data was restored from the backup.</string>
+    <!-- Backup and restore screens -->
+    <string name="title_backup">Backup &amp; Restore</string>
+    <string name="backup_never">No backup has been made yet</string>
+    <string name="backup_last_at">Last backup: %1$s</string>
+    <string name="btn_backup_save">Save backup file</string>
+    <string name="btn_backup_share">Share</string>
+    <string name="btn_backup_restore">Restore from a backup</string>
+    <string name="btn_backup_undo">Bring back the previous data</string>
+    <string name="backup_privacy_warning">This file holds every customer’s name, mobile number and money records in plain form. Keep it in your own Google Drive or another trusted place, and do not send it to anyone.</string>
+    <string name="backup_warning_title">Careful</string>
+    <string name="backup_warning_continue">I understand, continue</string>
+    <string name="backup_restore_hint">To get your records back on another phone or after a wipe, choose a backup file you made earlier.</string>
+    <string name="backup_undo_hint">The data from before the restore is still kept.</string>
+    <string name="backup_share_title">Share backup file</string>
+    <string name="backup_saved">The backup file was saved.</string>
+    <string name="backup_ok">OK</string>
+    <string name="backup_step_making">Making the backup…</string>
+    <string name="backup_step_writing">Saving the file…</string>
+    <string name="backup_step_share">Getting ready to share…</string>
+    <string name="backup_step_copying">Reading the file…</string>
+    <string name="backup_step_checking">Checking the file…</string>
+    <string name="backup_step_restoring">Restoring…</string>
+    <string name="backup_step_undo_checking">Checking the previous data…</string>
+    <string name="backup_step_undoing">Bringing back the previous data…</string>
+    <string name="restore_confirm_title">Replace your data with this backup?</string>
+    <string name="restore_confirm_date">Backup date: %1$s</string>
+    <string name="restore_col_backup">In backup</string>
+    <string name="restore_col_now">Now</string>
+    <string name="restore_safety_note">Your current data will be kept as a safety copy. If needed you can bring it back with “Bring back the previous data”.</string>
+    <string name="btn_restore_confirm">Yes, replace with this backup</string>
+    <string name="undo_confirm_title">Bring back the previous data?</string>
+    <string name="undo_confirm_body">The data you had before the restore will come back. The current data will be kept as a safety copy.</string>
+    <string name="btn_undo_confirm">Yes, bring it back</string>
+    <string name="count_sales">Sales</string>
+    <string name="count_customers">Customers</string>
+    <string name="count_products">Products</string>
+    <string name="count_expenses">Expenses</string>
+    <string name="count_ledger">Transactions</string>
+    <string name="restoring_title">Restoring…</string>
+    <string name="restoring_hint">Do not close the app. When it is done the app will open again by itself.</string>
+    <string name="restore_done_title">Data restored</string>
+    <string name="undo_done_title">Previous data restored</string>
+    <string name="restore_done_date">Backup date: %1$s</string>
+    <string name="restore_done_counts">What you have now:</string>
+    <string name="restore_failed_note">The data could not be restored. Your previous data is fine, nothing was changed.</string>
+    <string name="home_backup_reminder">You have not made a backup for over 7 days — make one now</string>
+    <!-- Confirm amount, below-cost warning, backup nudge, loading -->
+    <string name="confirm_amount_title">Please check the amount</string>
+    <string name="confirm_amount_question">Is this correct?</string>
+    <string name="btn_fix_amount">Fix it</string>
+    <string name="btn_confirm_save">Yes, save</string>
+    <string name="below_cost_line">The price is below the cost price (৳ %1$s) — this sale will make a loss</string>
+    <string name="backup_nudge_title">Make a backup</string>
+    <string name="backup_nudge_text">You have recorded some sales but have not made a backup yet. If the phone is lost or broken, all your records could be gone. Please keep a backup file now.</string>
+    <string name="btn_backup_now">Make a backup</string>
+    <string name="btn_later">Later</string>
+    <string name="loading">Loading…</string>
+
+    <!-- Sale date and warranty -->
+    <string name="warranty_card_title">Warranty</string>
+    <string name="warranty_switch">Has a warranty</string>
+    <string name="warranty_value_label">How long</string>
+    <string name="warranty_unit_day">days</string>
+    <string name="warranty_unit_month">months</string>
+    <string name="warranty_unit_year">years</string>
+    <string name="warranty_range_day">Enter between 1 and 999 days</string>
+    <string name="warranty_range_month">Enter between 1 and 120 months</string>
+    <string name="warranty_range_year">Enter between 1 and 50 years</string>
+    <string name="error_warranty_range">The warranty number is out of range</string>
+    <string name="warranty_until">Until %1$s</string>
+    <string name="cart_date_label">Sale date</string>
+    <string name="cart_date_today">Today</string>
+    <string name="cart_date_old_pill">Old date</string>
+    <string name="cart_date_pick_title">Choose the sale date</string>
+    <string name="old_date_question">You chose a date long ago. Is that right?</string>
+    <string name="old_date_yes">Yes, it is right</string>
+    <string name="old_date_change">Change the date</string>
+    <string name="cart_date_reset_note">The saved date was after today, so the sale date was set to today.</string>
+    <string name="line_warranty_row">Warranty: %1$s</string>
+    <string name="line_warranty_none">No warranty · add one</string>
+    <string name="line_warranty_title">Warranty</string>
+    <string name="payment_sale_date">Sale date: %1$s</string>
+    <string name="receipt_warranty">Warranty: %1$s (%2$s)</string>
+
+    <!-- PDF export: the button, the confirm dialog, messages -->
+    <string name="pdf_button">PDF</string>
+    <string name="pdf_button_desc">Create PDF</string>
+    <string name="pdf_confirm_title">Create a PDF?</string>
+    <string name="pdf_privacy">This PDF contains customers’ names, mobile numbers and money records. Send it only to someone you trust.</string>
+    <string name="pdf_products_text">A PDF of the product list will be created.</string>
+    <string name="pdf_show_cost">Show cost price</string>
+    <string name="pdf_create">Create PDF</string>
+    <string name="pdf_creating">Creating the PDF…</string>
+    <string name="pdf_share_title">Send PDF</string>
+    <string name="pdf_failed">The PDF could not be created. Please try again.</string>
+    <string name="pdf_empty_due">Nobody owes anything right now, so there is nothing to put in a PDF.</string>
+    <string name="pdf_empty_products">There are no products, so there is nothing to put in a PDF.</string>
+    <string name="pdf_empty_report">There is nothing to show in this period, so no PDF was created.</string>
+    <string name="pdf_empty_pick_dates">Choose the dates first, then create the PDF.</string>
+    <string name="pdf_empty_statement">This customer has no transactions, so there is nothing to put in a PDF.</string>
+
+    <!-- PDF export: words inside the documents -->
+    <string name="pdf_shop_placeholder">Dokan Hisab</string>
+    <string name="pdf_mobile">Mobile</string>
+    <string name="pdf_footer">Page %1$s / %2$s</string>
+    <string name="pdf_generated_on">Created on: %1$s</string>
+    <string name="pdf_period_line">Period: %1$s</string>
+    <string name="pdf_col_serial">No.</string>
+    <string name="pdf_col_name">Name</string>
+    <string name="pdf_col_phone">Mobile</string>
+    <string name="pdf_col_due">Due</string>
+    <string name="pdf_col_category">Category</string>
+    <string name="pdf_col_unit">Unit</string>
+    <string name="pdf_col_sell">Selling price</string>
+    <string name="pdf_col_cost">Cost price</string>
+    <string name="pdf_col_stock">Stock</string>
+    <string name="pdf_col_receipt">Receipt no.</string>
+    <string name="pdf_col_date">Date</string>
+    <string name="pdf_col_customer">Customer</string>
+    <string name="pdf_col_total">Total</string>
+    <string name="pdf_col_count">Count</string>
+    <string name="pdf_col_description">Description</string>
+    <string name="pdf_col_amount">Amount</string>
+    <string name="pdf_col_balance">Balance</string>
+    <string name="pdf_title_due_list">Due List</string>
+    <string name="pdf_total_due">Total due</string>
+    <string name="pdf_total_advance">Total advance</string>
+    <string name="pdf_title_products">Product List</string>
+    <string name="pdf_total_products">Total products</string>
+    <string name="pdf_title_report_sales">Sales Report</string>
+    <string name="pdf_title_report_due">Due Report</string>
+    <string name="pdf_title_report_expenses">Expense Report</string>
+    <string name="pdf_title_report_profit">Profit &amp; Loss Report</string>
+    <string name="pdf_title_statement">Customer Statement</string>
+    <string name="pdf_customer_line">Customer: %1$s</string>
+    <string name="pdf_current_due">Due now</string>
+    <string name="pdf_current_advance">Advance now</string>
+    <string name="pdf_current_clear">No due now</string>
+
+    <!-- Language setting (the same text in both languages: it must be readable in either) -->
+    <string name="settings_language_title">Language / ভাষা</string>
+    <string name="language_bengali">বাংলা</string>
+    <string name="language_english">English</string>
+
+    <!-- Currency setting (display only). The title is the same in both languages. -->
+    <string name="settings_currency_title">Currency / মুদ্রা</string>
+
+    <string name="currency_name_bdt">Bangladeshi taka</string>
+    <string name="currency_name_inr">Indian rupee</string>
+    <string name="currency_name_pkr">Pakistani rupee</string>
+    <string name="currency_name_npr">Nepalese rupee</string>
+    <string name="currency_name_usd">US dollar</string>
+    <string name="currency_name_eur">Euro</string>
+    <string name="currency_name_gbp">British pound</string>
+    <string name="currency_name_sar">Saudi riyal</string>
+    <string name="currency_name_aed">UAE dirham</string>
+    <string name="currency_name_qar">Qatari riyal</string>
+    <string name="currency_name_kwd">Kuwaiti dinar</string>
+    <string name="currency_name_omr">Omani rial</string>
+    <string name="currency_name_myr">Malaysian ringgit</string>
+    <string name="currency_name_sgd">Singapore dollar</string>
+    <string name="currency_name_cad">Canadian dollar</string>
+    <string name="currency_name_aud">Australian dollar</string>
+    <string name="currency_hint">Only the symbol and the way numbers are written change. No amount is changed.</string>
+    <string name="currency_dialog_title">Choose a currency</string>
+    <string name="currency_warning_title">Change the currency?</string>
+    <string name="currency_warning_text">All the amounts in your records stay exactly the same: nothing is converted from one currency to another. Only the currency symbol and the way numbers are grouped change. For example %1$s would become %2$s.</string>
+    <string name="currency_warning_yes">Yes, change the currency</string>
+</resources>

@@ -228,7 +228,10 @@
     <string name="filter_month">এই মাস</string>
     <string name="filter_all">সব</string>
     <string name="search_all_note">খোঁজার সময় সব বিক্রিতে খোঁজা হচ্ছে</string>
-    <string name="sales_summary">%1$s টি বিক্রি · মোট ৳ %2$s</string>
+    <plurals name="sales_summary">
+        <item quantity="one">%1$s টি বিক্রি · মোট ৳ %2$s</item>
+        <item quantity="other">%1$s টি বিক্রি · মোট ৳ %2$s</item>
+    </plurals>
     <string name="walk_in_customer">সাধারণ কাস্টমার</string>
     <string name="sale_due_tag">বাকি ৳ %1$s</string>
     <string name="sale_cancelled_tag">বাতিল</string>
@@ -366,7 +369,10 @@
     <string name="report_profit_net_loss">নিট ক্ষতি</string>
     <string name="report_profit_delivery_info">ডেলিভারি চার্জ %1$s (লাভে ধরা হয়নি)</string>
     <string name="report_profit_personal_info">ব্যক্তিগত খরচ %1$s (দোকানের লাভ থেকে বাদ দেওয়া হয়নি)</string>
-    <string name="report_approximate">আনুমানিক: %1$s টি পণ্য-লাইনের ক্রয়মূল্য জানা নেই (বিক্রি %2$s), তাই লাভ আসলের চেয়ে বেশি দেখাতে পারে।</string>
+    <plurals name="report_approximate">
+        <item quantity="one">আনুমানিক: %1$s টি পণ্য-লাইনের ক্রয়মূল্য জানা নেই (বিক্রি %2$s), তাই লাভ আসলের চেয়ে বেশি দেখাতে পারে।</item>
+        <item quantity="other">আনুমানিক: %1$s টি পণ্য-লাইনের ক্রয়মূল্য জানা নেই (বিক্রি %2$s), তাই লাভ আসলের চেয়ে বেশি দেখাতে পারে।</item>
+    </plurals>
 
     <!-- Home dashboard -->
     <string name="home_title">আজকের হিসাব</string>
@@ -378,10 +384,16 @@
     <string name="home_card_expense">আজকের খরচ</string>
     <string name="home_card_receivable">মোট পাবো</string>
     <string name="home_card_low_stock">কম স্টক</string>
-    <string name="home_sales_count">%1$s টি বিক্রি</string>
+    <plurals name="home_sales_count">
+        <item quantity="one">%1$s টি বিক্রি</item>
+        <item quantity="other">%1$s টি বিক্রি</item>
+    </plurals>
     <string name="home_sales_none">এখনও কোনো বিক্রি নেই</string>
     <string name="home_expense_split">দোকান %1$s · ব্যক্তিগত %2$s</string>
-    <string name="home_low_stock_count">%1$s টি পণ্য</string>
+    <plurals name="home_low_stock_count">
+        <item quantity="one">%1$s টি পণ্য</item>
+        <item quantity="other">%1$s টি পণ্য</item>
+    </plurals>
     <string name="home_low_stock_ok">সব ঠিক আছে</string>
 
     <!-- Expenses: list -->
@@ -392,7 +404,10 @@
     <string name="expense_sum_total">মোট</string>
     <string name="expense_by_category">ক্যাটাগরি অনুযায়ী</string>
     <string name="expense_personal_tag">ব্যক্তিগত</string>
-    <string name="expense_count">%1$s টি</string>
+    <plurals name="expense_count">
+        <item quantity="one">%1$s টি</item>
+        <item quantity="other">%1$s টি</item>
+    </plurals>
     <string name="expense_btn_new">নতুন খরচ</string>
     <string name="expense_btn_categories">ক্যাটাগরি</string>
     <string name="expense_empty">এই সময়ে কোনো খরচ নেই।</string>
@@ -478,7 +493,7 @@
     <string name="ledger_advance_max">সর্বোচ্চ ফেরত দেওয়া যাবে %1$s</string>
     <string name="ledger_saving">সংরক্ষণ হচ্ছে…</string>
     <string name="err_ledger_amount_missing">টাকার পরিমাণ লিখুন (০-এর চেয়ে বেশি)।</string>
-    <string name="err_ledger_amount_too_large">একবারে সর্বোচ্চ ৳ ১,০০,০০,০০০ লেখা যাবে।</string>
+    <string name="err_ledger_amount_too_large">একবারে সর্বোচ্চ {max} লেখা যাবে।</string>
     <string name="err_ledger_date_future">আগামী দিনের তারিখ দেওয়া যাবে না।</string>
     <string name="err_ledger_method_required">কীভাবে লেনদেন হলো তা বেছে নিন।</string>
     <string name="err_ledger_note_required">সংশোধনের কারণ নোটে লিখতে হবে।</string>
@@ -659,4 +674,34 @@
     <string name="pdf_current_due">এখন বাকি</string>
     <string name="pdf_current_advance">এখন অগ্রিম</string>
     <string name="pdf_current_clear">এখন বাকি নেই</string>
+
+    <!-- Language setting (the same text in both languages: it must be readable in either) -->
+    <string name="settings_language_title">Language / ভাষা</string>
+    <string name="language_bengali">বাংলা</string>
+    <string name="language_english">English</string>
+
+    <!-- Currency setting (display only). The title is the same in both languages. -->
+    <string name="settings_currency_title">Currency / মুদ্রা</string>
+
+    <string name="currency_name_bdt">বাংলাদেশি টাকা</string>
+    <string name="currency_name_inr">ভারতীয় রুপি</string>
+    <string name="currency_name_pkr">পাকিস্তানি রুপি</string>
+    <string name="currency_name_npr">নেপালি রুপি</string>
+    <string name="currency_name_usd">মার্কিন ডলার</string>
+    <string name="currency_name_eur">ইউরো</string>
+    <string name="currency_name_gbp">ব্রিটিশ পাউন্ড</string>
+    <string name="currency_name_sar">সৌদি রিয়াল</string>
+    <string name="currency_name_aed">সংযুক্ত আরব আমিরাত দিরহাম</string>
+    <string name="currency_name_qar">কাতারি রিয়াল</string>
+    <string name="currency_name_kwd">কুয়েতি দিনার</string>
+    <string name="currency_name_omr">ওমানি রিয়াল</string>
+    <string name="currency_name_myr">মালয়েশিয়ান রিঙ্গিত</string>
+    <string name="currency_name_sgd">সিঙ্গাপুর ডলার</string>
+    <string name="currency_name_cad">কানাডিয়ান ডলার</string>
+    <string name="currency_name_aud">অস্ট্রেলিয়ান ডলার</string>
+    <string name="currency_hint">শুধু চিহ্ন আর সংখ্যা লেখার ধরন বদলায়। কোনো টাকার অঙ্ক বদলায় না।</string>
+    <string name="currency_dialog_title">মুদ্রা বেছে নিন</string>
+    <string name="currency_warning_title">মুদ্রা বদলাবেন?</string>
+    <string name="currency_warning_text">আপনার হিসাবের সব টাকার অঙ্ক একই থাকবে, এক মুদ্রা থেকে অন্য মুদ্রায় রূপান্তর হবে না। শুধু টাকার চিহ্ন আর সংখ্যা লেখার ধরন বদলাবে। যেমন %1$s হয়ে যাবে %2$s।</string>
+    <string name="currency_warning_yes">হ্যাঁ, মুদ্রা বদলান</string>
 </resources>
