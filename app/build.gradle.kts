@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -22,6 +24,23 @@ val newAppId = "com.taqwatech.dokanhisab"
 val oldAppId = "com.example.dukanhisabnext"
 val buildForOldApp = providers.gradleProperty("oldAppId").orNull == "true"
 
+// ---- Release signing (the upload key) ----
+// The key and its passwords are NEVER in this project. keystore.properties (git-ignored, project root)
+// says where the key file is:
+//   storeFile=C:/Users/Ibrahim/Keys/dokanhisab-upload.jks
+//   keyAlias=upload
+//   storePassword=...   (optional: leave both passwords out and set the environment variables
+//   keyPassword=...      DOKAN_STORE_PASSWORD and DOKAN_KEY_PASSWORD in the terminal instead)
+// Without keystore.properties the release build still builds, unsigned.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
+}
+fun signingValue(key: String, envName: String? = null): String =
+    keystoreProperties.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() }
+        ?: envName?.let { System.getenv(it) }?.takeIf { it.isNotEmpty() }
+        ?: throw GradleException("keystore.properties: \"$key\" is missing" + (envName?.let { " (or set $it)" } ?: ""))
+
 android {
     namespace = "com.example.dukanhisabnext"
     compileSdk {
@@ -42,6 +61,17 @@ android {
         testInstrumentationRunner = "com.example.dukanhisabnext.testing.SafeTestRunner"
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("upload") {
+                storeFile = file(signingValue("storeFile"))
+                storePassword = signingValue("storePassword", "DOKAN_STORE_PASSWORD")
+                keyAlias = signingValue("keyAlias")
+                keyPassword = signingValue("keyPassword", "DOKAN_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // com.taqwatech.dokanhisab.debug: a separate app with its own data, so the test app and the
@@ -52,6 +82,7 @@ android {
             }
         }
         release {
+            if (keystorePropertiesFile.exists()) signingConfig = signingConfigs.getByName("upload")
             // R8 shrinks and optimizes the WHOLE app (our code and the libraries together).
             // Do NOT add "packageScope" here: optimizing only the library packages moved one
             // Kotlin class (CollectionsKt__MutableCollectionsJVMKt) to another package while its
