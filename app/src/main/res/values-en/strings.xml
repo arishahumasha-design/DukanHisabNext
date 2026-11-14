@@ -346,8 +346,8 @@
     <string name="title_reports">Reports</string>
     <string name="report_tab_sales">Sales</string>
     <string name="report_tab_due">Due</string>
-    <string name="report_tab_expenses">Expenses</string>
-    <string name="report_tab_profit">Profit/Loss</string>
+    <string name="report_tab_expenses">Costs</string>
+    <string name="report_tab_profit">Profit</string>
     <string name="report_pick_dates">Tap “Pick dates” above and choose a start and an end date.</string>
     <string name="report_sales_count">Number of sales</string>
     <string name="report_sales_net">Net sales (subtotal − discount)</string>
@@ -605,6 +605,10 @@
     <string name="warranty_unit_day">days</string>
     <string name="warranty_unit_month">months</string>
     <string name="warranty_unit_year">years</string>
+    <!-- The unit after the number 1 ("1 year", not "1 years") -->
+    <string name="warranty_unit_day_one">day</string>
+    <string name="warranty_unit_month_one">month</string>
+    <string name="warranty_unit_year_one">year</string>
     <string name="warranty_range_day">Enter between 1 and 999 days</string>
     <string name="warranty_range_month">Enter between 1 and 120 months</string>
     <string name="warranty_range_year">Enter between 1 and 50 years</string>

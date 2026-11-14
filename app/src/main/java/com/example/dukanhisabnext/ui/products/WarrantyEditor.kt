@@ -30,6 +30,13 @@ fun WarrantyUnit.labelRes(): Int = when (this) {
     WarrantyUnit.YEAR -> R.string.warranty_unit_year
 }
 
+/** The unit after the number 1 ("1 year"). */
+fun WarrantyUnit.labelOneRes(): Int = when (this) {
+    WarrantyUnit.DAY -> R.string.warranty_unit_day_one
+    WarrantyUnit.MONTH -> R.string.warranty_unit_month_one
+    WarrantyUnit.YEAR -> R.string.warranty_unit_year_one
+}
+
 /** The red message under the warranty box: the limit of the chosen unit for a number out of range. */
 @Composable
 fun warrantyErrorText(error: FormError?, unit: WarrantyUnit): String? = when (error) {

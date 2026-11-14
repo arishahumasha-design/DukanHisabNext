@@ -97,7 +97,7 @@ class LanguageFormattingTest {
     fun dateInBothLanguages() {
         assertEquals("১৪/১১/২০২৬", formatDate(evening))
         english()
-        assertEquals("14/11/2026", formatDate(evening))
+        assertEquals("14 Nov 2026", formatDate(evening))
     }
 
     @Test
@@ -124,6 +124,19 @@ class LanguageFormattingTest {
         assertEquals("11:45 pm", clockText(evening, en))
         assertEquals("2:30 am", clockText(smallHours, en))
         assertEquals("12:09 pm", clockText(noonish, en))
+    }
+
+    @Test
+    fun warrantyPeriodSaysOneYearNotOneYears() {
+        val many: (com.example.dukanhisabnext.data.entity.WarrantyUnit) -> String = { "years" }
+        val one: (com.example.dukanhisabnext.data.entity.WarrantyUnit) -> String = { "year" }
+        val unit = com.example.dukanhisabnext.data.entity.WarrantyUnit.YEAR
+        english()
+        assertEquals("1 year", com.example.dukanhisabnext.warranty.warrantyPeriodText(1, unit, many, one))
+        assertEquals("2 years", com.example.dukanhisabnext.warranty.warrantyPeriodText(2, unit, many, one))
+        assertEquals("1 years", com.example.dukanhisabnext.warranty.warrantyPeriodText(1, unit, many)) // no singular given: the same name
+        CurrentLanguage.value = AppLanguage.BENGALI
+        assertEquals("১ বছর", com.example.dukanhisabnext.warranty.warrantyPeriodText(1, unit, { "বছর" }, { "বছর" }))
     }
 
     // ---- the language choice ----

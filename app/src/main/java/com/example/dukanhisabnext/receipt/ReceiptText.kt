@@ -40,6 +40,7 @@ data class ReceiptLabels(
     val period: (DayPeriod) -> String,
     // ---- Version 5: the warranty caption under a product ("ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)") ----
     val warrantyUnit: (WarrantyUnit) -> String = { it.name },
+    val warrantyUnitOne: ((WarrantyUnit) -> String)? = null, // the unit after the number 1
     val monthNames: List<String> = emptyList(),   // the 12 Bengali month names, January first
     val warrantyUntil: (day: String) -> String = { it },                   // the real text comes from strings.xml (warranty_until)
     val warrantyCaption: (period: String, until: String) -> String = { p, u -> "$p ($u)" } // the real text: receipt_warranty
@@ -65,7 +66,7 @@ fun receiptWarrantyCaption(line: ReceiptLine, labels: ReceiptLabels): String? {
     val unit = line.warrantyUnit ?: return null
     val until = line.warrantyUntil ?: return null
     return labels.warrantyCaption(
-        warrantyPeriodText(value, unit, labels.warrantyUnit),
+        warrantyPeriodText(value, unit, labels.warrantyUnit, labels.warrantyUnitOne),
         labels.warrantyUntil(warrantyUntilDayText(until, labels.monthNames))
     )
 }

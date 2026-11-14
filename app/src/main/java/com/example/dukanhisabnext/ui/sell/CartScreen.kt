@@ -71,6 +71,7 @@ import com.example.dukanhisabnext.ui.components.NumberField
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.products.StockStatus
 import com.example.dukanhisabnext.ui.products.color
+import com.example.dukanhisabnext.ui.products.labelOneRes
 import com.example.dukanhisabnext.ui.products.labelRes
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
@@ -527,6 +528,7 @@ private fun CartLineCard(
 
             // The warranty of this line for this sale: tap to change, remove or add one.
             val warrantyUnitNames = WarrantyUnit.entries.associateWith { stringResource(it.labelRes()) }
+            val warrantyUnitNamesOne = WarrantyUnit.entries.associateWith { stringResource(it.labelOneRes()) }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -539,7 +541,7 @@ private fun CartLineCard(
                 val unit = input.warrantyUnit
                 if (value != null && unit != null) {
                     Text(
-                        text = stringResource(R.string.line_warranty_row, warrantyPeriodText(value, unit) { warrantyUnitNames.getValue(it) }),
+                        text = stringResource(R.string.line_warranty_row, warrantyPeriodText(value, unit, { warrantyUnitNames.getValue(it) }, { warrantyUnitNamesOne.getValue(it) })),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )

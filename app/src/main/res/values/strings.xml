@@ -601,6 +601,10 @@
     <string name="warranty_unit_day">দিন</string>
     <string name="warranty_unit_month">মাস</string>
     <string name="warranty_unit_year">বছর</string>
+    <!-- The unit after the number 1 (English: "1 year", not "1 years"; Bengali: the same word) -->
+    <string name="warranty_unit_day_one">দিন</string>
+    <string name="warranty_unit_month_one">মাস</string>
+    <string name="warranty_unit_year_one">বছর</string>
     <string name="warranty_range_day">১ থেকে ৯৯৯ দিনের মধ্যে লিখুন</string>
     <string name="warranty_range_month">১ থেকে ১২০ মাসের মধ্যে লিখুন</string>
     <string name="warranty_range_year">১ থেকে ৫০ বছরের মধ্যে লিখুন</string>

@@ -5,11 +5,17 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val DAY_MONTH_YEAR: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH)
+/** English writes the month as a word, so "14 Nov 2026" cannot be read as month/day. */
+private val DAY_MONTH_YEAR_ENGLISH: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.ENGLISH)
 private val CLOCK_12_HOUR: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mm", Locale.ENGLISH)
 
-/** UTC millis -> Bengali date in Dhaka time, for example "১০/১১/২০২৬". */
-fun formatDate(epochMillis: Long): String =
-    localDigits(DAY_MONTH_YEAR.format(DhakaTime.localDate(epochMillis)))
+/**
+ * UTC millis -> the date in Dhaka time: "১০/১১/২০২৬" in Bengali, "10 Nov 2026" in English.
+ */
+fun formatDate(epochMillis: Long): String {
+    val day = DhakaTime.localDate(epochMillis)
+    return if (CurrentLanguage.value.usesBengaliDigits) localDigits(DAY_MONTH_YEAR.format(day)) else DAY_MONTH_YEAR_ENGLISH.format(day)
+}
 
 /**
  * UTC millis -> Bengali 12-hour clock time in Dhaka, for example "১১:৪৫".

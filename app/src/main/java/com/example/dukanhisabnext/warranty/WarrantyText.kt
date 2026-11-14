@@ -8,8 +8,13 @@ import java.time.LocalDate
 // unit names and the month names come from strings.xml; the tests pass their own.
 
 /** "৬ মাস": the number in Bengali digits and the unit's name. */
-fun warrantyPeriodText(value: Int, unit: WarrantyUnit, unitName: (WarrantyUnit) -> String): String =
-    "${localDigits(value.toString())} ${unitName(unit)}"
+fun warrantyPeriodText(
+    value: Int,
+    unit: WarrantyUnit,
+    unitName: (WarrantyUnit) -> String,
+    unitNameOne: ((WarrantyUnit) -> String)? = null // the name after the number 1 ("1 year"); null = the same name
+): String =
+    "${localDigits(value.toString())} ${if (value == 1 && unitNameOne != null) unitNameOne(unit) else unitName(unit)}"
 
 /** "১৩ মে ২০২৭": a Dhaka calendar day. [monthNames] are the 12 Bengali month names, January first. */
 fun warrantyDayText(day: LocalDate, monthNames: List<String>): String =
