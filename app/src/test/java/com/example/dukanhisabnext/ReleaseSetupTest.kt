@@ -43,7 +43,8 @@ class ReleaseSetupTest {
     @Test
     fun signingIsReadFromAnIgnoredFileAndNoSecretIsInTheBuild() {
         assertTrue(gradle.contains("rootProject.file(\"keystore.properties\")"))
-        assertTrue("the release still builds without the file", gradle.contains("if (keystorePropertiesFile.exists()) signingConfig"))
+        assertTrue("the release still builds without a complete key setup", gradle.contains("if (uploadKey != null) signingConfig"))
+        assertTrue("an incomplete setup only warns", gradle.contains("logger.warn(") && !gradle.contains("throw GradleException"))
         val code = gradle.lines().filterNot { it.trimStart().startsWith("//") }.joinToString("\n")
         assertFalse(Regex("""(storePassword|keyPassword)\s*=\s*"""").containsMatchIn(code))
         assertFalse(Regex("""storeFile\s*=\s*file\("""").containsMatchIn(code))

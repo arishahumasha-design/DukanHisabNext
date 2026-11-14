@@ -31,15 +31,32 @@ val buildForOldApp = providers.gradleProperty("oldAppId").orNull == "true"
 //   keyAlias=upload
 //   storePassword=...   (optional: leave both passwords out and set the environment variables
 //   keyPassword=...      DOKAN_STORE_PASSWORD and DOKAN_KEY_PASSWORD in the terminal instead)
-// Without keystore.properties the release build still builds, unsigned.
+// Without keystore.properties (or with something missing) the release build still builds, unsigned.
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) keystorePropertiesFile.inputStream().use { load(it) }
 }
-fun signingValue(key: String, envName: String? = null): String =
+fun signingValue(key: String, envName: String? = null): String? =
     keystoreProperties.getProperty(key)?.trim()?.takeIf { it.isNotEmpty() }
         ?: envName?.let { System.getenv(it) }?.takeIf { it.isNotEmpty() }
-        ?: throw GradleException("keystore.properties: \"$key\" is missing" + (envName?.let { " (or set $it)" } ?: ""))
+
+// Sign only when everything is there. If keystore.properties exists but something is missing (for example
+// the password variables were not set in this terminal, or Android Studio builds debug), the release is
+// built UNSIGNED with a warning, and debug builds are never blocked.
+val uploadKey: Map<String, String>? = if (!keystorePropertiesFile.exists()) null else {
+    val values = mapOf(
+        "storeFile" to signingValue("storeFile"),
+        "keyAlias" to signingValue("keyAlias"),
+        "storePassword" to signingValue("storePassword", "DOKAN_STORE_PASSWORD"),
+        "keyPassword" to signingValue("keyPassword", "DOKAN_KEY_PASSWORD")
+    )
+    val missing = values.filterValues { it == null }.keys.toMutableList()
+    values["storeFile"]?.let { if (!file(it).exists()) missing += "storeFile (no file at that path)" }
+    if (missing.isEmpty()) values.mapValues { it.value!! } else {
+        logger.warn("keystore.properties: missing $missing - the release will be built UNSIGNED.")
+        null
+    }
+}
 
 android {
     namespace = "com.example.dukanhisabnext"
@@ -62,12 +79,12 @@ android {
     }
 
     signingConfigs {
-        if (keystorePropertiesFile.exists()) {
+        if (uploadKey != null) {
             create("upload") {
-                storeFile = file(signingValue("storeFile"))
-                storePassword = signingValue("storePassword", "DOKAN_STORE_PASSWORD")
-                keyAlias = signingValue("keyAlias")
-                keyPassword = signingValue("keyPassword", "DOKAN_KEY_PASSWORD")
+                storeFile = file(uploadKey.getValue("storeFile"))
+                storePassword = uploadKey.getValue("storePassword")
+                keyAlias = uploadKey.getValue("keyAlias")
+                keyPassword = uploadKey.getValue("keyPassword")
             }
         }
     }
@@ -82,7 +99,7 @@ android {
             }
         }
         release {
-            if (keystorePropertiesFile.exists()) signingConfig = signingConfigs.getByName("upload")
+            if (uploadKey != null) signingConfig = signingConfigs.getByName("upload")
             // R8 shrinks and optimizes the WHOLE app (our code and the libraries together).
             // Do NOT add "packageScope" here: optimizing only the library packages moved one
             // Kotlin class (CollectionsKt__MutableCollectionsJVMKt) to another package while its
