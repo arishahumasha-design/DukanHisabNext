@@ -1,6 +1,10 @@
 <resources>
     <!-- App name shown under the launcher icon -->
     <string name="app_name">দোকান হিসাব</string>
+    <!-- The debug build (com.taqwatech.dokanhisab.debug), so it is never mistaken for the real app -->
+    <string name="app_name_debug">দোকান হিসাব (ডিবাগ)</string>
+    <!-- Only the one-time build under the old test id (docs/MOVE_TO_NEW_APP.md): the app to remove at the end -->
+    <string name="app_name_old">দোকান হিসাব (পুরনো)</string>
 
     <!-- Bottom navigation tab names -->
     <string name="tab_home">হোম</string>

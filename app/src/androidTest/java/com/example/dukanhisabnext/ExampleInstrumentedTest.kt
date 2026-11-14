@@ -19,6 +19,7 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.dukanhisabnext", appContext.packageName)
+        // The phone tests run against the debug build: the permanent id plus ".debug" (build.gradle.kts).
+        assertEquals("com.taqwatech.dokanhisab.debug", appContext.packageName)
     }
 }

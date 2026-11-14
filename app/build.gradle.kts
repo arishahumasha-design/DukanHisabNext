@@ -10,6 +10,18 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// ---- The app's permanent identity (Google Play) ----
+// The Kotlin namespace and the source packages stay com.example.dukanhisabnext: they are only names
+// inside the code. What Android and Google Play see is the applicationId below, and it can NEVER change
+// once the app is published.
+val newAppId = "com.taqwatech.dokanhisab"
+
+// The test package the app had before Group D. Used ONLY for the one-time move of the shopkeeper's
+// data (docs/MOVE_TO_NEW_APP.md, step 1): `-PoldAppId=true` builds the latest code under the OLD id so it
+// installs OVER the old app (keeping its data and running the database migrations). Never for anything else.
+val oldAppId = "com.example.dukanhisabnext"
+val buildForOldApp = providers.gradleProperty("oldAppId").orNull == "true"
+
 android {
     namespace = "com.example.dukanhisabnext"
     compileSdk {
@@ -17,17 +29,28 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.dukanhisabnext"
+        applicationId = if (buildForOldApp) oldAppId else newAppId
         minSdk = 26
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
+
+        // The name under the launcher icon ("দোকান হিসাব"); the debug and the old-id builds say what they are.
+        manifestPlaceholders["appLabel"] = if (buildForOldApp) "@string/app_name_old" else "@string/app_name"
 
         // SafeTestRunner = AndroidJUnitRunner + "never on a real phone" (see testing/SafeTestRunner.kt)
         testInstrumentationRunner = "com.example.dukanhisabnext.testing.SafeTestRunner"
     }
 
     buildTypes {
+        debug {
+            // com.taqwatech.dokanhisab.debug: a separate app with its own data, so the test app and the
+            // real app can live on one phone. (Not for the one-time old-id build: it must replace the old app.)
+            if (!buildForOldApp) {
+                applicationIdSuffix = ".debug"
+                manifestPlaceholders["appLabel"] = "@string/app_name_debug"
+            }
+        }
         release {
             // R8 shrinks and optimizes the WHOLE app (our code and the libraries together).
             // Do NOT add "packageScope" here: optimizing only the library packages moved one
