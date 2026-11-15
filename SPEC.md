@@ -912,10 +912,13 @@ Look and wording (M9 group C):
   Bengali), so mixed text is right in both languages. The digits 0-9 are tabular by default in the bundled Inter
   files (amounts line up; hyphens and letters are normal).
   The PDFs draw with the same typeface. Details, source and license: `docs/FONTS.md`.
-- Language/currency switch: only when the language or the currency is changed, the screen cross-fades to a plain
-  background with a small spinner (90 ms out, spinner until 400 ms later, 100 ms in: 0.6 s in all, at most), the
-  change is applied behind it, and the new screen fades in. Data is untouched; with the system "remove animations"
-  setting the change is immediate (`ui/components/SwitchTransition.kt`).
+- Language/currency switch (`ui/components/SwitchTransition.kt`, `MainActivity`): the activity declares
+  `configChanges="locale|layoutDirection"` and is never recreated for it (a recreate leaves a black frame). The old
+  screen fades to a plain background with a small spinner (90 ms), the change is made, a fresh `MainActivity` starts
+  with a cross-fade and the old one finishes (the old window stays until the new one has drawn). Saved state and
+  ViewModels are handed over, so the user stays on the same screen with form text and the cart intact; the spinner
+  stays until 400 ms after the fade-out and the new screen fades in over 100 ms (about 0.6 s). Data is untouched. With
+  the system "remove animations" setting there is no cover and no fade. Details: `docs/LANGUAGE.md`.
 
 Bottom navigation: **Home**, **Sell** (new sale), **Khata** (the tab is "খাতা", the screen heading "বাকির খাতা"; no other name),
 **More** (products, contacts, sales list, expenses, reports, settings).

@@ -17,7 +17,22 @@ Both are chosen in **Settings** ("Language / ভাষা" and "Currency / ম�
   or English; otherwise the saved choice; for a new install Bengali (`resolveLanguage`). The choice is
   saved in its own file `display_prefs.xml`. `MainActivity` gives every screen the locale, so Material's
   own texts and the date pickers follow it whatever the phone's language is. A change in Settings
-  recreates the screen at once.
+  (or in the phone's own per-app language setting) is applied like this:
+  - `MainActivity` declares `configChanges="locale|layoutDirection"`, so Android does **not** recreate it for a
+    locale change. A recreate removes the window for a few hundred milliseconds, and that shows as a black screen.
+  - Instead the old screen saves its state (the same state Android keeps for a recreate: navigation back stack,
+    form fields, scroll positions, the ViewModels), starts a **fresh** `MainActivity` with a short cross-fade
+    (`R.anim.switch_fade_in/out`) and finishes. The old window stays visible until the new one has drawn, so there
+    is no frame without a window. The fresh screen takes the saved state and the ViewModels over
+    (`SwitchTransition.handOff`, `adoptViewModelStore`) and starts in the new language
+    (`SwitchTransition.pendingLanguage`, because on Android 13+ the system's per-app locale may lag behind). The
+    user stays on the screen they were on (Settings). A cart in progress is in its own file and is untouched.
+  - On Android 13+ `onConfigurationChanged` notices a per-app language change made outside the app (the phone's
+    settings, even while a form is open) and runs the same switch. Before Android 13 only the in-app choice exists.
+  - Spinner phase (`ui/components/SwitchTransition.kt`): the old screen fades to a plain background with a small
+    spinner (90 ms), the change is made and the fresh screen starts under the same cover, which fades out at
+    400 ms after that (100 ms fade): about 0.6 s from the tap in all. With the system "remove animations" setting
+    there is no cover and no fade: the fresh screen simply replaces the old one.
 - **Not in the backup.** `display_prefs.xml` is not listed in `backup_rules.xml` /
   `data_extraction_rules.xml`. The language is never in the backup file (a restore keeps the current language);
   only the currency code goes into the manifest (below).
