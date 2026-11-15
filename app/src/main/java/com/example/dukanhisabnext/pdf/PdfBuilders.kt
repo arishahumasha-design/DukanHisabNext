@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.pdf
 
+import com.example.dukanhisabnext.expense.shownCategoryName
 import com.example.dukanhisabnext.data.dao.KhataCustomerRow
 import com.example.dukanhisabnext.data.dao.LedgerHistoryRow
 import com.example.dukanhisabnext.data.dao.ProductWithStock
@@ -273,7 +274,7 @@ fun buildReportPdf(
                     PdfColumn(labels.total, PdfAlign.END, ColumnWidth.Fixed(100f))
                 )
                 val rows = s.byCategory.map { c ->
-                    PdfRow(listOf(if (c.isPersonal) "${c.name} (${labels.personalMark})" else c.name, labels.expenseCount(c.count.toLong()), fmt.money(c.total)))
+                    PdfRow(listOf(shownCategoryName(c.name, c.systemKey).let { n -> if (c.isPersonal) "$n (${labels.personalMark})" else n }, labels.expenseCount(c.count.toLong()), fmt.money(c.total)))
                 }
                 blocks += PdfBlock.Table(columns, rows, listOf(PdfRow(listOf(labels.expenseTotal, labels.expenseCount(body.count.toLong()), fmt.money(s.total)), bold = true)))
             }

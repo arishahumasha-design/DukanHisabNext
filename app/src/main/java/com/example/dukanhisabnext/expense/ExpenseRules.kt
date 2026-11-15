@@ -101,7 +101,10 @@ fun checkCategoryName(name: String, all: List<ExpenseCategory>, selfId: Long?): 
     }
     if (lengthOf(clean) > MAX_CATEGORY_NAME_LENGTH) add(CategoryError.NAME_TOO_LONG)
     val key = normalizeCategoryName(clean)
-    if (all.any { it.id != selfId && normalizeCategoryName(it.name) == key }) add(CategoryError.NAME_DUPLICATE)
+    // The name as stored and as shown (a default is shown in the current language) both count.
+    if (all.any { it.id != selfId && (normalizeCategoryName(it.name) == key || normalizeCategoryName(shownCategoryName(it.name, it.systemKey)) == key) }) {
+        add(CategoryError.NAME_DUPLICATE)
+    }
 }
 
 /** A category can be hidden unless it is the last one still shown. Showing again is always fine. */
@@ -207,14 +210,19 @@ fun matchesExpenseSearch(reason: String?, categoryName: String, query: String): 
 }
 
 fun searchedExpenses(rows: List<ExpenseRow>, query: String): List<ExpenseRow> =
-    rows.filter { matchesExpenseSearch(it.expense.reason, it.categoryName, query) }
+    rows.filter {
+        matchesExpenseSearch(it.expense.reason, it.categoryName, query) ||
+            matchesExpenseSearch(null, shownCategoryName(it.categoryName, it.categorySystemKey), query)
+    }
 
 data class CategoryTotal(
     val categoryId: Long,
     val name: String,
     val isPersonal: Boolean,
     val total: Long,
-    val count: Int
+    val count: Int,
+    /** The stable key of a default category (null for one the user made); see shownCategoryName. */
+    val systemKey: String? = null
 )
 
 /**
@@ -238,6 +246,7 @@ fun expenseSummary(rows: List<ExpenseRow>): ExpenseSummary {
                 categoryId = id,
                 name = list.first().categoryName,
                 isPersonal = list.first().categoryIsPersonal,
+                systemKey = list.first().categorySystemKey,
                 total = list.sumOf { it.expense.amount },
                 count = list.size
             )

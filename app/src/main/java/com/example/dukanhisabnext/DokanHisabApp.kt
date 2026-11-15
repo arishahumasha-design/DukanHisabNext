@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext
 
+import com.example.dukanhisabnext.util.withLanguage
 import android.app.Application
 import android.content.Intent
 import androidx.core.content.pm.PackageInfoCompat
@@ -47,6 +48,10 @@ class DokanHisabApp : Application() {
     override fun onCreate() {
         super.onCreate()
         displaySettings.resolveAtStart() // before anything formats a number or reads a string
+        // The default expense category names of both languages, so an untouched default shows in the current one.
+        com.example.dukanhisabnext.expense.DefaultCategoryNames.byLanguage = com.example.dukanhisabnext.util.AppLanguage.entries.associateWith { language ->
+            withLanguage(language).resources.getStringArray(R.array.expense_default_categories).toList()
+        }
         startupRecovery = try {
             BackupEngine.recover(BackupPaths(getDatabasePath(AppDatabase.FILE_NAME), filesDir))
         } catch (e: java.io.IOException) {

@@ -19,8 +19,8 @@ Both are chosen in **Settings** ("Language / ভাষা" and "Currency / ম�
   own texts and the date pickers follow it whatever the phone's language is. A change in Settings
   recreates the screen at once.
 - **Not in the backup.** `display_prefs.xml` is not listed in `backup_rules.xml` /
-  `data_extraction_rules.xml`, and the backup file holds only the database and its manifest. A restore or a
-  new phone therefore starts with Bengali and ৳; the language and currency are set again in Settings.
+  `data_extraction_rules.xml`. The language is never in the backup file (a restore keeps the current language);
+  only the currency code goes into the manifest (below).
 
 ## Digits and dates
 
@@ -60,12 +60,22 @@ Bengali names (customers, products, shop) still render in an English PDF. File n
   `pluralStringResource` (`ui/components/StringResources.kt`), which call `withCurrency()` and swap them for
   the chosen currency. PDFs do the same. Money numbers go through `formatTaka()`, which groups by the
   current currency.
-- Like the language, the currency is saved in `display_prefs.xml` and is **not** part of the backup.
+- The currency is saved in `display_prefs.xml`. It is **also written into each new backup** as the optional
+  manifest key `displayCurrency` (see DATA_FORMAT.md); the language is not. On restore the confirmation shows the
+  backup's currency and, if it differs from the current one, asks which to show afterwards (applied only if the
+  restore succeeds). An older backup without it, or with an unreadable or unknown code, keeps the current currency.
 
 ## What stays as it is
 
-- The default expense categories ("Rent", "Bills"...) are created once, in the language that was on at that
-  moment, and are then ordinary data (the user may rename them). Switching the language later does not
-  rename them. Likewise a customer's, product's or shop's name is shown exactly as typed.
+- **Default expense categories** ("Rent", "Bills"...) are created once, in the language that was on at that
+  moment, and carry a stable key (`expense_categories.systemKey`). While a default still has one of its default
+  names (in either language), it is **shown** in the current language: in lists, the form, the categories screen,
+  the report and the expense PDF (`shownCategoryName`). Nothing in the database changes. A default the user renamed,
+  and every category the user made, is shown exactly as typed. Search and the duplicate-name check accept both
+  the stored and the shown name.
+  - Known limitation: if the user renames a default to exactly the OTHER language's default name (for example the
+    rent category to "Rent" while Bengali is on), it is still treated as untouched and follows the language.
+    Telling these apart would need a new column, so it was left as is.
+- A customer's, product's or shop's name is shown exactly as typed.
 - The launcher label follows the phone's own language (Bengali: দোকান হিসাব, English: Dokan Hisab); on
   Android 13+ the per-app language does it.

@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.expense.shownCategoryName
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -116,7 +117,7 @@ fun ExpenseFormScreen(
                             if (!category.isActive) add(hiddenWord)
                         }
                         DropdownMenuItem(
-                            text = { Text(category.name + if (marks.isEmpty()) "" else marks.joinToString(prefix = " (", postfix = ")")) },
+                            text = { Text(shownCategoryName(category.name, category.systemKey) + if (marks.isEmpty()) "" else marks.joinToString(prefix = " (", postfix = ")")) },
                             onClick = {
                                 viewModel.onCategoryChange(category.id)
                                 close()

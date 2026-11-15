@@ -26,7 +26,9 @@ internal const val SHOP_EXPENSE_SQL = "$ACTIVE_EXPENSE_SQL AND c.isPersonal = 0"
 data class ExpenseRow(
     @Embedded val expense: Expense,
     val categoryName: String,
-    val categoryIsPersonal: Boolean
+    val categoryIsPersonal: Boolean,
+    /** The category's stable key when it is one of the defaults (shown in the current language, see DefaultCategoryNames). */
+    val categorySystemKey: String? = null
 )
 
 // On purpose there is NO delete for categories (old expenses must never lose their category) and
@@ -99,7 +101,7 @@ interface ExpenseDao {
      */
     @Query(
         """
-        SELECT e.*, c.name AS categoryName, c.isPersonal AS categoryIsPersonal
+        SELECT e.*, c.name AS categoryName, c.isPersonal AS categoryIsPersonal, c.systemKey AS categorySystemKey
         FROM expenses e
         JOIN expense_categories c ON c.id = e.expenseCategoryId
         WHERE $ACTIVE_EXPENSE_SQL AND e.expenseDate >= :start AND e.expenseDate < :end

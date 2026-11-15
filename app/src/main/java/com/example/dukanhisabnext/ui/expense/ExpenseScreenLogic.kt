@@ -175,7 +175,9 @@ data class CategoryForm(
     val isNew: Boolean get() = editingId == null
 }
 
-fun categoryFormFor(category: ExpenseCategory): CategoryForm = CategoryForm(category.id, category.name, category.isPersonal)
+/** The edit form starts with the name as SHOWN (a default in the current language). */
+fun categoryFormFor(category: ExpenseCategory): CategoryForm =
+    CategoryForm(category.id, com.example.dukanhisabnext.expense.shownCategoryName(category.name, category.systemKey), category.isPersonal)
 
 /** The small marks on a category row, in this order. */
 enum class CategoryMark { PERSONAL, HIDDEN }

@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.expense.shownCategoryName
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
@@ -127,7 +128,7 @@ private fun CategoryRow(category: ExpenseCategory, onEdit: () -> Unit, onToggle:
         modifier = Modifier.clickable(onClick = onEdit),
         headlineContent = {
             Text(
-                text = category.name,
+                text = shownCategoryName(category.name, category.systemKey),
                 style = MaterialTheme.typography.titleMedium,
                 color = if (category.isActive) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
             )

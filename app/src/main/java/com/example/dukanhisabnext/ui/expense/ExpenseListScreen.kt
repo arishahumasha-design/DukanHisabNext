@@ -1,5 +1,6 @@
 package com.example.dukanhisabnext.ui.expense
 
+import com.example.dukanhisabnext.expense.shownCategoryName
 import com.example.dukanhisabnext.ui.theme.AppCard
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
@@ -281,7 +282,7 @@ internal fun SummaryCard(summary: ExpenseSummary, taka: String) {
                 )
                 summary.byCategory.forEach { category ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(category.name, style = MaterialTheme.typography.bodyMedium)
+                        Text(shownCategoryName(category.name, category.systemKey), style = MaterialTheme.typography.bodyMedium)
                         if (showsPersonalMark(category.isPersonal)) PersonalTag()
                         Text(
                             pluralStringResource(R.plurals.expense_count, category.count, localDigits(category.count.toString())),
@@ -323,7 +324,7 @@ private fun ExpenseRowItem(row: ExpenseRow, taka: String, writtenOn: String?, on
         leadingContent = { IconTile(R.drawable.ic_expense) },
         headlineContent = {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(row.categoryName, style = MaterialTheme.typography.titleMedium)
+                Text(shownCategoryName(row.categoryName, row.categorySystemKey), style = MaterialTheme.typography.titleMedium)
                 if (showsPersonalMark(row.categoryIsPersonal)) PersonalTag()
             }
         },
