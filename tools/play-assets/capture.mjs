@@ -30,7 +30,8 @@ const TAB = { home: [150, 2226], sell: [340, 2226], khata: [670, 2226], more: [9
 const MORE = { products: 308, sales: 632, expenses: 792, reports: 954, settings: 1112 };
 
 const launch = async () => {
-  adb('shell', 'cmd', 'locale', 'set-app-locales', pkg, '--locales', lang);
+  // Android 13+: the per-app language. Older phones have no such command: there the language is the one chosen in Settings.
+  try { adb('shell', 'cmd', 'locale', 'set-app-locales', pkg, '--locales', lang); } catch { /* older Android */ }
   adb('shell', 'am', 'force-stop', pkg);
   adb('shell', 'monkey', '-p', pkg, '-c', 'android.intent.category.LAUNCHER', '1');
   await sleep(6000);
@@ -60,6 +61,11 @@ async function restoreInto(zip) {
   await sleep(1500);
   if (!(await tapText(S('btn_backup_restore')))) throw new Error('no restore button');
   await sleep(3000);
+  if (!texts().includes(zip)) {
+    // Older Android's file picker opens on "Recent", which is empty: open its side menu and choose Downloads.
+    await tapXY(73, 136, 1500);
+    await tapText('Downloads', { wait: 2000 });
+  }
   if (!(await tapText(zip))) throw new Error('backup file not found in the picker: ' + zip);
   await waitFor(S('btn_restore_confirm'), { tries: 15 });
   await tapText(S('btn_restore_confirm'), { wait: 9000 });
