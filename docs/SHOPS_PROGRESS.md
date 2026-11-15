@@ -45,11 +45,15 @@ on Home.
    MOVE_TO_NEW_APP (restore goes into the open shop), LANGUAGE (new strings). Emulator: backup names per shop,
    restore warning, delete dialog with backup-first (backed up the closed shop), a missing shop file shown as
    "can't be opened" (nothing created) and repaired by restoring its backup into it.
+8. Shop cards: "Open" on its own line, Edit/Delete share the next (long Bengali labels no longer squeeze).
+   Whole phone suite: 300 tests OK from a Bengali and from an English start; PC tests 1035; lint 0 errors.
 
 ## Next
 
-8. Full phone suite from a Bengali and from an English start; final report.
+Nothing left of the approved plan. Possible later work: see Open questions.
 
 ## Open questions
 
-None yet.
+- Backup settings of shops 2+ (`backup_prefs_shop_<n>.xml`) are not in Android's automatic backup (a file name
+  cannot be a pattern); only the last-backup time and reminder state are in it.
+- The switch shows the app's green start screen during the restart (about 1 s); the in-app cover is brief.

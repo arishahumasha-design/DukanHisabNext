@@ -194,12 +194,16 @@ private fun ShopCardView(card: ShopCard, onOpen: () -> Unit, onEdit: () -> Unit,
                 Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             if (card.health != ShopHealth.OK) StatusPill(stringResource(R.string.shop_cannot_open), PillVariant.Cancelled)
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                if (!card.isOpen && card.health == ShopHealth.OK) {
-                    SmallOutlinedButton(stringResource(R.string.btn_open_shop), onOpen)
+            // "Open" gets its own full line; Edit and Delete share the next one (long Bengali labels never squeeze).
+            if (!card.isOpen && card.health == ShopHealth.OK) {
+                SmallOutlinedButton(stringResource(R.string.btn_open_shop), onOpen, modifier = Modifier.fillMaxWidth())
+            }
+            val showEdit = card.health == ShopHealth.OK
+            if (showEdit || card.canDelete) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
+                    if (showEdit) SmallOutlinedButton(stringResource(R.string.btn_edit_shop), onEdit, modifier = Modifier.weight(1f))
+                    if (card.canDelete) SmallOutlinedButton(stringResource(R.string.btn_delete_shop), onDelete, modifier = Modifier.weight(1f))
                 }
-                if (card.health == ShopHealth.OK) SmallOutlinedButton(stringResource(R.string.btn_edit_shop), onEdit)
-                if (card.canDelete) SmallOutlinedButton(stringResource(R.string.btn_delete_shop), onDelete)
             }
         }
     }
