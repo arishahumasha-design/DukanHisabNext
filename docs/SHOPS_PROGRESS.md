@@ -39,10 +39,16 @@ on Home.
    "open now?" after making a shop, open-shop pill on Home (tap opens the list), Settings "Change shop" opens
    the list, `ShopProblemFrame` instead of the app when the open shop's file is gone or unreadable (restore into
    it, or other shops). Strings in Bengali and English. Checked on the emulator: edit, new, switch, Home name.
+7. Shops 2+ keep their database in `files/shop-databases/` (lint: Android's automatic backup allows a sub-folder
+   only in the files domain); automatic-backup rules cover it and the registry. Settings label "এখন খোলা দোকান".
+   "Shop created, open it now?" dialog. Docs: SPEC (Several shops), DATA_FORMAT (`shopName`, file names, section 4),
+   MOVE_TO_NEW_APP (restore goes into the open shop), LANGUAGE (new strings). Emulator: backup names per shop,
+   restore warning, delete dialog with backup-first (backed up the closed shop), a missing shop file shown as
+   "can't be opened" (nothing created) and repaired by restoring its backup into it.
 
 ## Next
 
-7. Docs, full test runs, screenshots.
+8. Full phone suite from a Bengali and from an English start; final report.
 
 ## Open questions
 

@@ -9,7 +9,7 @@ import org.junit.Test
 
 /**
  * Android's automatic backup: both rule files back up exactly the database and the small settings
- * file, and nothing of the restore work (no file-domain include). Also: every refusal message says
+ * file, the other shops' databases and the shop list, and nothing of the restore work or the carts. Also: every refusal message says
  * the data did not change.
  */
 class BackupRulesTest {
@@ -18,7 +18,10 @@ class BackupRulesTest {
     private val expected = listOf(
         "database" to AppDatabase.FILE_NAME,
         "database" to AppDatabase.FILE_NAME + "-wal",
-        "sharedpref" to "$BACKUP_PREFS_NAME.xml"
+        "sharedpref" to "$BACKUP_PREFS_NAME.xml",
+        // Several shops: the other shops' databases and the shop list (no restore work, no carts).
+        "file" to "shop-databases/",
+        "file" to "shop-registry/"
     )
 
     private fun rules(text: String, tag: String): List<Pair<String, String>> =

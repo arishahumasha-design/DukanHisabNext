@@ -51,6 +51,11 @@ phone side by side; the new one starts empty.
    never made one itself. Make one now and share it to Drive.
 6. Enter your shop details if they are missing (সেটিংস).
 
+Several shops (newer app versions): a restore always goes into the shop that is **open** (its name is shown on
+Home and in the restore dialog). On a fresh install that is the first shop. For a second shop, make it first
+(**সেটিংস → দোকান পরিবর্তন করুন → নতুন দোকান**), open it, then restore that shop's backup into it. Backup files
+now start with the shop's name (`Taqwa-Tech-backup-….zip`); older `DokanHisab-backup-….zip` files restore the same way.
+
 If any number differs: **stop**, keep both apps, and do not sell in the new app yet.
 
 ### Step 6: Only now remove the old app

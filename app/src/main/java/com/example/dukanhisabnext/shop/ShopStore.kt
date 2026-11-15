@@ -54,11 +54,11 @@ class ShopStore(
         null
     }
 
-    /** Shop 1 (always: an old install, or a new one whose file is made at its first start) plus every shops/shop-<n>.db found. */
+    /** Shop 1 (always: an old install, or a new one whose file is made at its first start) plus every files/shop-databases/shop-<n>.db found. */
     private fun rebuild(): ShopRegistry {
         val now = clock()
         val legacy = ShopRegistry.legacy(now, opened = paths(LEGACY_SHOP_ID).database.exists())
-        val found = File(databasesDir, ShopPaths.SHOPS_FOLDER).listFiles().orEmpty()
+        val found = File(filesDir, ShopPaths.DATABASES_FOLDER).listFiles().orEmpty()
             .mapNotNull { f -> Regex("shop-(\\d+)\\.db").matchEntire(f.name)?.groupValues?.get(1)?.toIntOrNull() }
             .filter { it > LEGACY_SHOP_ID }
             .sorted()

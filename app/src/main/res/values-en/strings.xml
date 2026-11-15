@@ -379,7 +379,6 @@
     </plurals>
 
     <!-- Home dashboard -->
-    <string name="home_title">Today’s Summary</string>
     <string name="home_quick_new_sale">New sale</string>
     <string name="home_quick_receive">Payment received</string>
     <string name="home_quick_new_expense">New expense</string>

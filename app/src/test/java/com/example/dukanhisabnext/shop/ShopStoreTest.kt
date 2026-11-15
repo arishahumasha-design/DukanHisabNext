@@ -84,8 +84,8 @@ class ShopStoreTest {
     @Test
     fun withoutAnyRegistryTheShopsAreFoundFromTheirFiles() {
         oldInstall()
-        for (id in listOf(2, 5)) File(databases, "shops/shop-$id.db").apply { parentFile.mkdirs(); writeText("x") }
-        File(databases, "shops/notes.txt").writeText("not a shop")
+        for (id in listOf(2, 5)) File(files, "shop-databases/shop-$id.db").apply { parentFile.mkdirs(); writeText("x") }
+        File(files, "shop-databases/notes.txt").writeText("not a shop")
         val r = store().load()
         assertEquals(listOf(1, 2, 5), r.active.map { it.id })
         assertEquals(6, r.nextId)
@@ -109,15 +109,15 @@ class ShopStoreTest {
     @Test
     fun deletingAnotherShopRemovesOnlyItsFiles() {
         twoShops()
-        val shopOneBefore = files.walkTopDown().filter { it.isFile && !it.path.contains("shops") && !it.path.contains("shop-registry") }.map { sha(it).toList() }.toList()
+        val shopOneBefore = files.walkTopDown().filter { it.isFile && !it.path.contains("shops") && !it.path.contains("shop-databases") && !it.path.contains("shop-registry") }.map { sha(it).toList() }.toList()
         val r = store().delete(2)
         assertEquals(listOf(1), r.active.map { it.id })
-        assertFalse(File(databases, "shops/shop-2.db").exists())
-        assertFalse(File(databases, "shops/shop-2.db-wal").exists())
+        assertFalse(File(files, "shop-databases/shop-2.db").exists())
+        assertFalse(File(files, "shop-databases/shop-2.db-wal").exists())
         assertFalse(File(files, "shops/2").exists())
         assertEquals(listOf("backup_prefs_shop_2"), deletedPrefs)
         assertTrue(File(databases, "dokan_hisab.db").exists())
-        val shopOneAfter = files.walkTopDown().filter { it.isFile && !it.path.contains("shops") && !it.path.contains("shop-registry") }.map { sha(it).toList() }.toList()
+        val shopOneAfter = files.walkTopDown().filter { it.isFile && !it.path.contains("shops") && !it.path.contains("shop-databases") && !it.path.contains("shop-registry") }.map { sha(it).toList() }.toList()
         assertEquals(shopOneBefore, shopOneAfter)
     }
 
@@ -154,8 +154,8 @@ class ShopStoreTest {
         val r = twoShops()
         // The crash: the entry was marked and only the database went.
         store().save(r.markedDeleting(2))
-        File(databases, "shops/shop-2.db").delete()
-        val wal = File(databases, "shops/shop-2.db-wal")
+        File(files, "shop-databases/shop-2.db").delete()
+        val wal = File(files, "shop-databases/shop-2.db-wal")
         assertTrue(wal.exists())
         val after = store().finishPendingDeletes()
         assertEquals(listOf(1), after.shops.map { it.id })

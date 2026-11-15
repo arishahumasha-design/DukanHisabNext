@@ -113,9 +113,11 @@ new event on its own day. The cancelled sale leaves every total of its own perio
 
 ## 2. The backup file
 
-A backup is **one zip file**, named `DokanHisab-backup-YYYY-MM-DD-HHmm.zip` (the
-Dhaka date and time it was made, Latin digits). The name is only for people; a
-reader must not rely on it.
+A backup is **one zip file** of **one shop**, named `<Shop-name>-backup-YYYY-MM-DD-HHmm.zip` (the shop's name
+in ASCII: letters and digits kept, everything else one `-`, at most 40 characters; `Shop-<n>` when the name has no
+ASCII letter, for example a Bengali name; then the Dhaka date and time it was made, Latin digits). Backups made
+before several shops existed are named `DokanHisab-backup-YYYY-MM-DD-HHmm.zip`. The name is only for people; a
+reader must not rely on it (the full shop name is in the manifest).
 
 ### Zip layout (format version 1)
 
@@ -149,6 +151,7 @@ the keys in this order; a reader must not depend on the order.
 | `dbSha256` | yes | SHA-256 of the database entry, 64 lowercase hex characters. |
 | `encryption` | no | `none` (the default). Any other value: refused as too new. |
 | `count.<table>` | yes, one per table | The number of rows of each table (all tables except `room_master_table`, `android_metadata` and `sqlite_*`). |
+| `shopName` | no (added with several shops, still format version 1) | The full name of the shop the backup was made in, as typed (Bengali allowed), at most 80 characters, control characters removed. Missing for older backups and for a shop without a name. Display only: on restore the Android app names the shop that will be replaced and warns when this name differs (case and spacing ignored) from the open shop's name; it never refuses the restore because of it. |
 | `displayCurrency` | no (added later, still format version 1) | The currency the app **showed** when the backup was made: a code of 3 to 8 capital letters, for example `BDT` or `INR`. Display only: every amount in the database is the same number whatever the currency, nothing is converted. Missing (older backups) or not a plausible code (anything else): ignored, the restore goes on and the app keeps its own currency. A code the reading app does not know: ignored the same way. On restore the Android app shows it and, when it differs from the current one, asks which currency to show afterwards. The app language is never stored. |
 
 Example:
@@ -177,10 +180,11 @@ count.sales=96
 count.shop_profile=1
 count.stock_movements=240
 displayCurrency=BDT
+shopName=Taqwa Tech
 ```
 
 Older readers ignore keys they do not know (a Java-properties reader only asks for the keys above), so adding
-`displayCurrency` kept the format version at 1: an older app restores such a backup exactly as before, and this app
+`displayCurrency` and `shopName` kept the format version at 1: an older app restores such a backup exactly as before, and this app
 restores an older backup (without the key) exactly as before.
 
 ### How the Android app checks a backup before restoring
@@ -520,3 +524,20 @@ The full schemas of versions 1 to 4 are in `app/schemas/.../1.json` to `4.json`.
 To write a backup: the same in reverse. Write one clean SQLite file (journal mode
 `DELETE`, `user_version` set, `room_master_table` filled), then the manifest with
 its size, SHA-256 and counts, then zip both.
+
+## 4. Several shops on one phone
+
+Each shop is a **separate database file** with exactly the tables above (no shop column anywhere); nothing is
+shared between shops. A small registry outside the databases lists them.
+
+| File | What |
+|---|---|
+| `databases/dokan_hisab.db` | Shop 1: the database of an install from before several shops (registered without being copied or changed). |
+| `files/shop-databases/shop-<n>.db` | Shop n (n ≥ 2). In the files folder because Android's automatic backup allows a sub-folder only there. |
+| `files/shop-registry/shops.properties` (+ `.bak`) | The registry: `format=dokanhisab-shops`, `version=1`, `selectedId`, `nextId`, `ids` and per shop `shop.<n>.name`, `.address`, `.createdAt`, `.opened`, `.state` (`OK` or `DELETING`). Written atomically; ids are never reused. |
+| `files/cart/`, `files/backup-work/`, `files/restore-*` | Shop 1's cart, sale journal and restore files (old names). |
+| `files/shops/<n>/` | The same for shop n. |
+| `shared_prefs/backup_prefs.xml`, `backup_prefs_shop_<n>.xml` | Last backup time and reminder per shop. |
+
+The registry keeps a copy of each shop's name and address for the shop list; the shop's own `shop_profile` row
+(in its database) is what receipts print. Details: `shop/ShopRegistry.kt`, `shop/ShopPaths.kt`, `shop/ShopStore.kt`.

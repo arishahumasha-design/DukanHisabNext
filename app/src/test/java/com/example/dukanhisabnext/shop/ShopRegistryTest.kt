@@ -40,7 +40,7 @@ class ShopRegistryTest {
     @Test
     fun otherShopsHaveTheirOwnFolders() {
         val p = ShopPaths(7, File("/d/databases"), File("/d/files"))
-        assertEquals(File("/d/databases/shops/shop-7.db"), p.database)
+        assertEquals(File("/d/files/shop-databases/shop-7.db"), p.database)
         assertEquals(File("/d/files/shops/7/cart/cart.json"), p.cartFile)
         assertEquals(File("/d/files/shops/7/cart/sale-attempts.txt"), p.journalFile)
         assertEquals(File("/d/files/shops/7/restore.state"), p.backupPaths.marker)

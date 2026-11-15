@@ -375,7 +375,6 @@
     </plurals>
 
     <!-- Home dashboard -->
-    <string name="home_title">আজকের হিসাব</string>
     <string name="home_quick_new_sale">নতুন বিক্রি</string>
     <string name="home_quick_receive">টাকা পেলাম</string>
     <string name="home_quick_new_expense">নতুন খরচ</string>

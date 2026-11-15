@@ -55,6 +55,8 @@ data class ShopListUi(
     val canAdd: Boolean = true,
     /** "Open this shop?" for this shop. */
     val confirmSwitch: ShopEntry? = null,
+    /** The shop to open was just made (the dialog says so). */
+    val confirmJustMade: Boolean = false,
     /** The switch is happening: the screen is covered ("Opening …") until the app restarts. */
     val switching: ShopEntry? = null,
     val switchBlocked: SwitchBlock? = null,
@@ -90,7 +92,8 @@ class ShopListViewModel(private val app: DokanHisabApp) : ViewModel() {
 
     // ---- switching ----
 
-    fun askSwitch(shop: ShopEntry) = _ui.update { it.copy(confirmSwitch = shop, switchBlocked = null) }
+    fun askSwitch(shop: ShopEntry, justMade: Boolean = false) =
+        _ui.update { it.copy(confirmSwitch = shop, confirmJustMade = justMade, switchBlocked = null) }
 
     fun cancelSwitch() = _ui.update { it.copy(confirmSwitch = null) }
 

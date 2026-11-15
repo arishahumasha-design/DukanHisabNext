@@ -12,7 +12,8 @@ import java.io.File
  *   files/backup-work/, files/restore-safety/, files/restore.state, files/restore.result,
  *   shared_prefs/backup_prefs.xml
  * Every other shop has its own folders:
- *   databases/shops/shop-<id>.db, files/shops/<id>/ (cart, journal, backup work, restore files),
+ *   files/shop-databases/shop-<id>.db (Android's automatic backup allows a folder only in the files domain),
+ *   files/shops/<id>/ (cart, journal, backup work, restore files),
  *   shared_prefs/backup_prefs_shop_<id>.xml
  */
 class ShopPaths(val id: Int, databasesDir: File, private val filesDir: File) {
@@ -20,7 +21,7 @@ class ShopPaths(val id: Int, databasesDir: File, private val filesDir: File) {
     val isLegacy: Boolean = id == LEGACY_SHOP_ID
 
     val database: File =
-        if (isLegacy) File(databasesDir, LEGACY_DATABASE_NAME) else File(File(databasesDir, SHOPS_FOLDER), "shop-$id.db")
+        if (isLegacy) File(databasesDir, LEGACY_DATABASE_NAME) else File(File(filesDir, DATABASES_FOLDER), "shop-$id.db")
 
     /** The folder the backup engine and the cart work in. For shop 1 it is the app's files folder itself. */
     val workRoot: File = if (isLegacy) filesDir else File(File(filesDir, SHOPS_FOLDER), id.toString())
@@ -54,5 +55,6 @@ class ShopPaths(val id: Int, databasesDir: File, private val filesDir: File) {
         const val LEGACY_DATABASE_NAME = "dokan_hisab.db"
         const val LEGACY_BACKUP_PREFS = "backup_prefs"
         const val SHOPS_FOLDER = "shops"
+        const val DATABASES_FOLDER = "shop-databases"
     }
 }

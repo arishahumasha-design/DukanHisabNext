@@ -65,7 +65,7 @@ class IsolatedContext private constructor(base: Context, val root: File) : Conte
     // ---- databases ----
 
     override fun getDatabasePath(name: String): File {
-        // A full path (the shops' databases are opened by path, databases/shops/shop-<n>.db) is allowed only inside the root.
+        // A full path (the shops' databases are opened by path, files/shop-databases/shop-<n>.db) is allowed only inside the root.
         if (name.startsWith(File.separator)) {
             val file = File(name)
             check(file.canonicalPath.startsWith(root.canonicalPath + File.separator)) { "a test database outside the isolated folder: $name" }

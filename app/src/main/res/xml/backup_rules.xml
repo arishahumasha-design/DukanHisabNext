@@ -6,6 +6,9 @@
     Backed up (and ONLY these, because the file lists includes):
       - the shop's database: dokan_hisab.db and its -wal file
       - the small backup settings file: backup_prefs.xml (when the last backup was made)
+      - the other shops' databases: files/shop-databases/ (shop 1 keeps dokan_hisab.db), and the shop list
+        files/shop-registry/ (names; without it the app finds the shops again from their files).
+        The backup settings of shops 2+ (backup_prefs_shop_<n>.xml) are not included (a file name cannot be a pattern).
     Left out, because nothing includes them (an <exclude> outside an include is refused by Android's
     checks, so they are not written as excludes):
       - files/backup-work/       the restore work folder
@@ -18,4 +21,6 @@
     <include domain="database" path="dokan_hisab.db" />
     <include domain="database" path="dokan_hisab.db-wal" />
     <include domain="sharedpref" path="backup_prefs.xml" />
+    <include domain="file" path="shop-databases/" />
+    <include domain="file" path="shop-registry/" />
 </full-backup-content>

@@ -85,7 +85,7 @@ fun ShopListScreen(
     LaunchedEffect(Unit) { viewModel.reload() }
     LaunchedEffect(createdId, ui.cards) {
         val made = ui.cards.firstOrNull { it.shop.id == createdId } ?: return@LaunchedEffect
-        viewModel.askSwitch(made.shop)
+        viewModel.askSwitch(made.shop, justMade = true)
         onCreatedHandled()
     }
 
@@ -137,8 +137,14 @@ fun ShopListScreen(
         val name = shopDisplayName(shop)
         AppAlertDialog(
             onDismissRequest = viewModel::cancelSwitch,
-            title = { Text(stringResource(R.string.switch_confirm_title, name)) },
-            text = { Text(stringResource(R.string.switch_confirm_body), style = MaterialTheme.typography.bodyLarge) },
+            title = { Text(if (ui.confirmJustMade) stringResource(R.string.shop_made_title) else stringResource(R.string.switch_confirm_title, name)) },
+            text = {
+                Text(
+                    if (ui.confirmJustMade) stringResource(R.string.shop_made_body, name) + "\n\n" + stringResource(R.string.switch_confirm_body)
+                    else stringResource(R.string.switch_confirm_body),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
             confirmButton = { DialogTextButton(stringResource(R.string.btn_open_now), viewModel::confirmSwitch) },
             dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), viewModel::cancelSwitch) }
         )

@@ -108,7 +108,7 @@ class LegacyShopPhoneTest {
         val sql = db.openHelper.writableDatabase
         assertEquals(0, sql.query("SELECT COUNT(*) FROM sales").use { c -> c.moveToFirst(); c.getInt(0) })
         db.close()
-        assertEquals(File(File(databasesDir, "shops"), "shop-2.db"), second)
+        assertEquals(File(File(isolated.filesDir, "shop-databases"), "shop-2.db"), second)
         assertTrue(second.exists())
         assertArrayEquals("making shop 2 never touches shop 1", shaBefore, sha(legacy))
     }

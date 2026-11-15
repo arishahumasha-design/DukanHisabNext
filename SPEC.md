@@ -1143,6 +1143,39 @@ confirm dialog says "এই PDF-তে কাস্টমারের নাম,
 পাঠান।" (the product list has only the cost-price switch). When there is nothing to export a short
 message is shown instead of an empty PDF. The PDF is built on a background thread with a loading dialog.
 
+### Several shops (one database file per shop)
+
+- One owner can keep up to **20 fully separate shops** (for example electronics, grocery, plastic). Each shop has
+  its own database file and its own cart, sale journal, backup work, backup time and reminder: products, stock,
+  sales, customers, dues, expenses, reports and receipt numbers are never shared or mixed. There is no "all shops"
+  view. Language and currency stay app-wide.
+- A small registry (`files/shop-registry/shops.properties`, see `docs/DATA_FORMAT.md` section 4) lists the shops
+  (id, name, address, created date) and which one is open. An existing single-shop install becomes **shop 1**
+  without its database being copied or changed (`LegacyShopPhoneTest` proves it byte-identical); shop 1 keeps all
+  its old file names.
+- **Always visible:** the open shop's name is on Home (a green pill with a shop icon, one line, cut with "…"; tapping
+  it opens the shop list) and in Settings ("এখন খোলা দোকান").
+- **Shop list** (Settings → "দোকান পরিবর্তন করুন", or the Home pill): one card per shop (name, address, "খোলা আছে" for
+  the open one, "খোলা যাচ্ছে না" for one whose file is gone), "এই দোকান খুলুন", "এডিট করুন", "মুছে ফেলুন" (not for the
+  open shop, not for the last one) and "নতুন দোকান". Names are required and unique (case and spacing ignored). A new
+  shop is pre-filled with the open shop's owner name and mobile (owner details are per shop, printed on that shop's
+  receipts); after making it the app offers to open it.
+- **Switching:** confirm, a cover with a spinner, then the app restarts into that shop and lands on **Home** (no
+  screen state is carried over). A switch is refused while a backup/restore runs or a sale/payment is being saved.
+  An unsaved cart stays with its own shop.
+- **Backup and restore are per shop:** the backup holds only the open shop; its file name starts with the shop's
+  name (`Taqwa-Tech-backup-2026-11-15-1209.zip`, `Shop-<n>-…` for a name without ASCII letters) and the manifest
+  carries the full name (`shopName`). A restore goes into the open shop: the dialog names it, says its current data
+  will be replaced, and warns in red when the backup was made by a differently named shop.
+- **Deleting a shop:** a strong dialog; "আগে এই দোকানের ব্যাকআপ নিন" is the main (focused) action and backs up that
+  closed shop; deleting without a backup needs the tick "আমি ব্যাকআপ চাই না"; the shop's name must be typed. Deleting
+  is crash-safe (the registry marks the shop first; a stopped delete finishes at the next start) and removes only
+  that shop's files.
+- **A shop file that is gone or cannot be read** is never replaced by an empty one and never deleted (the database
+  opener no longer deletes a damaged file): the app shows "… খোলা যাচ্ছে না" with "এই দোকানে ব্যাকআপ রিস্টোর করুন"
+  and "অন্য দোকান".
+- Android's automatic backup also covers `files/shop-databases/` (shops 2+) and `files/shop-registry/`.
+
 ### App identity, release and the one-time data move (Group D1)
 
 - **Permanent app id:** `com.taqwatech.dokanhisab` (never changes once published). Debug build:

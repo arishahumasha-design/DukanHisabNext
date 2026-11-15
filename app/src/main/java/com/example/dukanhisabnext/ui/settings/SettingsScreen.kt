@@ -182,7 +182,8 @@ private fun OwnerCard(ui: SettingsUi, onEdit: () -> Unit) {
 }
 
 /**
- * The shop name: a small label "দোকানের নাম" with the name under it (only when a shop exists).
+ * The OPEN shop: a small label "এখন খোলা দোকান" with its name under it (only when it has a name), so nobody
+ * records something in the wrong shop.
  * It sits above the Backup card; the button that edits it ([ShopButton]) sits below that card.
  */
 @Composable
@@ -191,7 +192,7 @@ private fun ShopNameCard(shopName: String?) {
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = stringResource(R.string.field_shop_name),
+                text = stringResource(R.string.settings_open_shop),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

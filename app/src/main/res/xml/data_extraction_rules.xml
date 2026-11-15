@@ -6,6 +6,7 @@
     Backed up (and ONLY these, because the sections list includes):
       - the shop's database: dokan_hisab.db and its -wal file
       - the small backup settings file: backup_prefs.xml
+      - the other shops' databases (files/shop-databases/) and the shop list (files/shop-registry/)
     Left out, because nothing includes them: files/backup-work/ (restore work folder),
     files/restore-safety/ (safety copy), files/restore.state, files/restore.result,
     databases/dokan_hisab.db.restore-prepared, files/cart/ (the sale in progress), and the cache folder.
@@ -15,10 +16,14 @@
         <include domain="database" path="dokan_hisab.db" />
         <include domain="database" path="dokan_hisab.db-wal" />
         <include domain="sharedpref" path="backup_prefs.xml" />
+        <include domain="file" path="shop-databases/" />
+        <include domain="file" path="shop-registry/" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="dokan_hisab.db" />
         <include domain="database" path="dokan_hisab.db-wal" />
         <include domain="sharedpref" path="backup_prefs.xml" />
+        <include domain="file" path="shop-databases/" />
+        <include domain="file" path="shop-registry/" />
     </device-transfer>
 </data-extraction-rules>

@@ -94,3 +94,25 @@ still render in an English PDF. File names stay ASCII.
 - A customer's, product's or shop's name is shown exactly as typed.
 - The launcher label follows the phone's own language (Bengali: দোকান হিসাব, English: Dokan Hisab); on
   Android 13+ the per-app language does it.
+
+## Several shops: the new texts
+
+The shop screens (shop list, new/edit shop, switch and delete dialogs, the "cannot be opened" screen, the open-shop
+pill on Home, the restore warning) have every text in both `values/strings.xml` (Bengali) and
+`values-en/strings.xml` (English) under the comment "Several shops"; `StringsParityTest` checks that both files
+have exactly the same keys and the same placeholders. A few of them:
+
+| Key | Bengali | English |
+|---|---|---|
+| `title_shops` | দোকান বাছাই করুন | Choose shop |
+| `btn_new_shop` | নতুন দোকান | New shop |
+| `shop_open_now` | খোলা আছে | Open now |
+| `switch_confirm_title` | “%1$s” খুলবেন? | Open “%1$s”? |
+| `btn_backup_shop_first` | আগে এই দোকানের ব্যাকআপ নিন | Back up this shop first |
+| `delete_no_backup` | আমি ব্যাকআপ চাই না | I do not want a backup |
+| `restore_other_shop_warning` | সাবধান: এই ব্যাকআপটি “%1$s” দোকানের, “%2$s” দোকানের নয়। | Careful: this backup was made by the shop “%1$s”, not by “%2$s”. |
+| `shop_unnamed` | দোকান %1$s | Shop %1$s |
+
+Shop names are kept exactly as typed in either script. Backup file names use only the ASCII part of the name
+(`Shop-<n>` for a name without ASCII letters), so file names stay ASCII in both languages. Language and currency stay
+app-wide: switching shops does not change them.
