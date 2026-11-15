@@ -167,4 +167,22 @@ class ShopIsolationPhoneTest {
         close(a)
         assertTrue("A is untouched", aBytes.contentEquals(a.database.readBytes()))
     }
+
+    @Test
+    fun aNewShopWhoseWorkFolderDoesNotExistYetCanRestoreABackup() = runBlocking {
+        // A backup of shop A, restored into shop 3 that was just made (no work folder, no cart, no earlier job).
+        val fan = product(a, "Fan")
+        sell(a, fan.id, "draft-a")
+        val zip = (engine(a).createBackup() as CreateResult.Created).zip
+        val c = store.paths(3)
+        db(c).openHelper.writableDatabase // the shop's database exists (it was made with its profile)
+        assertTrue(!c.workRoot.exists())
+        val engine = engine(c)
+        val (copied, problem) = engine.copyIncoming(zip.inputStream(), zip.length())
+        assertEquals("no 'not enough space' for a folder that is not made yet: $problem", null, problem)
+        val prepared = engine.prepareRestore(copied!!).let { it as? PrepareResult.Ready ?: throw AssertionError(it.toString()) }.restore
+        assertTrue(engine.restore(prepared) is RestoreResult.Done)
+        close(c)
+        assertEquals(1L, count(c, "sales"))
+    }
 }

@@ -116,6 +116,16 @@ class BackupEngine(
     val paths = BackupPaths(liveDb ?: context.getDatabasePath(liveDbName), workRoot)
     private val lock = Mutex()
 
+    /**
+     * Free space where [dir] is or would be made. A shop's work folder does not exist until its first job, and
+     * File.usableSpace of a missing folder is 0 (a restore into a new shop was refused as "not enough space").
+     */
+    private fun freeSpace(dir: File): Long {
+        var d: File? = dir
+        while (d != null && !d.exists()) d = d.parentFile
+        return usableSpace(d ?: dir)
+    }
+
     /** True while a job runs (the screen disables its buttons; a second start is refused). */
     val isBusy: Boolean get() = lock.isLocked
 
@@ -132,7 +142,7 @@ class BackupEngine(
             val dir = File(paths.workDir, "create").also { it.deleteRecursively(); it.mkdirs() }
             val outDir = File(paths.workDir, "out").also { it.deleteRecursively(); it.mkdirs() }
             val liveSize = paths.liveDb.length() + paths.liveWal.length()
-            if (usableSpace(paths.workRoot) < liveSize * 3 + MARGIN) return CreateResult.Failed(BackupProblem.NO_SPACE)
+            if (freeSpace(paths.workRoot) < liveSize * 3 + MARGIN) return CreateResult.Failed(BackupProblem.NO_SPACE)
 
             // 1. Copy the database AND its -wal while holding the write lock: no one can write now,
             //    so the two files match exactly. A sale being saved either finished before (it is in
@@ -207,7 +217,7 @@ class BackupEngine(
         try {
             if (declaredLength != null && declaredLength > limits.maxBackupBytes) return@withContext null to BackupProblem.FILE_TOO_LARGE
             val needed = (declaredLength ?: limits.maxBackupBytes) + MARGIN
-            if (usableSpace(paths.workRoot) < needed) return@withContext null to BackupProblem.NO_SPACE
+            if (freeSpace(paths.workRoot) < needed) return@withContext null to BackupProblem.NO_SPACE
             val dir = File(paths.workDir, "incoming").also { it.deleteRecursively(); it.mkdirs() }
             val file = File(dir, "backup.zip")
             val copied = source.use { input -> FileOutputStream(file).use { copyCapped(input, it, limits.maxBackupBytes) } }
@@ -317,7 +327,7 @@ class BackupEngine(
             checkSchemaVersion(manifest.dbSchemaVersion)?.let { return ZipCheck.Bad(it) }
             checkDbEntry(manifest)?.let { return ZipCheck.Bad(it) }
             if (manifest.dbSize > limits.maxEntryBytes) return ZipCheck.Bad(BackupProblem.FILE_TOO_LARGE)
-            if (usableSpace(paths.workRoot) < manifest.dbSize * 3 + MARGIN) return ZipCheck.Bad(BackupProblem.NO_SPACE)
+            if (freeSpace(paths.workRoot) < manifest.dbSize * 3 + MARGIN) return ZipCheck.Bad(BackupProblem.NO_SPACE)
 
             // The database: unpacked with a cap (zip bomb), hashed while unpacking.
             val dbEntry = zf.getEntry(DATABASE_ENTRY)
