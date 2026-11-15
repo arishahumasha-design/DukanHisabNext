@@ -21,6 +21,8 @@ import com.example.dukanhisabnext.ui.report.ReportTab
 import com.example.dukanhisabnext.ui.report.SalesLine
 import com.example.dukanhisabnext.util.CurrentLanguage
 import com.example.dukanhisabnext.util.DhakaTime
+import com.example.dukanhisabnext.util.quantityTextWithCurrency
+import com.example.dukanhisabnext.util.textWithCurrency
 import com.example.dukanhisabnext.util.withCurrency
 import com.example.dukanhisabnext.util.withLanguage
 import com.example.dukanhisabnext.util.formatDate
@@ -67,7 +69,7 @@ fun reportPeriodText(chipLabel: String?, range: DhakaTime.TimeRange?, date: (Lon
 /** The words of the four documents, from strings.xml. */
 fun pdfLabels(res: Resources): PdfLabels {
     fun s(id: Int) = res.getString(id).withCurrency()
-    fun s(id: Int, vararg args: Any) = res.getString(id, *args).withCurrency()
+    fun s(id: Int, vararg args: Any) = res.textWithCurrency(id, *args)
     fun digits(n: Long) = localDigits(n.toString())
     return PdfLabels(
         shopPlaceholder = s(R.string.pdf_shop_placeholder),
@@ -137,7 +139,7 @@ fun pdfLabels(res: Resources): PdfLabels {
         expenseShop = s(R.string.expense_sum_shop), expensePersonal = s(R.string.expense_sum_personal),
         expenseTotal = s(R.string.expense_sum_total), expenseByCategory = s(R.string.expense_by_category),
         categoryHeader = s(R.string.pdf_col_category), count = s(R.string.pdf_col_count), personalMark = s(R.string.expense_personal_tag),
-        expenseCount = { res.getQuantityString(R.plurals.expense_count, it.toInt(), digits(it)).withCurrency() },
+        expenseCount = { res.quantityTextWithCurrency(R.plurals.expense_count, it.toInt(), digits(it)) },
         profitLine = { kind, loss ->
             s(
                 when (kind) {
@@ -151,7 +153,7 @@ fun pdfLabels(res: Resources): PdfLabels {
         },
         deliveryInfo = { s(R.string.report_profit_delivery_info, it) },
         personalInfo = { s(R.string.report_profit_personal_info, it) },
-        approximate = { lines, sales -> res.getQuantityString(R.plurals.report_approximate, lines.toInt(), digits(lines), sales).withCurrency() },
+        approximate = { lines, sales -> res.quantityTextWithCurrency(R.plurals.report_approximate, lines.toInt(), digits(lines), sales) },
         statementTitle = s(R.string.pdf_title_statement), customerLine = { s(R.string.pdf_customer_line, it) },
         description = s(R.string.pdf_col_description), amount = s(R.string.pdf_col_amount), balance = s(R.string.pdf_col_balance),
         currentDue = s(R.string.pdf_current_due), currentAdvance = s(R.string.pdf_current_advance), currentClear = s(R.string.pdf_current_clear)
@@ -160,7 +162,7 @@ fun pdfLabels(res: Resources): PdfLabels {
 
 /** Bengali digits, taka sign and dates, the same as the screens. */
 fun pdfFormat(res: Resources) = PdfFormat(
-    money = { res.getString(R.string.price_format, formatTaka(it)).withCurrency() },
+    money = { res.textWithCurrency(R.string.price_format, formatTaka(it)) },
     date = ::formatDate,
     number = { localDigits(it.toString()) },
     quantity = ::formatQuantity,

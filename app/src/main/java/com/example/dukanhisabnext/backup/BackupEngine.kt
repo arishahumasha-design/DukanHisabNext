@@ -101,7 +101,9 @@ class BackupEngine(
     private val clock: () -> Long = System::currentTimeMillis,
     private val limits: BackupLimits = BackupLimits(),
     private val usableSpace: (File) -> Long = { it.usableSpace },
-    private val fault: (BackupStep) -> Unit = {}
+    private val fault: (BackupStep) -> Unit = {},
+    /** The code of the currency the app shows now, written into the manifest (display only; see BackupManifest.displayCurrency). */
+    private val displayCurrency: () -> String? = { null }
 ) {
     val paths = BackupPaths(context.getDatabasePath(liveDbName), workRoot)
     private val lock = Mutex()
@@ -153,7 +155,8 @@ class BackupEngine(
                     createdAt = now,
                     dbSize = snapshot.length(),
                     dbSha256 = FileInputStream(snapshot).use(::sha256Hex),
-                    counts = facts.counts
+                    counts = facts.counts,
+                    displayCurrency = currencyCodeOrNull(displayCurrency())
                 )
                 val zip = File(outDir, backupFileName(now))
                 ZipOutputStream(FileOutputStream(zip).buffered()).use { out ->

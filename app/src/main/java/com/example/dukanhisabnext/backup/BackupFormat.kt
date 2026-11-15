@@ -90,7 +90,13 @@ data class BackupManifest(
     val dbSha256: String,
     val encryption: String = ENCRYPTION_NONE,
     /** Row count of every table of the database (name -> rows). */
-    val counts: Map<String, Long>
+    val counts: Map<String, Long>,
+    /**
+     * Optional (added after format version 1 was fixed; older apps simply ignore it): the code of the currency
+     * the app showed when the backup was made, for example "INR". null when the backup does not say, or when
+     * the value is not a plausible code (see [currencyCodeOrNull]). Display only: it changes no amount.
+     */
+    val displayCurrency: String? = null
 )
 
 private fun escape(value: String): String = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
@@ -110,7 +116,14 @@ fun writeManifest(m: BackupManifest): String = buildString {
     line("dbSha256", m.dbSha256)
     line("encryption", m.encryption)
     for ((table, rows) in m.counts.toSortedMap()) line("count.$table", rows)
+    m.displayCurrency?.let { line("displayCurrency", it) } // optional, written only when known
 }
+
+/**
+ * A currency code as it may appear in a manifest: 3 to 8 capital letters A-Z, else null. Anything else (empty,
+ * lower case, junk from a damaged or hand-made file) is ignored, and the restore goes on without it.
+ */
+fun currencyCodeOrNull(raw: String?): String? = raw?.trim()?.takeIf { it.length in 3..8 && it.all { c -> c in 'A'..'Z' } }
 
 sealed interface ManifestResult {
     data class Ok(val manifest: BackupManifest) : ManifestResult
@@ -154,7 +167,8 @@ fun parseManifest(text: String): ManifestResult {
             dbSize = dbSize,
             dbSha256 = sha,
             encryption = encryption,
-            counts = counts
+            counts = counts,
+            displayCurrency = currencyCodeOrNull(p.getProperty("displayCurrency"))
         )
     )
 }

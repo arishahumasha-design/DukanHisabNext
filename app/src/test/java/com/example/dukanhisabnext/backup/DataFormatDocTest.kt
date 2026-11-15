@@ -55,7 +55,7 @@ class DataFormatDocTest {
         assertTrue(doc.contains("platform=$BACKUP_PLATFORM"))
         for ((version, hash) in KNOWN_SCHEMA_HASHES) assertTrue("hash of $version", doc.contains("| $version | `$hash` |"))
         // Every manifest key the app writes is in the key table.
-        val sample = BackupManifest(dbSchemaVersion = 3, appVersionCode = 1, appVersionName = "1", createdAt = 0, dbSize = 0, dbSha256 = "0".repeat(64), counts = emptyMap())
+        val sample = BackupManifest(dbSchemaVersion = 3, appVersionCode = 1, appVersionName = "1", createdAt = 0, dbSize = 0, dbSha256 = "0".repeat(64), counts = emptyMap(), displayCurrency = "BDT")
         for (key in writeManifest(sample).lines().filter { it.isNotEmpty() }.map { it.substringBefore('=') }) {
             assertTrue("manifest key $key", doc.contains("| `$key` |"))
         }

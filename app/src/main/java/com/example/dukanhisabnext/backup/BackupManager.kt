@@ -37,6 +37,8 @@ class BackupManager(
     startup: StartupNote?,
     /** Called after a restore or an undo replaced the data, just before the restart (the cart is emptied). */
     private val onDataReplaced: () -> Unit = {},
+    /** After a restore replaced the data and the user chose the backup's currency: show it from now on. */
+    private val onCurrencyChosen: (String) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
@@ -201,7 +203,8 @@ class BackupManager(
                         val summary = RestoreSummary(
                             backupCreatedAt = prepared.restore.manifest?.createdAt,
                             backupCounts = prepared.restore.counts,
-                            currentCounts = countRows()
+                            currentCounts = countRows(),
+                            backupCurrency = prepared.restore.manifest?.displayCurrency
                         )
                         finish(BackupJobState.AwaitingConfirm(summary))
                     }
@@ -236,12 +239,19 @@ class BackupManager(
         for (suffix in listOf("", "-wal", "-shm", "-journal")) File(prepared.path + suffix).delete()
     }
 
-    /** The user said "yes": the swap. On success the app restarts by itself. */
-    fun confirmRestore() {
+    /** The currency to show after the restore that is waiting for its "yes" (null: keep the current one). */
+    private var currencyAfterRestore: String? = null
+
+    /**
+     * The user said "yes": the swap. On success the app restarts by itself. [currencyCode]: the user chose to show
+     * the backup's currency after the restore (null = keep the current one). It is applied only if the restore succeeds.
+     */
+    fun confirmRestore(currencyCode: String? = null) {
         val current = _state.value as? BackupJobState.AwaitingConfirm ?: return
         val prepared = pending ?: return
         if (!_state.compareAndSet(current, BackupJobState.Working(JobStep.RESTORING))) return
         pending = null
+        currencyAfterRestore = currencyCode
         scope.launch { swap(prepared) }
     }
 
@@ -268,10 +278,14 @@ class BackupManager(
 
     /** The swap itself, then the restart. If it fails but the database was already closed, the app restarts too. */
     private suspend fun swap(prepared: PreparedRestore) {
+        // Taken now, so a failed restore can never leave it behind for a later undo.
+        val currency = currencyAfterRestore
+        currencyAfterRestore = null
         when (val result = engine.restore(prepared)) {
             is RestoreResult.Done -> {
                 _state.value = BackupJobState.Restarting
                 onDataReplaced()
+                currency?.let(onCurrencyChosen)
                 delay(RESTART_DELAY_MS) // let the "রিস্টোর হচ্ছে…" screen show
                 restartApp()
             }

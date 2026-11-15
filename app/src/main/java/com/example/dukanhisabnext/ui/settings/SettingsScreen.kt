@@ -284,26 +284,6 @@ private tailrec fun android.content.Context.findMainActivity(): MainActivity? = 
     else -> null
 }
 
-/** The name of a currency (from strings.xml), for the list. */
-private fun AppCurrency.nameRes(): Int = when (this) {
-    AppCurrency.BDT -> R.string.currency_name_bdt
-    AppCurrency.INR -> R.string.currency_name_inr
-    AppCurrency.PKR -> R.string.currency_name_pkr
-    AppCurrency.NPR -> R.string.currency_name_npr
-    AppCurrency.USD -> R.string.currency_name_usd
-    AppCurrency.EUR -> R.string.currency_name_eur
-    AppCurrency.GBP -> R.string.currency_name_gbp
-    AppCurrency.SAR -> R.string.currency_name_sar
-    AppCurrency.AED -> R.string.currency_name_aed
-    AppCurrency.QAR -> R.string.currency_name_qar
-    AppCurrency.KWD -> R.string.currency_name_kwd
-    AppCurrency.OMR -> R.string.currency_name_omr
-    AppCurrency.MYR -> R.string.currency_name_myr
-    AppCurrency.SGD -> R.string.currency_name_sgd
-    AppCurrency.CAD -> R.string.currency_name_cad
-    AppCurrency.AUD -> R.string.currency_name_aud
-}
-
 /**
  * "Currency / মুদ্রা": the symbol and number style the app shows. It only relabels: no amount is ever converted
  * and the database is not touched. Tapping the card opens the list; if the shop already has records, a
@@ -326,7 +306,7 @@ private fun CurrencyCard() {
             Column(modifier = Modifier.weight(1f)) {
                 Text(stringResource(R.string.settings_currency_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(
-                    "${current.symbol} · ${stringResource(current.nameRes())} (${current.code})",
+                    currencyLabel(current),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -366,7 +346,7 @@ private fun CurrencyCard() {
                             ) {
                                 RadioButton(selected = currency == current, onClick = null)
                                 Text(
-                                    "${currency.symbol} · ${stringResource(currency.nameRes())} (${currency.code})",
+                                    currencyLabel(currency),
                                     style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.padding(start = 12.dp)
                                 )

@@ -27,13 +27,13 @@ class SharedPrefsDisplayStore(context: Context) : DisplayStore {
     override fun loadLanguage(): AppLanguage? = languageFromTag(prefs.getString(KEY_LANGUAGE, null))
 
     override fun saveLanguage(language: AppLanguage) {
-        prefs.edit().putString(KEY_LANGUAGE, language.tag).apply()
+        prefs.edit().putString(KEY_LANGUAGE, language.tag).commit() // commit: a restart may follow at once
     }
 
     override fun loadCurrency(): AppCurrency? = AppCurrency.fromCode(prefs.getString(KEY_CURRENCY, null))
 
     override fun saveCurrency(currency: AppCurrency) {
-        prefs.edit().putString(KEY_CURRENCY, currency.code).apply()
+        prefs.edit().putString(KEY_CURRENCY, currency.code).commit() // commit: after a restore the app restarts at once
     }
 
     companion object {
@@ -80,3 +80,16 @@ fun Context.withLanguage(language: AppLanguage): Context {
     config.setLocale(language.locale)
     return createConfigurationContext(config)
 }
+
+/**
+ * A string of strings.xml in the chosen currency: the currency swap ([withCurrency]) is done on the template,
+ * then the arguments are put in, so an argument that names a currency on purpose stays as it is.
+ */
+fun android.content.res.Resources.textWithCurrency(id: Int, vararg args: Any): String {
+    val template = getString(id).withCurrency()
+    return if (args.isEmpty()) template else String.format(configuration.locales[0], template, *args)
+}
+
+/** [textWithCurrency] for a <plurals> string. */
+fun android.content.res.Resources.quantityTextWithCurrency(id: Int, count: Int, vararg args: Any): String =
+    String.format(configuration.locales[0], getQuantityString(id, count).withCurrency(), *args)

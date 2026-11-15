@@ -708,4 +708,11 @@
     <string name="currency_warning_title">মুদ্রা বদলাবেন?</string>
     <string name="currency_warning_text">আপনার হিসাবের সব টাকার অঙ্ক একই থাকবে, এক মুদ্রা থেকে অন্য মুদ্রায় রূপান্তর হবে না। শুধু টাকার চিহ্ন আর সংখ্যা লেখার ধরন বদলাবে। যেমন %1$s হয়ে যাবে %2$s।</string>
     <string name="currency_warning_yes">হ্যাঁ, মুদ্রা বদলান</string>
+
+    <!-- Restore: the currency the backup was made with (display only) -->
+    <string name="restore_currency_same">এই ব্যাকআপের মুদ্রা: %1$s</string>
+    <string name="restore_currency_none">এই ব্যাকআপে মুদ্রার তথ্য নেই। অ্যাপে %1$s-ই থাকবে।</string>
+    <string name="restore_currency_differs">এই ব্যাকআপ %1$s দিয়ে তৈরি, কিন্তু অ্যাপে এখন %2$s দেখানো হচ্ছে। রিস্টোরের পর কোন মুদ্রা দেখাবে? কোনো টাকার অঙ্ক রূপান্তর হবে না।</string>
+    <string name="restore_currency_use_backup">%1$s (ব্যাকআপের মতো)</string>
+    <string name="restore_currency_keep">%1$s (এখনকার মতো)</string>
 </resources>

@@ -712,4 +712,11 @@
     <string name="currency_warning_title">Change the currency?</string>
     <string name="currency_warning_text">All the amounts in your records stay exactly the same: nothing is converted from one currency to another. Only the currency symbol and the way numbers are grouped change. For example %1$s would become %2$s.</string>
     <string name="currency_warning_yes">Yes, change the currency</string>
+
+    <!-- Restore: the currency the backup was made with (display only) -->
+    <string name="restore_currency_same">Currency in this backup: %1$s</string>
+    <string name="restore_currency_none">This backup does not say which currency it used. The app keeps %1$s.</string>
+    <string name="restore_currency_differs">This backup was made with %1$s, but the app now shows %2$s. Which currency should the app show after the restore? No amount is converted.</string>
+    <string name="restore_currency_use_backup">%1$s (as in the backup)</string>
+    <string name="restore_currency_keep">%1$s (as now)</string>
 </resources>

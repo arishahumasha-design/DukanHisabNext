@@ -24,7 +24,9 @@ val SUMMARY_TABLES: List<String> = listOf("sales", "customers", "products", "exp
 data class RestoreSummary(
     val backupCreatedAt: Long?,
     val backupCounts: Map<String, Long>,
-    val currentCounts: Map<String, Long>
+    val currentCounts: Map<String, Long>,
+    /** The currency code the backup was made with (null: an older backup, or none given). */
+    val backupCurrency: String? = null
 )
 
 sealed interface BackupJobState {

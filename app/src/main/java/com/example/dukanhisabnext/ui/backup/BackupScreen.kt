@@ -1,5 +1,12 @@
 package com.example.dukanhisabnext.ui.backup
 
+import com.example.dukanhisabnext.util.CurrentCurrency
+import com.example.dukanhisabnext.ui.settings.currencyLabel
+import com.example.dukanhisabnext.backup.restoreCurrencyCase
+import com.example.dukanhisabnext.backup.RestoreCurrencyCase
+import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.RadioButton
+import androidx.compose.foundation.selection.selectable
 import com.example.dukanhisabnext.ui.theme.AppCard
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -271,7 +278,7 @@ fun BackupScreen(onBack: () -> Unit) {
         RestoreSummaryDialog(
             summary = awaiting.summary,
             periodWord = periodWord,
-            onConfirm = manager::confirmRestore,
+            onConfirm = { code -> manager.confirmRestore(code) },
             onCancel = manager::cancelRestore
         )
     }
@@ -282,9 +289,12 @@ fun BackupScreen(onBack: () -> Unit) {
 private fun RestoreSummaryDialog(
     summary: RestoreSummary,
     periodWord: (com.example.dukanhisabnext.util.DayPeriod) -> String,
-    onConfirm: () -> Unit,
+    onConfirm: (currencyCode: String?) -> Unit,
     onCancel: () -> Unit
 ) {
+    val currencyCase = restoreCurrencyCase(summary.backupCurrency, CurrentCurrency.value)
+    // Another currency in the backup: the user must choose one before the restore can start.
+    var useBackupCurrency by rememberSaveable { mutableStateOf<Boolean?>(null) }
     AppAlertDialog(
         properties = DialogProperties(dismissOnClickOutside = false),
         onDismissRequest = onCancel,
@@ -313,6 +323,7 @@ private fun RestoreSummaryDialog(
                         Text(localDigits(row.now.toString()), modifier = Modifier.weight(1f))
                     }
                 }
+                RestoreCurrencyPart(currencyCase, useBackupCurrency) { useBackupCurrency = it }
                 Text(
                     stringResource(R.string.restore_safety_note),
                     style = MaterialTheme.typography.bodyMedium,
@@ -320,7 +331,16 @@ private fun RestoreSummaryDialog(
                 )
             }
         },
-        confirmButton = { DestructiveTextButton(stringResource(R.string.btn_restore_confirm), onConfirm) },
+        confirmButton = {
+            DestructiveTextButton(
+                text = stringResource(R.string.btn_restore_confirm),
+                onClick = {
+                    val code = (currencyCase as? RestoreCurrencyCase.Different)?.takeIf { useBackupCurrency == true }?.backup?.code
+                    onConfirm(code)
+                },
+                enabled = currencyCase !is RestoreCurrencyCase.Different || useBackupCurrency != null
+            )
+        },
         dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), onCancel) }
     )
 }
@@ -339,5 +359,43 @@ private fun openShareSheet(context: Context, file: File, title: String) {
         context.startActivity(Intent.createChooser(send, title))
     } catch (e: ActivityNotFoundException) {
         // No app can take it: nothing to do (the save button still works).
+    }
+}
+
+/**
+ * The currency of the backup: one line when it is the same or not given, or (another currency) the question
+ * which one to show after the restore, as two choices. Display only: no amount is ever converted.
+ */
+@Composable
+private fun RestoreCurrencyPart(case: RestoreCurrencyCase, useBackup: Boolean?, onChoose: (Boolean) -> Unit) {
+    when (case) {
+        is RestoreCurrencyCase.Same -> Text(stringResource(R.string.restore_currency_same, currencyLabel(case.currency)), style = MaterialTheme.typography.bodyMedium)
+        is RestoreCurrencyCase.NotInBackup -> Text(
+            stringResource(R.string.restore_currency_none, currencyLabel(case.current)),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        is RestoreCurrencyCase.Different -> Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                stringResource(R.string.restore_currency_differs, currencyLabel(case.backup), currencyLabel(case.current)),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+            for ((choice, text) in listOf(
+                true to stringResource(R.string.restore_currency_use_backup, currencyLabel(case.backup)),
+                false to stringResource(R.string.restore_currency_keep, currencyLabel(case.current))
+            )) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .selectable(selected = useBackup == choice, role = Role.RadioButton, onClick = { onChoose(choice) }),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(selected = useBackup == choice, onClick = null)
+                    Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        }
     }
 }

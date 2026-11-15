@@ -136,3 +136,28 @@ fun startupNote(result: Map<String, String>?, recovery: RecoveryOutcome, restore
     restoreFailed -> StartupNote.Failed
     else -> null
 }
+
+// =========================================================================================
+// The currency of a backup (display only)
+// =========================================================================================
+
+/** What the restore dialog says about the currency the backup was made with. */
+sealed interface RestoreCurrencyCase {
+    /** An older backup, or a code this app does not know: nothing to ask, the app keeps [current]. */
+    data class NotInBackup(val current: com.example.dukanhisabnext.util.AppCurrency) : RestoreCurrencyCase
+
+    /** The backup was made with the currency the app shows now. */
+    data class Same(val currency: com.example.dukanhisabnext.util.AppCurrency) : RestoreCurrencyCase
+
+    /** Another currency: the user is asked which one to show after the restore. */
+    data class Different(
+        val backup: com.example.dukanhisabnext.util.AppCurrency,
+        val current: com.example.dukanhisabnext.util.AppCurrency
+    ) : RestoreCurrencyCase
+}
+
+/** [backupCode] from the manifest (null for an older backup), [current] the currency shown now. */
+fun restoreCurrencyCase(backupCode: String?, current: com.example.dukanhisabnext.util.AppCurrency): RestoreCurrencyCase {
+    val backup = com.example.dukanhisabnext.util.AppCurrency.fromCode(backupCode) ?: return RestoreCurrencyCase.NotInBackup(current)
+    return if (backup == current) RestoreCurrencyCase.Same(current) else RestoreCurrencyCase.Different(backup, current)
+}

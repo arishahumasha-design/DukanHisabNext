@@ -149,6 +149,7 @@ the keys in this order; a reader must not depend on the order.
 | `dbSha256` | yes | SHA-256 of the database entry, 64 lowercase hex characters. |
 | `encryption` | no | `none` (the default). Any other value: refused as too new. |
 | `count.<table>` | yes, one per table | The number of rows of each table (all tables except `room_master_table`, `android_metadata` and `sqlite_*`). |
+| `displayCurrency` | no (added later, still format version 1) | The currency the app **showed** when the backup was made: a code of 3 to 8 capital letters, for example `BDT` or `INR`. Display only: every amount in the database is the same number whatever the currency, nothing is converted. Missing (older backups) or not a plausible code (anything else): ignored, the restore goes on and the app keeps its own currency. A code the reading app does not know: ignored the same way. On restore the Android app shows it and, when it differs from the current one, asks which currency to show afterwards. The app language is never stored. |
 
 Example:
 
@@ -175,7 +176,12 @@ count.sale_items=180
 count.sales=96
 count.shop_profile=1
 count.stock_movements=240
+displayCurrency=BDT
 ```
+
+Older readers ignore keys they do not know (a Java-properties reader only asks for the keys above), so adding
+`displayCurrency` kept the format version at 1: an older app restores such a backup exactly as before, and this app
+restores an older backup (without the key) exactly as before.
 
 ### How the Android app checks a backup before restoring
 

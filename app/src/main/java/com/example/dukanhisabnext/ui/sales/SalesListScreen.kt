@@ -1,6 +1,6 @@
 package com.example.dukanhisabnext.ui.sales
 
-import com.example.dukanhisabnext.util.withCurrency
+import com.example.dukanhisabnext.util.quantityTextWithCurrency
 import com.example.dukanhisabnext.ui.components.LoadingIndicator
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -155,7 +155,7 @@ fun SalesListScreen(
                 Text(
                     text = salesSummaryLine(
                         current.summary,
-                        summaryText = { count, total -> resources.getQuantityString(R.plurals.sales_summary, current.summary.count, count, total).withCurrency() },
+                        summaryText = { count, total -> resources.quantityTextWithCurrency(R.plurals.sales_summary, current.summary.count, count, total) },
                         excludedText = { count -> excludedTemplate.replace("{count}", count) }
                     ),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),

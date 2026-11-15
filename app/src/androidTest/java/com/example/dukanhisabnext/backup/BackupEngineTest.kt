@@ -72,11 +72,12 @@ class BackupEngineTest {
     private fun engine(
         limits: BackupLimits = BackupLimits(),
         space: (File) -> Long = { it.usableSpace },
-        fault: (BackupStep) -> Unit = {}
+        fault: (BackupStep) -> Unit = {},
+        currency: String? = null
     ) = BackupEngine(
         context = context, getLive = ::openLive, closeLive = ::closeLive,
         appVersionCode = 5, appVersionName = "test", liveDbName = liveName, workRoot = workRoot,
-        clock = { now }, limits = limits, usableSpace = space, fault = fault
+        clock = { now }, limits = limits, usableSpace = space, fault = fault, displayCurrency = { currency }
     )
 
     private fun cleanAll() {
@@ -245,6 +246,59 @@ class BackupEngineTest {
             dbSize = bytes.size.toLong(), dbSha256 = sha(bytes), counts = countsOf(db)
         )
         return zipOf(name, MANIFEST_ENTRY to writeManifest(manifest).toByteArray(), DATABASE_ENTRY to bytes)
+    }
+
+    // ---- the display currency in the manifest (optional, format version stays 1) ----
+
+    @Test
+    fun aNewBackupCarriesTheCurrencyAndRestoresTheSameData() = runBlocking {
+        fillA()
+        val a = snapshot()
+        val result = engine(currency = "INR").createBackup() as CreateResult.Created
+        assertEquals("INR", result.manifest.displayCurrency)
+        val text = String(entriesOf(result.zip).getValue(MANIFEST_ENTRY), Charsets.UTF_8)
+        assertTrue(text.contains("displayCurrency=INR\n"))
+        assertTrue(text.contains("formatVersion=1\n"))
+        val zip = File(files, "inr.zip").also { result.zip.copyTo(it, overwrite = true) }
+
+        changeToB()
+        val e = engine()
+        val ready = e.prepareRestore(zip) as PrepareResult.Ready
+        assertEquals("INR", ready.restore.manifest?.displayCurrency)
+        assertEquals(RestoreResult.Done(ready.restore.counts), e.restore(ready.restore))
+        assertEquals("the currency changed nothing in the data", a, snapshot())
+        assertLiveIsHealthy()
+    }
+
+    @Test
+    fun aBackupWithoutTheCurrencyRestoresExactlyAsBefore() = runBlocking {
+        fillA()
+        val a = snapshot()
+        val (zip, manifest) = backup() // engine() writes no currency, like an older app
+        assertNull(manifest.displayCurrency)
+        assertFalse(String(entriesOf(zip).getValue(MANIFEST_ENTRY), Charsets.UTF_8).contains("displayCurrency"))
+        changeToB()
+        val e = engine()
+        val ready = e.prepareRestore(zip) as PrepareResult.Ready
+        assertNull(ready.restore.manifest?.displayCurrency)
+        assertEquals(RestoreResult.Done(ready.restore.counts), e.restore(ready.restore))
+        assertEquals(a, snapshot())
+    }
+
+    @Test
+    fun aCorruptCurrencyInTheManifestIsIgnoredAndTheRestoreWorks() = runBlocking {
+        fillA()
+        val a = snapshot()
+        val (good, _) = backup()
+        val zip = rebuild(good, "bad-currency.zip", editManifest = { setKey(it, "displayCurrency", "r₹ ??") })
+        changeToB()
+        val e = engine()
+        val ready = e.prepareRestore(zip)
+        assertTrue("expected Ready, got $ready", ready is PrepareResult.Ready)
+        ready as PrepareResult.Ready
+        assertNull(ready.restore.manifest?.displayCurrency)
+        assertEquals(RestoreResult.Done(ready.restore.counts), e.restore(ready.restore))
+        assertEquals(a, snapshot())
     }
 
     // ---- refusals ----

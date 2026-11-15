@@ -83,7 +83,8 @@ class DokanHisabApp : Application() {
             getLive = { database },
             closeLive = { AppDatabase.closeInstance() },
             appVersionCode = PackageInfoCompat.getLongVersionCode(info),
-            appVersionName = info.versionName.orEmpty()
+            appVersionName = info.versionName.orEmpty(),
+            displayCurrency = { com.example.dukanhisabnext.util.CurrentCurrency.value.code }
         )
     }
 
@@ -105,6 +106,8 @@ class DokanHisabApp : Application() {
             restartApp = ::restartProcess,
             // A restore or an undo replaced the data: the cart's product ids no longer fit.
             onDataReplaced = { cartStore.clear() },
+            // The user chose to show the currency the backup was made with (display only, no amount changes).
+            onCurrencyChosen = { code -> com.example.dukanhisabnext.util.AppCurrency.fromCode(code)?.let(displaySettings::chooseCurrency) },
             startup = startupNote(backupEngine.readRestoreResult(), startupRecovery, backupPrefs.restoreFailedNote)
         )
     }
