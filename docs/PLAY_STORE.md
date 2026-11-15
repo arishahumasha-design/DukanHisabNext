@@ -10,8 +10,8 @@ Placeholders you must fill yourself are written `<LIKE THIS>`.
 |---|---|
 | Category | **Business** (Apps, not Games) |
 | Free or paid | Free (no in-app purchases, no ads) |
-| Contact email (public on the store page) | `<CONTACT EMAIL>` |
-| Developer / owner name | `<OWNER NAME>` |
+| Contact email (public on the store page) | taqwatech.apps@gmail.com |
+| Developer / owner name | Md Ibrahim Howlader (Taqwa Tech Online Center) |
 | Privacy policy URL | `<URL where docs/privacy/index.html is hosted, e.g. https://USER.github.io/REPO/>` |
 | App access | **All functionality is available without login.** No account, no special instructions. |
 | Ads | **No** ads |

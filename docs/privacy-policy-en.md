@@ -1,8 +1,8 @@
 # Privacy Policy: Dokan Hisab
 
-Last updated: `<DATE>`
+Last updated: 15 November 2026
 App: **Dokan Hisab** (package `com.taqwatech.dokanhisab`)
-Owner: `<OWNER NAME>`    Contact: `<CONTACT EMAIL>`
+Owner: Md Ibrahim Howlader (Taqwa Tech Online Center)    Contact: taqwatech.apps@gmail.com
 
 ## In short
 
@@ -55,4 +55,4 @@ If this policy changes, the new version will be published at the same address wi
 
 ## Contact
 
-Questions: `<CONTACT EMAIL>`
+Questions: taqwatech.apps@gmail.com
