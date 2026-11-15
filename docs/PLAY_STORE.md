@@ -140,7 +140,7 @@ khata, expenses, reports, PDF, backup/restore, shops, settings). The Play pictur
 5. Copy `app\build\outputs\mapping\release\mapping.txt` to `C:\Users\Ibrahim\Keys\mapping\1.0.0-1\mapping.txt`.
 6. Play Console: create the app (default language Bengali, app, free), Testing, Closed testing, create release,
    upload the `.aab`, accept Play App Signing, paste the release notes, add testers (Gmail addresses or a Google
-   Group), send the tester text. Complete App content (sections 1, 6, 7, 8 above) and the store listing.
+   Group), send the tester text. Complete App content (sections 1, 6, 7, 8 above) and the store listing. Privacy policy URL: https://arishahumasha-design.github.io/dokanhisab-privacy/
 7. Personal developer accounts created after Nov 2023 must run a closed test with **at least 12 testers for 14 days**
    before applying for production; check the Console's current requirement.
 8. Every later upload needs a higher `versionCode` in `app/build.gradle.kts`.

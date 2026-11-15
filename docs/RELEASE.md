@@ -95,3 +95,9 @@ does not give the same file.
 - **Not debuggable in release** (checked with aapt and `run-as`, which refuses the release app).
 - **No logs:** the app code has no `Log`, `println` or `printStackTrace` calls, so no customer name,
   phone number or amount can reach the system log.
+
+## 6. Privacy policy address (for the Play Console)
+
+The privacy policy is the page `docs/privacy/index.html`, hosted with GitHub Pages at
+https://arishahumasha-design.github.io/dokanhisab-privacy/
+Enter exactly this address under Play Console, App content, Privacy policy (see `docs/PLAY_STORE.md`).
