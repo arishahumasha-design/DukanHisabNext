@@ -34,24 +34,42 @@ import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.messageRes
 
 /**
- * "দোকানের তথ্য": the shop's own details, printed at the top of every receipt.
- * Only the shop name is required; the mobile is optional (and checked if typed).
+ * "দোকানের তথ্য": a shop's own details, printed at the top of every receipt. The same form makes a new shop
+ * ([target] New, the owner name and mobile pre-filled from the open shop) and edits any shop.
+ * Only the shop name is required (unique among the shops); the mobile is optional (and checked if typed).
  */
 @Composable
 fun ShopScreen(
     onBack: () -> Unit,
     onSaved: () -> Unit = {},
-    viewModel: ShopViewModel = appViewModel { app, _ -> ShopViewModel(app.shopRepository) }
+    target: ShopFormTarget? = null,
+    onCreated: (Int) -> Unit = {},
+    viewModel: ShopViewModel = appViewModel { app, _ ->
+        ShopViewModel(
+            manager = app.shopManager,
+            target = target ?: ShopFormTarget.Existing(app.currentShop.id),
+            openShopId = app.currentShop.id,
+            readOpenProfile = { app.shopRepository.get() }
+        )
+    }
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // After a successful save the app goes back to where it came from (Settings), which then
-    // shows the "saved" message and the updated shop button.
+    // After a successful save the app goes back to where it came from, which then shows the "saved" message
+    // and the updated shop button (or, for a new shop, offers to open it).
     LaunchedEffect(state.saved) {
         if (state.saved) onSaved()
     }
+    LaunchedEffect(state.createdId) {
+        state.createdId?.let(onCreated)
+    }
+    val title = when (target) {
+        ShopFormTarget.New -> stringResource(R.string.title_new_shop)
+        is ShopFormTarget.Existing -> stringResource(R.string.title_edit_shop)
+        null -> stringResource(R.string.title_shop)
+    }
 
-    SubScreenScaffold(title = stringResource(R.string.title_shop), onBack = onBack) { padding ->
+    SubScreenScaffold(title = title, onBack = onBack) { padding ->
         // The Save button is pinned above the keyboard (FormWithSaveBar); the fields scroll.
         FormWithSaveBar(
             padding = padding,
@@ -92,6 +110,13 @@ fun ShopScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(stringResource(R.string.field_address)) }
             )
+
+            if (state.tooMany) {
+                Text(
+                    stringResource(R.string.shop_limit_reached, com.example.dukanhisabnext.util.localDigits(com.example.dukanhisabnext.shop.MAX_SHOPS.toString())),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
 
             // A clear "saved" message. It goes away as soon as something is edited again.
             if (state.saved) {

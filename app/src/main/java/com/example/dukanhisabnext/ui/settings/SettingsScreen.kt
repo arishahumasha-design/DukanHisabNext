@@ -73,6 +73,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onEditOwner: () -> Unit,
     onOpenShop: () -> Unit,
+    /** The shop list (several shops): "দোকান পরিবর্তন করুন". */
+    onOpenShops: () -> Unit = onOpenShop,
     onOpenBackup: () -> Unit,
     shopSavedMessage: Boolean,
     viewModel: SettingsViewModel = appViewModel { app, _ -> SettingsViewModel(app.shopRepository) }
@@ -99,7 +101,7 @@ fun SettingsScreen(
                 LanguageCard()
                 CurrencyCard()
                 BackupRow(onClick = onOpenBackup)
-                ShopButton(shopName = current.shopName, onClick = onOpenShop)
+                ShopButton(shopName = current.shopName, onAdd = onOpenShop, onChange = onOpenShops)
             }
         }
     }
@@ -205,19 +207,20 @@ private fun ShopNameCard(shopName: String?) {
 
 /**
  * The shop button. No shop name yet: "দোকান যুক্ত করুন" (the main button). A shop exists: "দোকান
- * পরিবর্তন করুন" as a quiet outlined button. Both open "দোকানের তথ্য".
+ * পরিবর্তন করুন" as a quiet outlined button: it opens the shop list (open another shop, make a new one).
+ * "Add shop" fills in the open shop's own details ("দোকানের তথ্য").
  */
 @Composable
-private fun ShopButton(shopName: String?, onClick: () -> Unit) {
+private fun ShopButton(shopName: String?, onAdd: () -> Unit, onChange: () -> Unit) {
     when (shopButtonKind(shopName)) {
         ShopButtonKind.ADD -> PrimaryButton(
             text = stringResource(R.string.btn_add_shop),
-            onClick = onClick,
+            onClick = onAdd,
             modifier = Modifier.fillMaxWidth()
         )
         ShopButtonKind.CHANGE -> SecondaryButton(
             text = stringResource(R.string.btn_change_shop),
-            onClick = onClick,
+            onClick = onChange,
             modifier = Modifier.fillMaxWidth()
         )
     }

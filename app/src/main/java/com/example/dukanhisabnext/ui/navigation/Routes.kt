@@ -31,6 +31,11 @@ object Routes {
     const val CONTACT_RECEIPT = "contact_receipt/{saleId}"
     const val OWNER = "owner_info"
     const val SHOP = "shop_profile"
+    // ---- several shops: the list, a new shop, editing any shop ----
+    const val SHOPS = "shops"
+    const val SHOP_NEW = "shop_new"
+    const val SHOP_EDIT = "shop_edit/{shopId}"
+    fun shopEdit(shopId: Int) = "shop_edit/$shopId"
 
     // ---- Sell tab: screen A (picker) and screen B (cart) ----
     const val SELL = "sell"
@@ -87,7 +92,7 @@ object Routes {
     fun hidesBottomBar(route: String?): Boolean =
         route == PRODUCT_EDIT || route == STOCK_ADJUST || route == CUSTOMER_EDIT ||
             route == CART || route == PAYMENT || route == DUE || route == SALE_ADD_CUSTOMER ||
-            route == SHOP || route == OWNER || route == LEDGER_ENTRY ||
+            route == SHOP || route == SHOP_NEW || route == SHOP_EDIT || route == OWNER || route == LEDGER_ENTRY ||
             route == KHATA_ADD_CUSTOMER || route == CONTACT_EDIT || route == CONTACT_ENTRY ||
             route == EXPENSE_FORM
 }

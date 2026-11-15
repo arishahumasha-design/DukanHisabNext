@@ -22,6 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.example.dukanhisabnext.ui.components.pluralStringResource
 import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -158,6 +161,8 @@ fun HomeScreen(
     onOpen: (DashboardTarget) -> Unit,
     onOpenBackup: () -> Unit,
     onNewSale: () -> Unit,
+    /** The open-shop pill: the shop list. */
+    onOpenShops: () -> Unit = {},
     onReceiveMoney: () -> Unit,
     onNewExpense: () -> Unit,
     onNewProduct: () -> Unit,
@@ -200,15 +205,19 @@ fun HomeScreen(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
-        // The small top line: the shop's name (or the page name while there is none) and today's date.
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = shopName ?: stringResource(R.string.home_title),
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+        // The top line: WHICH SHOP is open (so nothing is recorded in the wrong shop; a tap opens the shop list)
+        // and today's date.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            OpenShopPill(
+                name = shopName ?: openShopFallbackName(),
+                onClick = onOpenShops,
+                modifier = Modifier.weight(1f, fill = false)
             )
+            Spacer(Modifier.width(Spacing.m))
             Spacer(Modifier.width(Spacing.m))
             Text(todayText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -300,3 +309,45 @@ fun HomeScreen(
         }
     }
 }
+
+/** The open shop's name when it has none yet: "দোকান ১". */
+@Composable
+private fun openShopFallbackName(): String {
+    val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as com.example.dukanhisabnext.DokanHisabApp
+    return stringResource(R.string.shop_unnamed, com.example.dukanhisabnext.util.localDigits(app.currentShop.id.toString()))
+}
+
+/** A green pill with the shop icon and the open shop's name (one line, cut with "…"); tapping opens the shop list. */
+@Composable
+private fun OpenShopPill(name: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val description = stringResource(R.string.home_shop_open, name)
+    androidx.compose.material3.Surface(
+        onClick = onClick,
+        shape = com.example.dukanhisabnext.ui.theme.PillShape,
+        color = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = modifier.androidx_semantics(description)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = Spacing.m, vertical = Spacing.s),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            androidx.compose.material3.Icon(
+                androidx.compose.ui.res.painterResource(R.drawable.ic_shop),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(Spacing.s))
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+private fun Modifier.androidx_semantics(description: String): Modifier =
+    this.semantics(mergeDescendants = true) { contentDescription = description }

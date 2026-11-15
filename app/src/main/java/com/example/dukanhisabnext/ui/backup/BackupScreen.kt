@@ -86,7 +86,7 @@ private enum class Ask { NONE, SAVE_WARNING, SHARE_WARNING, UNDO }
  * are off, and the manager refuses too). Cancelling a picker is not an error.
  */
 @Composable
-fun BackupScreen(onBack: () -> Unit) {
+fun BackupScreen(onBack: () -> Unit, restoreOnly: Boolean = false) {
     val context = LocalContext.current
     val manager = (context.applicationContext as DokanHisabApp).backupManager
     val state by manager.state.collectAsStateWithLifecycle()
@@ -187,7 +187,8 @@ fun BackupScreen(onBack: () -> Unit) {
                 }
             }
 
-            // ---- make a backup ----
+            // ---- make a backup (not for a shop that cannot be opened: only a restore helps there) ----
+            if (!restoreOnly) {
             PrimaryButton(
                 text = stringResource(R.string.btn_backup_save),
                 onClick = { ask = Ask.SAVE_WARNING },
@@ -201,6 +202,7 @@ fun BackupScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             )
             InfoCard(text = stringResource(R.string.backup_privacy_warning), variant = PillVariant.Due)
+            }
 
             // ---- restore ----
             SecondaryButton(

@@ -725,4 +725,43 @@
     <string name="restore_into_shop">Restore into: %1$s. The current data of this shop will be replaced.</string>
     <string name="restore_other_shop_warning">Careful: this backup was made by the shop “%1$s”, not by “%2$s”.</string>
     <string name="restore_no_shop_name">This backup does not say which shop it is from (it was made before several shops were possible).</string>
+
+    <!-- Several shops -->
+    <string name="title_shops">Choose shop</string>
+    <string name="shop_open_now">Open now</string>
+    <string name="shop_cannot_open">Can\'t be opened</string>
+    <string name="btn_open_shop">Open this shop</string>
+    <string name="btn_edit_shop">Edit</string>
+    <string name="btn_delete_shop">Delete</string>
+    <string name="btn_new_shop">New shop</string>
+    <string name="shop_limit_reached">You can have at most %1$s shops.</string>
+    <string name="shop_unnamed">Shop %1$s</string>
+    <string name="shop_list_hint">Each shop has its own products, stock, sales, customers, dues, expenses and reports. Nothing is shared.</string>
+    <string name="title_new_shop">New shop</string>
+    <string name="title_edit_shop">Edit shop</string>
+    <string name="shop_made_title">Shop created</string>
+    <string name="shop_made_body">“%1$s” is ready. Open it now?</string>
+    <string name="btn_open_now">Open now</string>
+    <string name="switch_confirm_title">Open “%1$s”?</string>
+    <string name="switch_confirm_body">The app restarts and shows this shop\'s Home. A sale in progress stays with its own shop.</string>
+    <string name="switch_opening">Opening “%1$s”…</string>
+    <string name="switch_blocked_backup">A backup or restore is running. Try again when it has finished.</string>
+    <string name="switch_blocked_saving">Something is being saved right now. Try again in a moment.</string>
+    <string name="delete_shop_title">Delete “%1$s”?</string>
+    <string name="delete_shop_body">All products, stock, sales, customers, dues, expenses and reports of this shop will be deleted for good. This cannot be undone.</string>
+    <string name="btn_backup_shop_first">Back up this shop first</string>
+    <string name="delete_backup_done">Backup saved.</string>
+    <string name="delete_backup_failed">The backup could not be made. Try again.</string>
+    <string name="delete_no_backup">I do not want a backup</string>
+    <string name="delete_type_name">To confirm, type the shop\'s name: %1$s</string>
+    <string name="btn_delete_forever">Delete for good</string>
+    <string name="shop_deleted">The shop was deleted.</string>
+    <string name="shop_problem_title">“%1$s” can\'t be opened</string>
+    <string name="shop_problem_missing">This shop\'s data file cannot be found. Nothing was deleted or made new.</string>
+    <string name="shop_problem_damaged">This shop\'s data file is damaged or cannot be read. It has been left as it is.</string>
+    <string name="shop_problem_hint">Restore a backup into this shop, or open another shop. Once another shop is open, this one can be deleted from the list.</string>
+    <string name="btn_restore_into_shop">Restore a backup into this shop</string>
+    <string name="btn_other_shops">Other shops</string>
+    <string name="home_shop_open">Open shop: %1$s</string>
+    <string name="settings_open_shop">Shop open now</string>
 </resources>

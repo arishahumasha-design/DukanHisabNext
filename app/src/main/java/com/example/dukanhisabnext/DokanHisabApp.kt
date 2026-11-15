@@ -147,6 +147,48 @@ class DokanHisabApp : Application() {
         return if (ok) ShopHealth.OK else ShopHealth.CANNOT_OPEN
     }
 
+    /**
+     * Making, editing, switching and deleting shops. A switch is refused while a backup/restore runs or a sale or
+     * payment is being saved; otherwise the choice is saved, the open database closed and the app restarted (it
+     * then opens the chosen shop and lands on Home).
+     */
+    val shopManager: com.example.dukanhisabnext.shop.ShopManager by lazy {
+        com.example.dukanhisabnext.shop.ShopManager(
+            context = this,
+            store = shopStore,
+            backupBusy = { backupEngine.isBusy || !com.example.dukanhisabnext.backup.canStartJob(backupManager.state.value) },
+            saving = { shopHealth == ShopHealth.OK && (saleRepository.isSaving || ledgerRepository.isSaving) },
+            restart = {
+                AppDatabase.closeInstance()
+                restartProcess()
+            },
+            saveOpenShopProfile = { profile -> shopRepository.save(profile) }
+        )
+    }
+
+    /**
+     * A backup engine for shop [id] that is NOT open (the delete dialog's "Back up this shop first"): its database
+     * is opened only for the backup. Call the returned close function afterwards.
+     */
+    fun engineForShop(id: Int): Pair<BackupEngine, () -> Unit> {
+        val paths = shopStore.paths(id)
+        var db: AppDatabase? = null
+        val info = packageManager.getPackageInfo(packageName, 0)
+        val engine = BackupEngine(
+            context = this,
+            getLive = { db ?: AppDatabase.open(this, paths.database).also { db = it } },
+            closeLive = { db?.close(); db = null },
+            appVersionCode = PackageInfoCompat.getLongVersionCode(info),
+            appVersionName = info.versionName.orEmpty(),
+            displayCurrency = { com.example.dukanhisabnext.util.CurrentCurrency.value.code },
+            liveDb = paths.database,
+            workRoot = paths.workRoot,
+            shopId = id,
+            shopName = { shopStore.load().find(id)?.name?.ifBlank { null } }
+        )
+        return engine to { db?.close(); db = null }
+    }
+
     /** The open shop's name as it is now (an edit in this session changes it; read from the registry). */
     fun currentShopName(): String? = try {
         shopStore.load().find(currentShop.id)?.name?.ifBlank { null }
@@ -206,6 +248,8 @@ class DokanHisabApp : Application() {
 
     /** The row counts the restore summary and the Home reminder use. */
     private suspend fun countShopRows(): Map<String, Long> = withContext(Dispatchers.IO) {
+        // A shop that cannot be opened has nothing to count (and its database must not be opened, or made).
+        if (shopHealth != ShopHealth.OK) return@withContext SUMMARY_TABLES.associateWith { 0L }
         val db = database.openHelper.readableDatabase
         SUMMARY_TABLES.associateWith { table ->
             db.query("SELECT COUNT(*) FROM `$table`").use { c -> c.moveToFirst(); c.getLong(0) }

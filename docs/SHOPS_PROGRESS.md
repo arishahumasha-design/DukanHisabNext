@@ -33,10 +33,15 @@ on Home.
    optional manifest field `shopName`, the restore dialog names the shop it replaces and warns when the backup is
    from a differently named shop (neutral note for older backups). PC test `BackupShopNameTest`; phone test
    `ShopIsolationPhoneTest` checks the name and the manifest.
+6. UI: shop list (`ui/shop/ShopListScreen.kt`: cards, Open with confirm + cover + restart, Edit, Delete with
+   "Back up this shop first" as the focused main action, the tick "I do not want a backup" and the typed name),
+   new/edit shop form (`ShopScreen` with `ShopFormTarget`; a new shop is pre-filled with the open shop's owner),
+   "open now?" after making a shop, open-shop pill on Home (tap opens the list), Settings "Change shop" opens
+   the list, `ShopProblemFrame` instead of the app when the open shop's file is gone or unreadable (restore into
+   it, or other shops). Strings in Bengali and English. Checked on the emulator: edit, new, switch, Home name.
 
 ## Next
 
-6. UI: shop list, new/edit, delete dialog, shop name on Home and in Settings.
 7. Docs, full test runs, screenshots.
 
 ## Open questions

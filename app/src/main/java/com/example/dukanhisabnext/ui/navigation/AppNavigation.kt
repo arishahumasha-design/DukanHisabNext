@@ -57,8 +57,15 @@ import com.example.dukanhisabnext.ui.backup.BackupScreen
 import com.example.dukanhisabnext.ui.settings.OwnerScreen
 import com.example.dukanhisabnext.ui.settings.SettingsScreen
 import com.example.dukanhisabnext.ui.shop.ShopScreen
+import com.example.dukanhisabnext.ui.shop.ShopFormTarget
+import com.example.dukanhisabnext.ui.shop.ShopListScreen
+import com.example.dukanhisabnext.ui.shop.ShopProblemFrame
+import com.example.dukanhisabnext.shop.ShopHealth
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.dukanhisabnext.ui.sell.SellScreen
+
+/** A note passed back from the new-shop form to the shop list: this shop was just made (its id). */
+private const val SHOP_CREATED_KEY = "shop_created"
 
 /** A note passed back from "দোকানের তথ্য" to Settings: the shop was just saved. */
 private const val SHOP_SAVED_KEY = "shop_saved"
@@ -76,8 +83,10 @@ private const val NO_CUSTOMER = -1L
 @Composable
 fun AppNavigation() {
     // The whole app, with two full-screen layers above it for restore (see BackupOverlays).
+    val app = LocalContext.current.applicationContext as DokanHisabApp
     Box(modifier = Modifier.fillMaxSize()) {
-        AppFrame()
+        // The open shop's database is gone or cannot be read: nothing may open it (it would be made new, empty).
+        if (app.shopHealth != ShopHealth.OK) ShopProblemFrame() else AppFrame()
         BackupOverlays()
     }
 }
@@ -137,6 +146,7 @@ private fun AppFrame() {
                 // the product list with the "কম স্টক" chip on, the Khata tab as a tab).
                 HomeScreen(
                     onOpenBackup = { navController.navigate(Routes.BACKUP) },
+                    onOpenShops = { navController.navigate(Routes.SHOPS) },
                     // The four quick actions only open screens that already exist.
                     onNewSale = { navController.openTab(Screen.Sell) },
                     onReceiveMoney = { navController.openTab(Screen.Khata) },
@@ -304,6 +314,7 @@ private fun AppFrame() {
                             navController.navigate(Routes.SHOP)
                         },
                         onOpenBackup = { navController.navigate(Routes.BACKUP) },
+                        onOpenShops = { navController.navigate(Routes.SHOPS) },
                         shopSavedMessage = shopSaved
                     )
                 }
@@ -321,6 +332,38 @@ private fun AppFrame() {
                             navController.previousBackStackEntry?.savedStateHandle?.set(SHOP_SAVED_KEY, true)
                             navController.popBackStack()
                         }
+                    )
+                }
+                composable(Routes.SHOPS) { entry ->
+                    // A shop the form just made: the list offers to open it.
+                    val created by entry.savedStateHandle.getStateFlow(SHOP_CREATED_KEY, 0).collectAsStateWithLifecycle()
+                    ShopListScreen(
+                        onBack = { navController.popBackStack() },
+                        onNewShop = { navController.navigate(Routes.SHOP_NEW) },
+                        onEditShop = { id -> navController.navigate(Routes.shopEdit(id)) },
+                        createdId = created.takeIf { it > 0 },
+                        onCreatedHandled = { entry.savedStateHandle[SHOP_CREATED_KEY] = 0 }
+                    )
+                }
+                composable(Routes.SHOP_NEW) {
+                    ShopScreen(
+                        onBack = { navController.popBackStack() },
+                        target = ShopFormTarget.New,
+                        onCreated = { id ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(SHOP_CREATED_KEY, id)
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(
+                    Routes.SHOP_EDIT,
+                    arguments = listOf(navArgument("shopId") { type = NavType.IntType })
+                ) { entry ->
+                    val shopId = entry.arguments?.getInt("shopId") ?: 0
+                    ShopScreen(
+                        onBack = { navController.popBackStack() },
+                        target = ShopFormTarget.Existing(shopId),
+                        onSaved = { navController.popBackStack() }
                     )
                 }
                 composable(Routes.EXPENSES) { entry ->
