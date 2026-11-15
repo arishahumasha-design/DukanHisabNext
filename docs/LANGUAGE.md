@@ -42,9 +42,9 @@ Both are chosen in **Settings** ("Language / ভাষা" and "Currency / ম�
 ## Receipts and PDFs
 
 Receipts, the shared receipt text, and the four PDF types (due list, product list, report, statement)
-follow the language: the words, digits, dates and the "am/pm" time. The PDF keeps **Noto Sans Bengali**
-(regular and semibold); Latin letters come from the system font through the font's fallback, so user-entered
-Bengali names (customers, products, shop) still render in an English PDF. File names stay ASCII.
+follow the language: the words, digits, dates and the "am/pm" time. The PDF draws with the same typeface as the screens (see FONTS.md): Inter for Latin letters and digits,
+Noto Sans Bengali for Bengali (regular and semibold), so user-entered Bengali names (customers, products, shop)
+still render in an English PDF. File names stay ASCII.
 
 ## Currency (display only)
 

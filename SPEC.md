@@ -14,8 +14,8 @@ before guessing.
 1. **Offline-first.** Everything works with no internet. Data lives in a local
    Room (SQLite) database on the phone.
 2. **Bengali UI.** All user-visible text is Bengali, defined in
-   `res/values/strings.xml`. No hardcoded strings in Kotlin code. Use Noto Sans
-   Bengali. Show Bengali digits in the UI (stored values stay normal numbers).
+   `res/values/strings.xml`. No hardcoded strings in Kotlin code. Fonts: Noto Sans
+   Bengali for Bengali, Inter for Latin letters and digits (see "Typography" below). Show Bengali digits in the UI (stored values stay normal numbers).
 3. **Money is never a Double.** Store money as `Long` in **paisa**
    (1 taka = 100 paisa). Format to taka only for display. This avoids rounding
    bugs like totals that do not match.
@@ -898,10 +898,23 @@ Look and wording (M9 group C):
 - Icons are only from the built-in Material set (`material-icons-core`, no extended library):
   Home, ShoppingCart, Person, Menu, Add, Warning, CheckCircle, Search, Share, Settings, List,
   AccountBox, Call, DateRange, ExitToApp and similar. The More list shows one in green per row.
-- Launcher icon (`res/drawable/ic_launcher_*.xml`, adaptive, all vector): a green background, a
-  white notebook with binder holes and the taka sign ৳ cut out of its cover (the outline of the
-  sign is taken from the app's own Noto Sans Bengali font), and a monochrome layer for themed
-  icons. The name under the icon stays "দোকান হিসাব". The old robot image files are gone.
+- Launcher icon and splash mark (`res/drawable/ic_launcher_*.xml`, adaptive, all vector): a solid #0F7B4F
+  background layer; a foreground of a white shop awning (two pale stripes, a gold scalloped valance) over a
+  white shop body with a green check mark, no letters and no currency sign, inside the 66dp safe zone; and a
+  monochrome layer for themed icons (awning with cut-out stripes, valance, body outline and check mark). The
+  Android 12+ splash screen shows the same foreground on the same green. minSdk is 26, so the adaptive icon in
+  `mipmap-anydpi-v26` serves every phone and its vectors scale to every density (no per-density PNGs). The
+  512x512 Google Play icon is `docs/logo/play-store-512.png`, drawn from `docs/logo/shop-logo.svg` (the
+  source of the vectors; geometry in `docs/logo/README.md`). The name under the icon stays "দোকান হিসাব".
+- Typography (`ui/theme/Type.kt`, `ui/theme/AppTypefaces.kt`): **Inter** (Regular, Medium, SemiBold, Bold; Latin
+  subset; OFL 1.1) draws Latin letters and digits and **Noto Sans Bengali** draws Bengali, as one typeface with
+  a fallback chain (Bengali screens: Noto first, Inter for Latin; English screens: Inter first, Noto for
+  Bengali), so mixed text is right in both languages. Tabular figures ("tnum") everywhere so amounts line up.
+  The PDFs draw with the same typeface. Details, source and license: `docs/FONTS.md`.
+- Language/currency switch: only when the language or the currency is changed, the screen cross-fades to a plain
+  background with a small spinner (90 ms out, spinner until 400 ms later, 100 ms in: 0.6 s in all, at most), the
+  change is applied behind it, and the new screen fades in. Data is untouched; with the system "remove animations"
+  setting the change is immediate (`ui/components/SwitchTransition.kt`).
 
 Bottom navigation: **Home**, **Sell** (new sale), **Khata** (the tab is "খাতা", the screen heading "বাকির খাতা"; no other name),
 **More** (products, contacts, sales list, expenses, reports, settings).
@@ -1114,8 +1127,8 @@ a confirm dialog and then the system share sheet:
 Layout: A4 portrait, 16 mm margins. Every page has the shop name, address and mobile, the document title,
 the period (or "তৈরির তারিখ", Dhaka time, Bengali digits) and a green line; the footer is "পাতা ১ / ৩".
 Tables repeat their header row on every page, use thin row separators, right-aligned amounts, a bold
-total row, and wrap a long name onto a second line (then "…"). 1,000+ rows work. The text is Noto Sans
-Bengali (regular and semibold from the one variable font in `res/font`), drawn with `PdfDocument`.
+total row, and wrap a long name onto a second line (then "…"). 1,000+ rows work. The text is Inter for Latin and Noto Sans
+Bengali for Bengali (regular and semibold, the same typeface as the screens, tabular figures), drawn with `PdfDocument`.
 Where things go on a page is decided by pure functions (`pdf/PdfLayout.kt`, `pdf/PdfDocumentLayout.kt`,
 `pdf/PdfBuilders.kt`) with PC tests; `PdfWriter.kt` only draws.
 
@@ -1160,7 +1173,7 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
 - **Digits and dates:** Bengali digits and "১৪/১১/২০২৬" / "১৪ নভেম্বর ২০২৬" / "রাত ১১:৪৫" in Bengali;
   Western digits and "14 Nov 2026" / "11:45 pm" in English. Typed input accepts both digit styles in both
   languages. Receipts, reports, Khata, dashboards, pickers and the four PDFs follow the language; the PDF
-  keeps Noto Sans Bengali, so Bengali names render in an English PDF.
+  uses the same two fonts as the screens (Inter first in English), so Bengali names still render in an English PDF.
 - **Currency (display only):** 16 currencies, default BDT ৳. Only the symbol and the grouping change
   (1,00,000 for ৳ ₹ Rs; 100,000 for the others); amounts are never converted and the database is not
   touched. A warning dialog appears when records exist. Not part of the backup.
