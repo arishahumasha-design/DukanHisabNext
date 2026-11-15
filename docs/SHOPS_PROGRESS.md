@@ -26,10 +26,12 @@ on Home.
    restore opened the prepared copy by name, which only worked for the top databases folder.
    Phone test `ShopIsolationPhoneTest` (sale in A not in B, carts per shop, backup A restored into B, crash
    recovery per shop).
+4. `shop/ShopManager.kt`: make a shop (own database + profile), edit any shop (a closed one is opened briefly),
+   switch (refused while a backup/restore runs or something is being saved; otherwise the choice is saved and
+   the app restarts), delete (not open, not last). PC test `SwitchRulesTest`, phone test `ShopManagerPhoneTest`.
 
 ## Next
 
-4. Switch (guarded, restart) and delete (crash-safe) with tests.
 5. Per-shop backup names, `shopName` in the manifest, restore warning.
 6. UI: shop list, new/edit, delete dialog, shop name on Home and in Settings.
 7. Docs, full test runs, screenshots.
