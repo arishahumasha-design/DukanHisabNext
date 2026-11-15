@@ -9,7 +9,13 @@ import com.example.dukanhisabnext.backup.BackupManager
 import com.example.dukanhisabnext.backup.BackupPrefs
 import com.example.dukanhisabnext.backup.SUMMARY_TABLES
 import com.example.dukanhisabnext.backup.startupNote
-import com.example.dukanhisabnext.backup.BackupPaths
+import com.example.dukanhisabnext.shop.ShopEntry
+import com.example.dukanhisabnext.shop.ShopHealth
+import com.example.dukanhisabnext.shop.ShopPaths
+import com.example.dukanhisabnext.shop.ShopRegistry
+import com.example.dukanhisabnext.shop.ShopStore
+import com.example.dukanhisabnext.shop.markedOpened
+import com.example.dukanhisabnext.shop.renamed
 import com.example.dukanhisabnext.backup.RecoveryOutcome
 import com.example.dukanhisabnext.data.AppDatabase
 import com.example.dukanhisabnext.data.CustomerRepository
@@ -52,17 +58,33 @@ class DokanHisabApp : Application() {
         com.example.dukanhisabnext.expense.DefaultCategoryNames.byLanguage = com.example.dukanhisabnext.util.AppLanguage.entries.associateWith { language ->
             withLanguage(language).resources.getStringArray(R.array.expense_default_categories).toList()
         }
-        startupRecovery = try {
-            BackupEngine.recover(BackupPaths(getDatabasePath(AppDatabase.FILE_NAME), filesDir))
+        // The shops: finish a delete that a crash stopped, then the open shop (see shop/ShopStore.kt).
+        shopRegistry = try {
+            shopStore.finishPendingDeletes()
         } catch (e: java.io.IOException) {
-            // Files could not be moved back: leave the marker so the next start tries again.
-            RecoveryOutcome.NOTHING
+            shopStore.load()
         }
-        // A restore finished while the app was closed: the saved cart belongs to the old data
-        // (product ids differ), so it goes before anything reads it.
-        if (startupRecovery == RecoveryOutcome.FINISHED) cartStorage.delete()
+        currentShop = shopRegistry.selected
+        shopPaths = shopStore.paths(currentShop.id)
+        // Each shop has its own restore marker: a restore stopped by a crash is repaired in that shop only.
+        for (shop in shopRegistry.active) {
+            val paths = shopStore.paths(shop.id)
+            val outcome = try {
+                BackupEngine.recover(paths.backupPaths)
+            } catch (e: java.io.IOException) {
+                // Files could not be moved back: leave the marker so the next start tries again.
+                RecoveryOutcome.NOTHING
+            }
+            // A restore finished while the app was closed: that shop's saved cart belongs to the old data
+            // (product ids differ), so it goes before anything reads it.
+            if (outcome == RecoveryOutcome.FINISHED) FileCartStorage(paths.cartFile).delete()
+            if (shop.id == currentShop.id) startupRecovery = outcome
+        }
+        shopHealth = checkOpenShop()
         // PDFs made earlier hold names and amounts: none stays on the phone after the app was closed.
         appScope.launch { com.example.dukanhisabnext.pdf.clearPdfFolder(cacheDir) }
+        // A shop that cannot be opened: nothing may touch its database (the shop list explains it).
+        if (shopHealth != ShopHealth.OK) return
         // The saved cart came back: take out what can no longer be sold (in the background).
         appScope.launch {
             cartStore.dropWhatCannotBeSold(
@@ -72,13 +94,66 @@ class DokanHisabApp : Application() {
         }
     }
 
+    /** The shops of this phone (registry, file layout). */
+    val shopStore: ShopStore by lazy {
+        ShopStore(getDatabasePath(AppDatabase.FILE_NAME).parentFile!!, filesDir, deletePrefs = { name -> deleteSharedPreferences(name) })
+    }
+
+    /** The registry as it was at start (it changes only through ShopStore; a switch restarts the app). */
+    lateinit var shopRegistry: ShopRegistry
+        private set
+
+    /** The open shop. Everything below (database, cart, journal, backup) belongs to it alone. */
+    lateinit var currentShop: ShopEntry
+        private set
+
+    lateinit var shopPaths: ShopPaths
+        private set
+
+    /** What the start-up check found about the open shop's database file. */
+    var shopHealth: ShopHealth = ShopHealth.OK
+        private set
+
+    /**
+     * Opens the open shop's database once at start (this runs the database conversions of an update) and checks
+     * it. A file that is gone, cannot be opened or is damaged is reported, never replaced or deleted.
+     * Also keeps the registry's copy of the shop name in step with the shop's own profile.
+     */
+    private fun checkOpenShop(): ShopHealth {
+        if (shopStore.fileHealth(currentShop) == ShopHealth.MISSING) return ShopHealth.MISSING
+        val ok = try {
+            val db = database.openHelper.writableDatabase
+            val check = db.query("PRAGMA quick_check").use { c -> if (c.moveToFirst()) c.getString(0) else null }
+            val profile = db.query("SELECT name, address FROM shop_profile WHERE id = 1").use { c ->
+                if (c.moveToFirst()) (c.getString(0) ?: "") to c.getString(1) else null
+            }
+            var registry = shopRegistry
+            if (!currentShop.opened) registry = registry.markedOpened(currentShop.id)
+            if (profile != null && profile.first.isNotBlank() &&
+                (profile.first != currentShop.name || profile.second?.ifBlank { null } != currentShop.address)
+            ) {
+                registry = registry.renamed(currentShop.id, profile.first, profile.second)
+            }
+            if (registry != shopRegistry) {
+                shopStore.save(registry)
+                shopRegistry = registry
+                currentShop = registry.selected
+            }
+            check == "ok"
+        } catch (e: Exception) {
+            false
+        }
+        if (!ok) AppDatabase.closeInstance()
+        return if (ok) ShopHealth.OK else ShopHealth.CANNOT_OPEN
+    }
+
     /** Small background work that belongs to the app, not to a screen. */
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** The sale in progress on the disk (app files, not the database and not the backup). */
-    private val cartStorage: CartStorage by lazy { FileCartStorage(File(filesDir, "cart/cart.json")) }
+    private val cartStorage: CartStorage by lazy { FileCartStorage(shopPaths.cartFile) }
 
-    val database: AppDatabase by lazy { AppDatabase.getInstance(this) }
+    val database: AppDatabase by lazy { AppDatabase.getInstance(this, shopPaths.database) }
 
     /** Backups and restores. Uses the same database file as the rest of the app. */
     val backupEngine: BackupEngine by lazy {
@@ -89,12 +164,14 @@ class DokanHisabApp : Application() {
             closeLive = { AppDatabase.closeInstance() },
             appVersionCode = PackageInfoCompat.getLongVersionCode(info),
             appVersionName = info.versionName.orEmpty(),
-            displayCurrency = { com.example.dukanhisabnext.util.CurrentCurrency.value.code }
+            displayCurrency = { com.example.dukanhisabnext.util.CurrentCurrency.value.code },
+            liveDb = shopPaths.database,
+            workRoot = shopPaths.workRoot
         )
     }
 
     /** The small settings file: when the last backup was written. */
-    val backupPrefs: BackupPrefs by lazy { BackupPrefs(this) }
+    val backupPrefs: BackupPrefs by lazy { BackupPrefs(this, shopPaths.backupPrefsName) }
 
     /**
      * Runs the backup and restore jobs for the screens (one at a time, outliving any screen). It also
@@ -147,7 +224,7 @@ class DokanHisabApp : Application() {
     // Its journal file remembers each cart's last save attempt, so a cart that comes back after
     // Android closed the app is never saved twice.
     val saleRepository: SaleRepository by lazy {
-        SaleRepository(database, journal = FileSaleDraftJournal(File(filesDir, "cart/sale-attempts.txt")))
+        SaleRepository(database, journal = FileSaleDraftJournal(shopPaths.journalFile))
     }
 
     // One shared LedgerRepository too, for the same reason (lock and double-tap memory).

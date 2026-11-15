@@ -9,8 +9,9 @@ import kotlinx.coroutines.flow.StateFlow
  * when the last backup was really written, and a one-time "the restore failed" note.
  * Android's automatic backup includes this file (see backup_rules.xml).
  */
-class BackupPrefs(context: Context) {
-    private val prefs = context.getSharedPreferences(BACKUP_PREFS_NAME, Context.MODE_PRIVATE)
+class BackupPrefs(context: Context, name: String = BACKUP_PREFS_NAME) {
+    // Each shop has its own file (ShopPaths.backupPrefsName): shop 1 keeps backup_prefs.xml.
+    private val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
     private val last = MutableStateFlow(readLast())
 

@@ -19,10 +19,16 @@ on Home.
    PC tests `ShopStoreTest`; phone test `LegacyShopPhoneTest` (the old database registered as shop 1 stays
    byte-identical and shows the same data when opened by path; v4 still converts). IsolatedContext accepts
    full database paths inside its folder.
+3. The app runs on the open shop: database (by full path, `AppDatabase.getInstance(context, file)`), cart,
+   journal, backup engine and backup settings come from `ShopPaths`; start-up recovery runs for every shop;
+   start-up health check (missing / cannot open / quick_check), registry name kept in step with the profile.
+   A damaged database file is never deleted any more (`KeepDamagedFileFactory`). Bug fixed on the way: the
+   restore opened the prepared copy by name, which only worked for the top databases folder.
+   Phone test `ShopIsolationPhoneTest` (sale in A not in B, carts per shop, backup A restored into B, crash
+   recovery per shop).
 
 ## Next
 
-3. The app runs on the open shop's files; start-up recovery for every shop; health check; isolation tests.
 4. Switch (guarded, restart) and delete (crash-safe) with tests.
 5. Per-shop backup names, `shopName` in the manifest, restore warning.
 6. UI: shop list, new/edit, delete dialog, shop name on Home and in Settings.

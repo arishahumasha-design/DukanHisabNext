@@ -127,6 +127,9 @@ class SaleRepository(
     /** Only one save runs at a time in this app (a lock, like a single door). */
     private val saveLock = Mutex()
 
+    /** True while a sale is being saved or cancelled (switching shops is refused meanwhile). */
+    val isSaving: Boolean get() = saveLock.isLocked
+
     /** Carts already saved, by draftId, so a double tap returns the same sale. Small and in memory. */
     private val savedDrafts = object : LinkedHashMap<String, SaleResult.Saved>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SaleResult.Saved>?) =

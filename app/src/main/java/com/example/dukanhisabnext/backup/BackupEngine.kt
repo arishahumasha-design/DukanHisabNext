@@ -103,9 +103,11 @@ class BackupEngine(
     private val usableSpace: (File) -> Long = { it.usableSpace },
     private val fault: (BackupStep) -> Unit = {},
     /** The code of the currency the app shows now, written into the manifest (display only; see BackupManifest.displayCurrency). */
-    private val displayCurrency: () -> String? = { null }
+    private val displayCurrency: () -> String? = { null },
+    /** The live database file; by default [liveDbName] in the app's databases folder. A shop passes its own file (ShopPaths). */
+    liveDb: File? = null
 ) {
-    val paths = BackupPaths(context.getDatabasePath(liveDbName), workRoot)
+    val paths = BackupPaths(liveDb ?: context.getDatabasePath(liveDbName), workRoot)
     private val lock = Mutex()
 
     /** True while a job runs (the screen disables its buttons; a second start is refused). */
@@ -352,7 +354,7 @@ class BackupEngine(
             db.delete()
         }
         val countsAfter = try {
-            val room = Room.databaseBuilder(context, AppDatabase::class.java, paths.prepared.name)
+            val room = Room.databaseBuilder(context, AppDatabase::class.java, paths.prepared.absolutePath) // by full path: a shop's database may live in databases/shops/
                 .addMigrations(*ALL_MIGRATIONS)
                 .build()
             try {

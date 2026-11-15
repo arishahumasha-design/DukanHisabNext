@@ -1,6 +1,10 @@
 package com.example.dukanhisabnext.data
 
 import android.content.Context
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
+import java.io.File
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -67,19 +71,25 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        /** Returns the single shared database, creating it the first time. */
-        fun getInstance(context: Context): AppDatabase =
+        /**
+         * The shared database of the open shop ([file], from ShopPaths), creating the instance the first time.
+         * One process has one open shop: switching shops restarts the app.
+         */
+        fun getInstance(context: Context, file: File): AppDatabase =
             INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    FILE_NAME
-                )
-                    // Turns an older database file into the current version, keeping all data.
-                    .addMigrations(*ALL_MIGRATIONS)
-                    .build()
-                    .also { INSTANCE = it }
+                INSTANCE ?: open(context, file).also { INSTANCE = it }
             }
+
+        /**
+         * A database of one shop's file (by its full path). Besides the shared instance this is used briefly for a
+         * shop that is not open (making a new shop, editing or backing up another shop); the caller closes it.
+         * Turns an older database file into the current version, keeping all data.
+         */
+        fun open(context: Context, file: File): AppDatabase =
+            Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, file.absolutePath)
+                .addMigrations(*ALL_MIGRATIONS)
+                .openHelperFactory(KeepDamagedFileFactory())
+                .build()
 
         /**
          * Closes the shared database so its files can be swapped by a restore. After this the app
@@ -92,5 +102,36 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE = null
             }
         }
+    }
+}
+
+/**
+ * Android's default reaction to a damaged database file is to DELETE it and start empty. A shop's records must
+ * never vanish like that: this factory keeps everything else of the normal behaviour but leaves a damaged file
+ * where it is. The app's start-up check then shows the shop as "cannot be opened" (restore a backup or remove it).
+ */
+class KeepDamagedFileFactory(
+    private val inner: SupportSQLiteOpenHelper.Factory = FrameworkSQLiteOpenHelperFactory()
+) : SupportSQLiteOpenHelper.Factory {
+    override fun create(configuration: SupportSQLiteOpenHelper.Configuration): SupportSQLiteOpenHelper {
+        val callback = configuration.callback
+        val keeping = object : SupportSQLiteOpenHelper.Callback(callback.version) {
+            override fun onConfigure(db: SupportSQLiteDatabase) = callback.onConfigure(db)
+            override fun onCreate(db: SupportSQLiteDatabase) = callback.onCreate(db)
+            override fun onUpgrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = callback.onUpgrade(db, oldVersion, newVersion)
+            override fun onDowngrade(db: SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) = callback.onDowngrade(db, oldVersion, newVersion)
+            override fun onOpen(db: SupportSQLiteDatabase) = callback.onOpen(db)
+            override fun onCorruption(db: SupportSQLiteDatabase) {
+                // Deliberately nothing: the file stays (see the class comment).
+            }
+        }
+        return inner.create(
+            SupportSQLiteOpenHelper.Configuration.builder(configuration.context)
+                .name(configuration.name)
+                .callback(keeping)
+                .noBackupDirectory(configuration.useNoBackupDirectory)
+                .allowDataLossOnRecovery(configuration.allowDataLossOnRecovery)
+                .build()
+        )
     }
 }

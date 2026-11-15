@@ -43,6 +43,9 @@ class LedgerRepository(
 
     private val saveLock = Mutex()
 
+    /** True while a payment or due is being saved (switching shops is refused meanwhile). */
+    val isSaving: Boolean get() = saveLock.isLocked
+
     /** Forms already saved, by form id, so a double tap returns the same entry. Small and in memory. */
     private val savedForms = object : LinkedHashMap<String, LedgerSaveResult.Saved>() {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, LedgerSaveResult.Saved>?) =
