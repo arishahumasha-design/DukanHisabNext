@@ -15,11 +15,13 @@ on Home.
 
 1. Registry model, rules and file format, file layout per shop (shop 1 keeps the old names), ASCII backup
    names (`shop/ShopRegistry.kt`, `shop/ShopPaths.kt`, PC tests `ShopRegistryTest`).
+2. Registry store on disk (`shop/ShopStore.kt`: atomic write, .bak, rebuild from files, crash-safe delete).
+   PC tests `ShopStoreTest`; phone test `LegacyShopPhoneTest` (the old database registered as shop 1 stays
+   byte-identical and shows the same data when opened by path; v4 still converts). IsolatedContext accepts
+   full database paths inside its folder.
 
 ## Next
 
-2. Registry store on disk (atomic write, .bak) and the start-up bootstrap of an old install; phone test that
-   the old database stays byte-identical.
 3. The app runs on the open shop's files; start-up recovery for every shop; health check; isolation tests.
 4. Switch (guarded, restart) and delete (crash-safe) with tests.
 5. Per-shop backup names, `shopName` in the manifest, restore warning.
