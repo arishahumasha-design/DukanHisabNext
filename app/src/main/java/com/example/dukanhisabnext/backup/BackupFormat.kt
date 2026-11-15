@@ -96,7 +96,12 @@ data class BackupManifest(
      * the app showed when the backup was made, for example "INR". null when the backup does not say, or when
      * the value is not a plausible code (see [currencyCodeOrNull]). Display only: it changes no amount.
      */
-    val displayCurrency: String? = null
+    val displayCurrency: String? = null,
+    /**
+     * Optional (added with several shops; older apps ignore it): the full name of the shop the backup was made in.
+     * null for a backup from before, or a shop without a name. Only shown (the restore warns when it differs).
+     */
+    val shopName: String? = null
 )
 
 private fun escape(value: String): String = value.replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r")
@@ -117,6 +122,7 @@ fun writeManifest(m: BackupManifest): String = buildString {
     line("encryption", m.encryption)
     for ((table, rows) in m.counts.toSortedMap()) line("count.$table", rows)
     m.displayCurrency?.let { line("displayCurrency", it) } // optional, written only when known
+    m.shopName?.let { line("shopName", it) } // optional, written only when the shop has a name
 }
 
 /**
@@ -124,6 +130,10 @@ fun writeManifest(m: BackupManifest): String = buildString {
  * lower case, junk from a damaged or hand-made file) is ignored, and the restore goes on without it.
  */
 fun currencyCodeOrNull(raw: String?): String? = raw?.trim()?.takeIf { it.length in 3..8 && it.all { c -> c in 'A'..'Z' } }
+
+/** A shop name as it may appear in a manifest: control characters removed, trimmed, at most 80 characters; empty = null. */
+fun shopNameOrNull(raw: String?): String? =
+    raw?.filterNot { it.isISOControl() }?.trim()?.replace(Regex(" {2,}"), " ")?.take(80)?.trim()?.ifEmpty { null }
 
 sealed interface ManifestResult {
     data class Ok(val manifest: BackupManifest) : ManifestResult
@@ -168,7 +178,8 @@ fun parseManifest(text: String): ManifestResult {
             dbSha256 = sha,
             encryption = encryption,
             counts = counts,
-            displayCurrency = currencyCodeOrNull(p.getProperty("displayCurrency"))
+            displayCurrency = currencyCodeOrNull(p.getProperty("displayCurrency")),
+            shopName = shopNameOrNull(p.getProperty("shopName"))
         )
     )
 }

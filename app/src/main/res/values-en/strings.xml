@@ -719,4 +719,10 @@
     <string name="restore_currency_differs">This backup was made with %1$s, but the app now shows %2$s. Which currency should the app show after the restore? No amount is converted.</string>
     <string name="restore_currency_use_backup">%1$s (as in the backup)</string>
     <string name="restore_currency_keep">%1$s (as now)</string>
+
+    <!-- Several shops: restore -->
+    <string name="shop_this_shop">this shop</string>
+    <string name="restore_into_shop">Restore into: %1$s. The current data of this shop will be replaced.</string>
+    <string name="restore_other_shop_warning">Careful: this backup was made by the shop “%1$s”, not by “%2$s”.</string>
+    <string name="restore_no_shop_name">This backup does not say which shop it is from (it was made before several shops were possible).</string>
 </resources>

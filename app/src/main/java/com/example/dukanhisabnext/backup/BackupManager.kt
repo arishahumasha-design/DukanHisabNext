@@ -40,8 +40,13 @@ class BackupManager(
     /** After a restore replaced the data and the user chose the backup's currency: show it from now on. */
     private val onCurrencyChosen: (String) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis,
+    /** The name of the open shop (the restore dialog names it). */
+    private val shopName: () -> String? = { null },
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 ) {
+    /** The suggested file name of a backup saved now (the open shop's name, see BackupEngine.fileNameAt). */
+    fun fileNameAt(now: Long): String = engine.fileNameAt(now)
+
     private val _state = MutableStateFlow<BackupJobState>(BackupJobState.Idle)
     val state: StateFlow<BackupJobState> = _state
 
@@ -204,7 +209,9 @@ class BackupManager(
                             backupCreatedAt = prepared.restore.manifest?.createdAt,
                             backupCounts = prepared.restore.counts,
                             currentCounts = countRows(),
-                            backupCurrency = prepared.restore.manifest?.displayCurrency
+                            backupCurrency = prepared.restore.manifest?.displayCurrency,
+                            backupShopName = prepared.restore.manifest?.shopName,
+                            currentShopName = shopName()
                         )
                         finish(BackupJobState.AwaitingConfirm(summary))
                     }

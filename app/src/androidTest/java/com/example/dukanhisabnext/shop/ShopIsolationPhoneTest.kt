@@ -77,9 +77,12 @@ class ShopIsolationPhoneTest {
         return result as SaleResult.Saved
     }
 
+    private val names = mapOf(1 to "Taqwa Tech", 2 to "তাকওয়া স্টোর")
+
     private fun engine(p: ShopPaths, fault: (BackupStep) -> Unit = {}) = BackupEngine(
         context = isolated, getLive = { db(p) }, closeLive = { close(p) },
-        appVersionCode = 1, appVersionName = "test", liveDb = p.database, workRoot = p.workRoot, fault = fault
+        appVersionCode = 1, appVersionName = "test", liveDb = p.database, workRoot = p.workRoot, fault = fault,
+        shopId = p.id, shopName = { names[p.id] }
     )
 
     @Test
@@ -119,12 +122,17 @@ class ShopIsolationPhoneTest {
         val fan = product(a, "Fan")
         sell(a, fan.id, "draft-a")
         product(b, "Shirt")
-        val zip = (engine(a).createBackup() as CreateResult.Created).zip
+        val made = engine(a).createBackup() as CreateResult.Created
+        val zip = made.zip
+        assertTrue(zip.name, zip.name.startsWith("Taqwa-Tech-backup-"))
+        assertEquals("Taqwa Tech", made.manifest.shopName)
         val aSales = count(a, "sales")
         val aSha = run { close(a); a.database.readBytes().contentHashCode() }
 
         val prepared = engine(b).prepareRestore(zip).let { it as? PrepareResult.Ready ?: throw AssertionError(it.toString()) }.restore
+        assertEquals("the restore knows which shop the backup came from", "Taqwa Tech", prepared.manifest?.shopName)
         assertTrue(engine(b).restore(prepared) is RestoreResult.Done)
+        assertTrue("a Bengali-only name gives Shop-<n>", engine(b).fileNameAt(0).startsWith("Shop-2-backup-"))
         close(b)
 
         assertEquals("B now holds A's data", aSales, count(b, "sales"))

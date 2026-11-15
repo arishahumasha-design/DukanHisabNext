@@ -56,7 +56,8 @@ import com.example.dukanhisabnext.backup.RestoreSummary
 import com.example.dukanhisabnext.backup.backupDateTimeText
 import com.example.dukanhisabnext.backup.backupScreenUi
 import com.example.dukanhisabnext.backup.lastBackupText
-import com.example.dukanhisabnext.backup.saveFileName
+import com.example.dukanhisabnext.backup.RestoreShopNote
+import com.example.dukanhisabnext.backup.restoreShopNote
 import com.example.dukanhisabnext.backup.summaryRows
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
 import com.example.dukanhisabnext.ui.components.DestructiveTextButton
@@ -250,7 +251,7 @@ fun BackupScreen(onBack: () -> Unit) {
             confirmButton = {
                 DialogTextButton(stringResource(R.string.backup_warning_continue), {
                     ask = Ask.NONE
-                    if (saving) saveLauncher.launch(saveFileName(System.currentTimeMillis())) else manager.startShare()
+                    if (saving) saveLauncher.launch(manager.fileNameAt(System.currentTimeMillis())) else manager.startShare()
                 })
             },
             dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), { ask = Ask.NONE }) }
@@ -311,6 +312,7 @@ private fun RestoreSummaryDialog(
                         fontWeight = FontWeight.Bold
                     )
                 }
+                RestoreShopPart(summary)
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text("", modifier = Modifier.weight(1.2f))
                     Text(stringResource(R.string.restore_col_backup), modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
@@ -343,6 +345,30 @@ private fun RestoreSummaryDialog(
         },
         dismissButton = { DialogTextButton(stringResource(R.string.btn_cancel), onCancel) }
     )
+}
+
+/**
+ * Which shop is replaced, and a warning when the backup was made by a differently named shop (or a neutral note
+ * for a backup from before several shops).
+ */
+@Composable
+private fun RestoreShopPart(summary: RestoreSummary) {
+    val current = summary.currentShopName?.ifBlank { null } ?: stringResource(R.string.shop_this_shop)
+    Text(stringResource(R.string.restore_into_shop, current), style = MaterialTheme.typography.bodyLarge)
+    when (restoreShopNote(summary.backupShopName, summary.backupCreatedAt == null, summary.currentShopName)) {
+        RestoreShopNote.SAME -> Unit
+        RestoreShopNote.OTHER_SHOP -> Text(
+            stringResource(R.string.restore_other_shop_warning, summary.backupShopName.orEmpty(), current),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.error
+        )
+        RestoreShopNote.UNKNOWN -> Text(
+            stringResource(R.string.restore_no_shop_name),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 /** Opens the system share sheet for the backup zip, through the FileProvider (no permission needed). */

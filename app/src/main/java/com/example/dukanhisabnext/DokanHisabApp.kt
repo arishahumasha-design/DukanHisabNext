@@ -147,6 +147,13 @@ class DokanHisabApp : Application() {
         return if (ok) ShopHealth.OK else ShopHealth.CANNOT_OPEN
     }
 
+    /** The open shop's name as it is now (an edit in this session changes it; read from the registry). */
+    fun currentShopName(): String? = try {
+        shopStore.load().find(currentShop.id)?.name?.ifBlank { null }
+    } catch (e: java.io.IOException) {
+        currentShop.name.ifBlank { null }
+    }
+
     /** Small background work that belongs to the app, not to a screen. */
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -166,7 +173,9 @@ class DokanHisabApp : Application() {
             appVersionName = info.versionName.orEmpty(),
             displayCurrency = { com.example.dukanhisabnext.util.CurrentCurrency.value.code },
             liveDb = shopPaths.database,
-            workRoot = shopPaths.workRoot
+            workRoot = shopPaths.workRoot,
+            shopId = currentShop.id,
+            shopName = ::currentShopName
         )
     }
 
@@ -190,6 +199,7 @@ class DokanHisabApp : Application() {
             onDataReplaced = { cartStore.clear() },
             // The user chose to show the currency the backup was made with (display only, no amount changes).
             onCurrencyChosen = { code -> com.example.dukanhisabnext.util.AppCurrency.fromCode(code)?.let(displaySettings::chooseCurrency) },
+            shopName = ::currentShopName,
             startup = startupNote(backupEngine.readRestoreResult(), startupRecovery, backupPrefs.restoreFailedNote)
         )
     }

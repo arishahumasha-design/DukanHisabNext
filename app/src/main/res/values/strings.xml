@@ -715,4 +715,10 @@
     <string name="restore_currency_differs">এই ব্যাকআপ %1$s দিয়ে তৈরি, কিন্তু অ্যাপে এখন %2$s দেখানো হচ্ছে। রিস্টোরের পর কোন মুদ্রা দেখাবে? কোনো টাকার অঙ্ক রূপান্তর হবে না।</string>
     <string name="restore_currency_use_backup">%1$s (ব্যাকআপের মতো)</string>
     <string name="restore_currency_keep">%1$s (এখনকার মতো)</string>
+
+    <!-- Several shops: restore -->
+    <string name="shop_this_shop">এই দোকান</string>
+    <string name="restore_into_shop">যে দোকানে রিস্টোর হবে: %1$s। এই দোকানের এখনকার তথ্য বদলে যাবে।</string>
+    <string name="restore_other_shop_warning">সাবধান: এই ব্যাকআপটি “%1$s” দোকানের, “%2$s” দোকানের নয়।</string>
+    <string name="restore_no_shop_name">এই ব্যাকআপে কোন দোকানের তা লেখা নেই (একাধিক দোকানের সুবিধা আসার আগে তৈরি)।</string>
 </resources>

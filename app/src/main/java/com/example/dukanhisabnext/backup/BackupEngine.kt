@@ -105,8 +105,14 @@ class BackupEngine(
     /** The code of the currency the app shows now, written into the manifest (display only; see BackupManifest.displayCurrency). */
     private val displayCurrency: () -> String? = { null },
     /** The live database file; by default [liveDbName] in the app's databases folder. A shop passes its own file (ShopPaths). */
-    liveDb: File? = null
+    liveDb: File? = null,
+    /** The shop this engine works for: its name goes into the manifest and the file name (null: the old "DokanHisab-backup" name). */
+    private val shopId: Int? = null,
+    private val shopName: () -> String? = { null }
 ) {
+    /** The name of a backup file made at [now]: "<Shop-name>-backup-YYYY-MM-DD-HHmm.zip" for a shop. */
+    fun fileNameAt(now: Long): String = saveFileName(now, shopName(), shopId)
+
     val paths = BackupPaths(liveDb ?: context.getDatabasePath(liveDbName), workRoot)
     private val lock = Mutex()
 
@@ -158,9 +164,10 @@ class BackupEngine(
                     dbSize = snapshot.length(),
                     dbSha256 = FileInputStream(snapshot).use(::sha256Hex),
                     counts = facts.counts,
-                    displayCurrency = currencyCodeOrNull(displayCurrency())
+                    displayCurrency = currencyCodeOrNull(displayCurrency()),
+                    shopName = shopNameOrNull(shopName())
                 )
-                val zip = File(outDir, backupFileName(now))
+                val zip = File(outDir, fileNameAt(now))
                 ZipOutputStream(FileOutputStream(zip).buffered()).use { out ->
                     out.putNextEntry(ZipEntry(MANIFEST_ENTRY))
                     out.write(writeManifest(manifest).toByteArray(Charsets.UTF_8))

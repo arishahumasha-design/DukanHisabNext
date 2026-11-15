@@ -26,7 +26,11 @@ data class RestoreSummary(
     val backupCounts: Map<String, Long>,
     val currentCounts: Map<String, Long>,
     /** The currency code the backup was made with (null: an older backup, or none given). */
-    val backupCurrency: String? = null
+    val backupCurrency: String? = null,
+    /** The shop name written in the backup (null: an older backup, or an undo). */
+    val backupShopName: String? = null,
+    /** The name of the open shop, which the restore replaces. */
+    val currentShopName: String? = null
 )
 
 sealed interface BackupJobState {

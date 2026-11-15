@@ -29,10 +29,13 @@ on Home.
 4. `shop/ShopManager.kt`: make a shop (own database + profile), edit any shop (a closed one is opened briefly),
    switch (refused while a backup/restore runs or something is being saved; otherwise the choice is saved and
    the app restarts), delete (not open, not last). PC test `SwitchRulesTest`, phone test `ShopManagerPhoneTest`.
+5. Per-shop backups: file name `<Shop-name>-backup-YYYY-MM-DD-HHmm.zip` (Shop-<n> without ASCII letters), the
+   optional manifest field `shopName`, the restore dialog names the shop it replaces and warns when the backup is
+   from a differently named shop (neutral note for older backups). PC test `BackupShopNameTest`; phone test
+   `ShopIsolationPhoneTest` checks the name and the manifest.
 
 ## Next
 
-5. Per-shop backup names, `shopName` in the manifest, restore warning.
 6. UI: shop list, new/edit, delete dialog, shop name on Home and in Settings.
 7. Docs, full test runs, screenshots.
 

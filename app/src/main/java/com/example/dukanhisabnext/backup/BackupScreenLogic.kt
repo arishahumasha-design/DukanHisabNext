@@ -56,6 +56,29 @@ fun lastBackupText(
 /** The name offered in the "save as" picker (Latin digits, Dhaka time). */
 fun saveFileName(now: Long): String = backupFileName(now)
 
+/** The file name of a shop's backup (the shop's name in ASCII, see shopBackupFileName); without a shop id the old name. */
+fun saveFileName(now: Long, shopName: String?, shopId: Int?): String =
+    if (shopId == null) backupFileName(now) else com.example.dukanhisabnext.shop.shopBackupFileName(shopName, shopId, now)
+
+/** What the restore dialog says about the shop the backup came from. */
+enum class RestoreShopNote {
+    /** The backup is from this shop (or the open shop has no name yet). */
+    SAME,
+
+    /** The backup was made by a differently named shop: a warning. */
+    OTHER_SHOP,
+
+    /** A backup from before several shops (no name in it): a neutral note. */
+    UNKNOWN
+}
+
+fun restoreShopNote(backupShopName: String?, isUndo: Boolean, currentShopName: String?): RestoreShopNote = when {
+    isUndo -> RestoreShopNote.SAME
+    backupShopName.isNullOrBlank() -> RestoreShopNote.UNKNOWN
+    com.example.dukanhisabnext.shop.shopNamesDiffer(backupShopName, currentShopName) -> RestoreShopNote.OTHER_SHOP
+    else -> RestoreShopNote.SAME
+}
+
 // ---- what the Backup screen shows for each job state ----
 
 data class BackupScreenUi(
