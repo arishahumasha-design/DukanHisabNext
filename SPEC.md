@@ -1198,6 +1198,26 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
   compare every number, then make a first backup in the new app; (6) only then remove the old app.
   Step by step for the shop owner and with the technical details: `docs/MOVE_TO_NEW_APP.md`.
 - A sideloaded APK (signed with the upload key) and the Play Store app (signed by Google) cannot
+
+### Release readiness and Play Store material (Group D2)
+
+- **Version** 1.0.0 (versionCode 1). The release build is signed only when `keystore.properties` is complete;
+  without it `assembleRelease` / `bundleRelease` still build, unsigned, and R8 writes `mapping.txt`
+  (unsigned APK 2,789,892 bytes, AAB 5,596,644 bytes).
+- **Demo data:** `tools/demo-data/make-demo.mjs` makes backups of two fictional shops in both languages
+  (`docs/demo/`); `DemoBackupsTest` restores them. They are never part of the app.
+- **Play pictures:** `tools/play-assets/` (adb, emulator only) takes eight screenshots per language of the release
+  app; `docs/play/screenshots/` are 1080x2160 (Play's 2:1 limit), the raw 1080x2400 ones are in `screenshots-raw/`.
+  Feature graphics 1024x500 (headless Chrome/Edge, because Bengali needs a real shaper) and the 512 icon.
+- **Texts and forms:** `docs/play/texts-en.md`, `texts-bn.md` (store names are 30 characters or fewer: the long
+  names of the plan were 32 and 31), `docs/PLAY_STORE.md` (permissions, Data safety, content rating, financial
+  features, signed-AAB steps), privacy policy `docs/privacy-policy-en.md`, `-bn.md`, `docs/privacy/index.html`
+  (built by `tools/privacy-html/build.mjs`).
+- **Fix found by the smoke test:** restoring a backup into a new shop whose work folder did not exist yet was
+  refused as "not enough space" (free space was asked of a folder that is not made yet). `BackupEngine.freeSpace`
+  now asks the nearest existing parent folder. Phone test: `ShopIsolationPhoneTest`.
+- **Older Android** (API 27 and 30 emulators, pictures in `docs/play/older-android/`): see `docs/LANGUAGE.md`,
+  "Older Android".
   update each other: switching means backup, uninstall, install, restore.
 
 ### Language and currency (English as a second language)

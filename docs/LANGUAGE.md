@@ -116,3 +116,21 @@ have exactly the same keys and the same placeholders. A few of them:
 Shop names are kept exactly as typed in either script. Backup file names use only the ASCII part of the name
 (`Shop-<n>` for a name without ASCII letters), so file names stay ASCII in both languages. Language and currency stay
 app-wide: switching shops does not change them.
+
+## Older Android (checked in Group D2 on emulators: API 27 = Android 8.1, API 30 = Android 11)
+
+Install, start, sell, receipt, products, reports, the PDF dialog and share sheet, the shop list and backup/restore
+all work on API 27 (all four combinations of Bengali/English screen language and Bengali/English data). Pictures:
+`docs/play/older-android/api27*/`, `api30*/`; script: `tools/play-assets/older-android-check.mjs`.
+
+What looks different from Android 10+ (fonts):
+- Below Android 10 (API 29) an app font cannot have a fallback list, so **one font** is used per language:
+  with the Bengali screen language Noto Sans Bengali is used for everything, and Latin product names
+  (for example "Eggs (dozen)") show in the phone's own Latin font (Roboto), not Inter. With the English
+  screen language Inter is used, and Bengali names fall back to the phone's own Bengali font.
+  Text stays correct and readable; only the look of mixed names differs. Digits in the Bengali UI are Bengali
+  digits in Noto, as on newer phones.
+- On API 30 (Android 11) the fallback list is supported by Android (by design; only an empty shop was looked at there).
+- The system file picker differs: on API 27 it opens on an empty "Recent" list (open the side menu, Downloads);
+  on API 30 the Recent list shows files but a tap by the test script did not choose a file (the grid view of the
+  emulator's picker), so restore on API 30 was not exercised by automation (it works on API 27 and 37).
