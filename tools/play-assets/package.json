@@ -1,0 +1,7 @@
+{
+  "name": "dokanhisab-play-assets",
+  "private": true,
+  "type": "module",
+  "description": "PC-only tools that make the Google Play pictures (screenshots, feature graphic). Not part of the app or its build.",
+  "dependencies": { "@resvg/resvg-js": "2.6.2" }
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <rect width="1024" height="500" fill="#0F7B4F"/>
+  <circle cx="880" cy="60" r="210" fill="#FFFFFF" fill-opacity="0.05"/>
+  <circle cx="990" cy="470" r="150" fill="#FFFFFF" fill-opacity="0.05"/>
+  <g transform="translate(40 52) scale(0.80)"><path d="M92,176L128,100L384,100L420,176Z" fill="#FFFFFF"/>
+  <path d="M164,100L228,100L212,176L148,176Z" fill="#DDF3E8"/>
+  <path d="M284,100L348,100L364,176L300,176Z" fill="#DDF3E8"/>
+  <path d="M92,176H420V192H92Z" fill="#FFFFFF"/>
+  <path d="M92,192A41,41 0 0 0 174,192ZM174,192A41,41 0 0 0 256,192ZM256,192A41,41 0 0 0 338,192ZM338,192A41,41 0 0 0 420,192Z" fill="#F2B84B"/>
+  <path d="M142,236H370A18,18 0 0 1 388,254V398A18,18 0 0 1 370,416H142A18,18 0 0 1 124,398V254A18,18 0 0 1 142,236Z" fill="#FFFFFF"/>
+  <path d="M200,330L242,372L318,284" fill="none" stroke="#0F7B4F" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/></g>
+  <text x="500" y="228" font-family="Noto Sans Bengali" font-weight="700" font-size="84" fill="#FFFFFF">দোকান হিসাব</text>
+  <text x="500" y="312" font-family="Noto Sans Bengali" font-weight="400" font-size="44" fill="#DDF3E8">বিক্রি, বাকি ও স্টক</text>
+  <text x="500" y="372" font-family="Noto Sans Bengali" font-weight="400" font-size="30" fill="#F2B84B">ইন্টারনেট ছাড়াই</text>
+</svg>
