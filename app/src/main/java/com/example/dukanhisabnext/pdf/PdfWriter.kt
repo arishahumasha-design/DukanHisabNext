@@ -1,46 +1,38 @@
 package com.example.dukanhisabnext.pdf
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.text.TextPaint
-import com.example.dukanhisabnext.R
+import com.example.dukanhisabnext.ui.theme.AppTypefaces
+import com.example.dukanhisabnext.util.AppLanguage
+import com.example.dukanhisabnext.util.CurrentLanguage
 import java.io.File
 import java.io.FileOutputStream
 
-// The Android part of the PDF export: the bundled Bengali font, the text measuring that matches it, and
+// The Android part of the PDF export: the bundled fonts (Inter + Noto Sans Bengali), the text measuring that matches it, and
 // the drawing of the instructions PdfDocumentLayout.kt decided. No decisions about WHERE things go live here.
 
-/** Noto Sans Bengali (a variable font) in the two weights a document uses: regular (400) and semibold (600). */
+/**
+ * The two weights a document uses, regular (400) and semibold (600), from the SAME typeface as the screens
+ * (ui/theme/AppTypefaces.kt: Inter for Latin letters and digits, Noto Sans Bengali for Bengali). If that fails the
+ * system fonts are used.
+ */
 class PdfFonts private constructor(val regular: Typeface, val bold: Typeface) {
     companion object {
-        /**
-         * Copies res/font/noto_sans_bengali.ttf to a cache file (Typeface.Builder wants a file) and builds both
-         * weights from it with font variation settings. If that fails the system fonts are used.
-         */
-        // A font file is a plain file inside the app, so openRawResource can copy it; lint only expects res/raw here.
-        @SuppressLint("ResourceType")
         fun load(context: Context): PdfFonts {
             return try {
-                val file = File(context.cacheDir, "pdf-font/noto_sans_bengali.ttf")
-                if (!file.exists() || file.length() == 0L) {
-                    file.parentFile?.mkdirs()
-                    context.resources.openRawResource(R.font.noto_sans_bengali).use { input ->
-                        file.outputStream().use { input.copyTo(it) }
-                    }
-                }
-                val regular = Typeface.Builder(file).setWeight(400).setFontVariationSettings("'wght' 400").build()
-                val bold = Typeface.Builder(file).setWeight(600).setFontVariationSettings("'wght' 600").build()
-                if (regular != null && bold != null) PdfFonts(regular, bold) else system()
+                val bengali = CurrentLanguage.value == AppLanguage.BENGALI
+                PdfFonts(
+                    AppTypefaces.typeface(context, 400, bengali),
+                    AppTypefaces.typeface(context, 600, bengali)
+                )
             } catch (e: Exception) {
-                system()
+                PdfFonts(Typeface.DEFAULT, Typeface.DEFAULT_BOLD)
             }
         }
-
-        private fun system() = PdfFonts(Typeface.DEFAULT, Typeface.DEFAULT_BOLD)
     }
 }
 
@@ -51,6 +43,7 @@ class PaintMeasure(private val fonts: PdfFonts) : TextMeasure {
     fun paint(size: Float, bold: Boolean): TextPaint = paints.getOrPut(size to bold) {
         TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = size
+            fontFeatureSettings = "tnum" // tabular figures: amounts line up in the tables
             typeface = if (bold) fonts.bold else fonts.regular
         }
     }

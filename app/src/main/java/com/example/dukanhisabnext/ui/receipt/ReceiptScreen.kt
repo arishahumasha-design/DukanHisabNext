@@ -407,15 +407,15 @@ private fun KeyValue(label: String, value: String, bold: Boolean = false, large:
     }
 }
 
-/** One table row. A long product name simply wraps onto more lines. */
+/** One table row. A long product name simply wraps onto more lines; the amounts never wrap (Inter digits are wider, and so is a big font size). */
 @Composable
 private fun TableRow(name: String, quantity: String, price: String, total: String, header: Boolean = false) {
     val style = if (header) MaterialTheme.typography.labelLarge else MaterialTheme.typography.bodyMedium
     val weight = if (header) FontWeight.Bold else FontWeight.Normal
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(name, modifier = Modifier.weight(1.7f), style = style, fontWeight = weight)
-        Text(quantity, modifier = Modifier.weight(1.1f), style = style, fontWeight = weight, textAlign = TextAlign.End)
-        Text(price, modifier = Modifier.weight(1.1f), style = style, fontWeight = weight, textAlign = TextAlign.End)
-        Text(total, modifier = Modifier.weight(1.2f), style = style, fontWeight = weight, textAlign = TextAlign.End)
+        Text(name, modifier = Modifier.weight(1.4f), style = style, fontWeight = weight)
+        Text(quantity, modifier = Modifier.weight(1.0f), style = style, fontWeight = weight, textAlign = TextAlign.End, softWrap = false)
+        Text(price, modifier = Modifier.weight(1.3f), style = style, fontWeight = weight, textAlign = TextAlign.End, softWrap = false)
+        Text(total, modifier = Modifier.weight(1.4f), style = style, fontWeight = weight, textAlign = TextAlign.End, softWrap = false)
     }
 }
