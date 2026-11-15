@@ -1198,6 +1198,7 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
   compare every number, then make a first backup in the new app; (6) only then remove the old app.
   Step by step for the shop owner and with the technical details: `docs/MOVE_TO_NEW_APP.md`.
 - A sideloaded APK (signed with the upload key) and the Play Store app (signed by Google) cannot
+  update each other: switching means backup, uninstall, install, restore.
 
 ### Release readiness and Play Store material (Group D2)
 
@@ -1218,7 +1219,6 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
   now asks the nearest existing parent folder. Phone test: `ShopIsolationPhoneTest`.
 - **Older Android** (API 27 and 30 emulators, pictures in `docs/play/older-android/`): see `docs/LANGUAGE.md`,
   "Older Android".
-  update each other: switching means backup, uninstall, install, restore.
 
 ### Language and currency (English as a second language)
 
