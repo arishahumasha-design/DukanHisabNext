@@ -7,7 +7,16 @@ import android.os.LocaleList
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import android.os.SystemClock
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
+import com.example.dukanhisabnext.ui.components.SwitchOverlay
+import com.example.dukanhisabnext.ui.components.SwitchTransition
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.dukanhisabnext.ui.navigation.AppNavigation
 import com.example.dukanhisabnext.ui.theme.DukanHisabNextTheme
@@ -18,6 +27,10 @@ import com.example.dukanhisabnext.util.CurrentLanguage
 import com.example.dukanhisabnext.util.withLanguage
 
 class MainActivity : ComponentActivity() {
+
+    // The language/currency switch transition (SwitchTransition.kt): the cover over this screen, and a guard against a second tap.
+    private var covering by mutableStateOf(false)
+    private var switching = false
 
     /**
      * Gives this screen the app's language (Bengali by default, or the one chosen in Settings), so
@@ -43,33 +56,60 @@ class MainActivity : ComponentActivity() {
             }
         }
         enableEdgeToEdge()
+        // A screen created by a language/currency switch starts under the cover and fades in (null: a normal start).
+        val arrivalFadeInAt = SwitchTransition.takeArrival(SystemClock.uptimeMillis())
         setContent {
             DukanHisabNextTheme {
                 AppNavigation()
+                SwitchOverlay(covering = covering, arrivalFadeInAt = arrivalFadeInAt)
             }
+        }
+    }
+
+    /**
+     * Runs [change] (which ends in the screen being recreated) behind the switch transition: the cover fades in,
+     * then the change is made. With "remove animations" on, the change is made at once.
+     */
+    private fun withSwitchTransition(change: () -> Unit) {
+        if (SwitchTransition.reducedMotion(this)) {
+            change()
+            return
+        }
+        if (switching) return
+        switching = true
+        val clickedAt = SystemClock.uptimeMillis()
+        covering = true
+        lifecycleScope.launch {
+            delay(SwitchTransition.FADE_OUT_MS.toLong())
+            SwitchTransition.begin(clickedAt)
+            change()
         }
     }
 
     /**
      * The user chose a language in Settings: remember it, then recreate the screen so every text, digit and
      * date is drawn again in the new language. On Android 13+ the system's per-app language is set too (that
-     * recreates the screen by itself); on older phones this does it.
+     * recreates the screen by itself); on older phones this does it. Behind the short switch transition.
      */
     fun switchLanguage(language: AppLanguage) {
         if (language == CurrentLanguage.value) return
-        (applicationContext as DokanHisabApp).displaySettings.chooseLanguage(language)
-        if (Build.VERSION.SDK_INT >= 33) {
-            getSystemService(android.app.LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(language.tag)
-        } else {
-            recreate()
+        withSwitchTransition {
+            (applicationContext as DokanHisabApp).displaySettings.chooseLanguage(language)
+            if (Build.VERSION.SDK_INT >= 33) {
+                getSystemService(android.app.LocaleManager::class.java).applicationLocales = LocaleList.forLanguageTags(language.tag)
+            } else {
+                recreate()
+            }
         }
     }
 
     /** The user chose a currency in Settings: only the symbol and the grouping change. Redraw everything. */
     fun switchCurrency(currency: AppCurrency) {
         if (currency == CurrentCurrency.value) return
-        (applicationContext as DokanHisabApp).displaySettings.chooseCurrency(currency)
-        recreate()
+        withSwitchTransition {
+            (applicationContext as DokanHisabApp).displaySettings.chooseCurrency(currency)
+            recreate()
+        }
     }
 }
 
