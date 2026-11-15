@@ -15,6 +15,7 @@
         android:theme="@style/Theme.DukanHisabNext">
         <activity
             android:name=".MainActivity"
+            android:configChanges="locale|layoutDirection"
             android:exported="true"
             android:label="${appLabel}"
             android:screenOrientation="portrait"

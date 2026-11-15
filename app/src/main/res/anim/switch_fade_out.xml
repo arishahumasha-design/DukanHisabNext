@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The old screen stays fully visible underneath while the new one fades in, so there is never an empty frame. -->
+<alpha xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="120"
+    android:fromAlpha="1.0"
+    android:interpolator="@android:interpolator/linear"
+    android:toAlpha="1.0" />
