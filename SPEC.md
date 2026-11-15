@@ -909,7 +909,8 @@ Look and wording (M9 group C):
 - Typography (`ui/theme/Type.kt`, `ui/theme/AppTypefaces.kt`): **Inter** (Regular, Medium, SemiBold, Bold; Latin
   subset; OFL 1.1) draws Latin letters and digits and **Noto Sans Bengali** draws Bengali, as one typeface with
   a fallback chain (Bengali screens: Noto first, Inter for Latin; English screens: Inter first, Noto for
-  Bengali), so mixed text is right in both languages. Tabular figures ("tnum") everywhere so amounts line up.
+  Bengali), so mixed text is right in both languages. The digits 0-9 are tabular by default in the bundled Inter
+  files (amounts line up; hyphens and letters are normal).
   The PDFs draw with the same typeface. Details, source and license: `docs/FONTS.md`.
 - Language/currency switch: only when the language or the currency is changed, the screen cross-fades to a plain
   background with a small spinner (90 ms out, spinner until 400 ms later, 100 ms in: 0.6 s in all, at most), the

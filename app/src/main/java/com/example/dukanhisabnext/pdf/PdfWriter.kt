@@ -43,7 +43,6 @@ class PaintMeasure(private val fonts: PdfFonts) : TextMeasure {
     fun paint(size: Float, bold: Boolean): TextPaint = paints.getOrPut(size to bold) {
         TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             textSize = size
-            fontFeatureSettings = "tnum" // tabular figures: amounts line up in the tables
             typeface = if (bold) fonts.bold else fonts.regular
         }
     }

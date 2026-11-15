@@ -41,14 +41,14 @@ fun appFontFamily(bengaliFirst: Boolean): FontFamily = FontFamily(
 
 // Bengali needs a generous line height (about 1.45 x the size) so the matras above and below
 // the letters are never clipped. English text is a little tighter (1.4 x).
-// "tnum": tabular figures, so amounts and table columns line up (Inter has them; Bengali digits are already even).
+// Tabular figures: the bundled Inter files draw the digits 0-9 tabular BY DEFAULT (see docs/FONTS.md), so amounts and
+// table columns line up while hyphens, letters and punctuation stay normal. No font feature is needed here.
 private fun style(family: FontFamily, lineFactor: Float, size: Int, weight: FontWeight): TextStyle = TextStyle(
     fontFamily = family,
     fontWeight = weight,
     fontSize = size.sp,
     lineHeight = (size * lineFactor).sp,
-    letterSpacing = 0.sp,
-    fontFeatureSettings = "tnum"
+    letterSpacing = 0.sp
 )
 
 /**

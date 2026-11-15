@@ -25,6 +25,12 @@ import java.io.File
  */
 object AppTypefaces {
 
+    /**
+     * Part of the cache file names. Raise it whenever a font file in res/font changes: an app update keeps the cache
+     * folder, and an old copy of the font would otherwise stay in use. (2: tabular digits by default in Inter.)
+     */
+    private const val FONT_FILES_VERSION = 2
+
     /** The four weights the app uses. */
     val WEIGHTS = intArrayOf(400, 500, 600, 700)
 
@@ -62,8 +68,8 @@ object AppTypefaces {
 
     private fun build(context: Context, w: Int, bengaliFirst: Boolean): Typeface {
         return try {
-            val inter = extract(context, interRes(w), "inter_$w.ttf")
-            val noto = extract(context, R.font.noto_sans_bengali, "noto_bengali_nolatin-v2.ttf")
+            val inter = extract(context, interRes(w), "inter_$w-v$FONT_FILES_VERSION.ttf")
+            val noto = extract(context, R.font.noto_sans_bengali, "noto_bengali-v$FONT_FILES_VERSION.ttf")
             val built: Typeface? = if (Build.VERSION.SDK_INT >= 29) {
                 val interFamily = FontFamily.Builder(Font.Builder(inter).setWeight(w).build()).build()
                 val notoFamily = FontFamily.Builder(

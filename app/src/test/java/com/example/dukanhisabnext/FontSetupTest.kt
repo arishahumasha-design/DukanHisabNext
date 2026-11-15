@@ -16,15 +16,14 @@ class FontSetupTest {
     private fun source(path: String) = File("src/main/java/com/example/dukanhisabnext/$path").readText()
 
     @Test
-    fun allFourInterWeightsAreBundledWithTabularFigures() {
+    fun allFourInterWeightsAreBundled() {
         for (name in listOf("inter_regular", "inter_medium", "inter_semibold", "inter_bold")) {
             val file = File(fonts, "$name.ttf")
             assertTrue("$name.ttf is missing", file.isFile)
             val bytes = file.readBytes()
             assertTrue("$name looks too small to be a font", bytes.size > 50_000)
-            // A TrueType file starts with 0x00010000; "tnum" is the tabular-figures feature name inside GSUB.
+            // A TrueType file starts with 0x00010000.
             assertEquals(0, bytes[0].toInt()); assertEquals(1, bytes[1].toInt())
-            assertTrue("$name lost its tabular figures", String(bytes, Charsets.ISO_8859_1).contains("tnum"))
         }
     }
 
@@ -42,9 +41,9 @@ class FontSetupTest {
     }
 
     @Test
-    fun theThemeUsesTheAppTypefaceWithTabularFiguresInBothLanguages() {
+    fun theThemeUsesTheAppTypefaceInBothLanguages() {
         val type = source("ui/theme/Type.kt")
-        assertTrue(type.contains("fontFeatureSettings = \"tnum\""))
+        assertFalse("tabular digits come from the font files, not a font feature that would also widen hyphens", type.contains("fontFeatureSettings"))
         assertTrue(type.contains("fun appTypography(language: AppLanguage)"))
         assertTrue("Bengali and English each get their own family", type.contains("bengaliFirst"))
         assertTrue(source("ui/theme/Theme.kt").contains("appTypography(CurrentLanguage.value)"))
@@ -54,7 +53,7 @@ class FontSetupTest {
     fun thePdfsDrawWithTheSameTypefaceAsTheScreens() {
         val pdf = source("pdf/PdfWriter.kt")
         assertTrue(pdf.contains("AppTypefaces.typeface("))
-        assertTrue("tabular figures in the PDF tables too", pdf.contains("fontFeatureSettings = \"tnum\""))
+        assertFalse("no font feature: the same files give the same digits", pdf.contains("fontFeatureSettings"))
         assertFalse("the old Bengali-only PDF font is gone", pdf.contains("pdf-font"))
     }
 }
