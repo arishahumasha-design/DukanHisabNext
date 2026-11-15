@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DokanHisab logo: shop awning + check mark. 512 canvas. The source of the app's vector drawables and of play-store-512.png. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0F7B4F"/>
+  <path d="M92,176L128,100L384,100L420,176Z" fill="#FFFFFF"/>
+  <path d="M164,100L228,100L212,176L148,176Z" fill="#DDF3E8"/>
+  <path d="M284,100L348,100L364,176L300,176Z" fill="#DDF3E8"/>
+  <path d="M92,176H420V192H92Z" fill="#FFFFFF"/>
+  <path d="M92,192A41,41 0 0 0 174,192ZM174,192A41,41 0 0 0 256,192ZM256,192A41,41 0 0 0 338,192ZM338,192A41,41 0 0 0 420,192Z" fill="#F2B84B"/>
+  <path d="M142,236H370A18,18 0 0 1 388,254V398A18,18 0 0 1 370,416H142A18,18 0 0 1 124,398V254A18,18 0 0 1 142,236Z" fill="#FFFFFF"/>
+  <path d="M200,330L242,372L318,284" fill="none" stroke="#0F7B4F" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
