@@ -1,5 +1,7 @@
 package com.example.dukanhisabnext.data
 
+import com.example.dukanhisabnext.testing.DisplayDefaultsRule
+import org.junit.Rule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.WarrantyUnit
@@ -22,6 +24,8 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class CartFileVersionTest {
+    @get:Rule
+    val displayDefaults = DisplayDefaultsRule()
 
     private fun line(id: Long, value: Int? = null, unit: WarrantyUnit? = null) = CartLineInput(
         productId = id, name = "পণ্য $id", unit = ProductUnit.PIECE, quantityText = "1", unitPriceText = "100",

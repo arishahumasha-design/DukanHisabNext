@@ -1,5 +1,7 @@
 package com.example.dukanhisabnext.data
 
+import com.example.dukanhisabnext.testing.DisplayDefaultsRule
+import org.junit.Rule
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteConstraintException
@@ -36,6 +38,8 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class MigrationTest {
+    @get:Rule
+    val displayDefaults = DisplayDefaultsRule()
 
     private val testDb = "migration-test"
     // Every file of this test (its database "migration-test") lives in an isolated context of the test

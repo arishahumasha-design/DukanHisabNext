@@ -8,16 +8,21 @@ import com.example.dukanhisabnext.data.entity.PaymentMethod
 import com.example.dukanhisabnext.data.entity.Product
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.Sale
+import com.example.dukanhisabnext.testing.DisplayDefaultsRule
 import com.example.dukanhisabnext.testing.IsolatedContext
 import org.junit.After
 import org.junit.Assert.fail
 import org.junit.Before
+import org.junit.Rule
 
 /**
  * Shared setup for DAO tests. Each test gets a brand-new database that lives
  * only in memory, so tests never touch the real shop data on the phone.
  */
 abstract class DatabaseTestBase {
+    /** Bengali and ৳ unless a test says otherwise, whatever language is saved on the phone (DisplayDefaultsRule). */
+    @get:Rule
+    val displayDefaults = DisplayDefaultsRule()
     protected lateinit var db: AppDatabase
 
     /**

@@ -1,5 +1,7 @@
 package com.example.dukanhisabnext.backup
 
+import com.example.dukanhisabnext.testing.DisplayDefaultsRule
+import org.junit.Rule
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
@@ -44,6 +46,8 @@ import org.junit.runner.RunWith
  */
 @RunWith(AndroidJUnit4::class)
 class BackupEngineTest {
+    @get:Rule
+    val displayDefaults = DisplayDefaultsRule()
 
     // Its database, its work folders and every backup file live in an isolated context of the test
     // package: the engine's own defaults (the app's real database name and files folder) can never be reached.
