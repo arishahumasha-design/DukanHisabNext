@@ -57,7 +57,7 @@ If `keystore.properties` is missing, or something in it is missing or wrong, the
 .\gradlew.bat :app:assembleRelease   # app\build\outputs\apk\release\app-release.apk     -> install on your own phone
 ```
 R8 shrinking and optimisation are on (never add `packageScope`: it crashed the release once).
-Sizes at Group D1: unsigned release APK **2,521,408 bytes (2.4 MB)**, release AAB **about 5.3 MB**
+Sizes at Group D2: unsigned release APK **2,789,892 bytes (2.7 MB)**, release AAB **5,596,644 bytes (5.3 MiB)**
 (Play then delivers a smaller APK per phone), debug APK about 14.5 MB.
 
 Check a signed APK: `& "$env:LOCALAPPDATA\Android\Sdk\build-tools\36.0.0\apksigner.bat" verify --print-certs app\build\outputs\apk\release\app-release.apk`
