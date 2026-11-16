@@ -42,6 +42,7 @@ import com.example.dukanhisabnext.ui.screens.MoreScreen
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavGraphBuilder
 import com.example.dukanhisabnext.DokanHisabApp
 import com.example.dukanhisabnext.ui.appViewModel
@@ -113,16 +114,7 @@ private fun AppFrame() {
                             // hierarchy = this screen and its parents. A screen inside the
                             // More group still "belongs to" the More tab, so it stays highlighted.
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                            onClick = {
-                                navController.navigate(screen.route) {
-                                    // Going "back" from any tab returns to Home, not through every tab.
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true // do not stack the same tab twice
-                                    restoreState = true
-                                }
-                            }
+                            onClick = { navController.openTab(screen, currentDestination) }
                         )
                     }
                 )
@@ -533,11 +525,20 @@ private fun NavController.openReceiptAfterSale(saleId: Long, change: Long) {
  * Opens a bottom-bar tab the same way a tap on it does (the tab's own screens are kept and restored,
  * and Back from a tab goes to Home).
  */
-private fun NavController.openTab(screen: Screen) {
-    navigate(screen.route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
+internal fun NavController.openTab(screen: Screen, shown: NavDestination? = currentDestination) {
+    val currentTab = Screen.entries.firstOrNull { s -> shown?.hierarchy?.any { it.route == s.route } == true }
+    when (tabAction(screen, currentTab)) {
+        TabAction.POP_TO_START -> popBackStack(screen.startRoute, inclusive = false)
+        TabAction.OPEN_FRESH -> navigate(screen.route) {
+            // Going "back" from any tab returns to Home, not through every tab.
+            popUpTo(graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true // do not stack the same tab twice; no restoreState: it opens on its first screen
+        }
+        TabAction.OPEN_RESTORING -> navigate(screen.route) {
+            popUpTo(graph.findStartDestination().id) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 }
 

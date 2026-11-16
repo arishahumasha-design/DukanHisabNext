@@ -697,7 +697,12 @@ Warranty (version 5, rules in `warranty/WarrantyRules.kt`):
   was EVER made ("ব্যাকআপ নিন" opens the backup screen, "পরে" closes it). It is counted when it
   is shown (`nudgeShownCount` in `backup_prefs.xml`) and never appears after "ব্যাকআপ নিন"
   was used (`nudgeUsed`), after it was shown twice, or when a backup exists. The Home line
-  for a backup older than 7 days is separate and stays.
+  for a backup older than 7 days is separate and stays. The dialog is decided and shown only while Home is the
+  screen in front and no restore is running or waiting with its "Data restored" note (`nudgeAllowedNow`), never
+  over a sale, payment, receipt, form, backup, restore or shop screen.
+- Bottom-bar tabs (`tabAction`): the Sell tab always opens on its product picker (never an old cart, payment
+  or receipt screen; the cart itself is kept in the cart store); a tap on the open tab goes back to that tab's
+  first screen; Khata and More keep their place when you come back to them.
 - Product list: the "সব" chip is selected only when NO filter is on (no category, "কম স্টক"
   off); tapping it clears the category and "কম স্টক".
 - Names (M9): lists of products, customers, contacts and categories are sorted without regard
