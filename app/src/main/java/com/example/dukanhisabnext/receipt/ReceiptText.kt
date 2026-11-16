@@ -36,6 +36,7 @@ data class ReceiptLabels(
     val cancelReason: String,      // কারণ
     val taka: String,              // ৳
     val unit: (ProductUnit) -> String,
+    val unitOne: ((ProductUnit) -> String)? = null, // the unit after the number 1 ("pc"); null = same as [unit]
     val method: (PaymentMethod) -> String,
     val period: (DayPeriod) -> String,
     // ---- Version 5: the warranty caption under a product ("ওয়ারেন্টি: ৬ মাস (১৩ মে ২০২৭ পর্যন্ত)") ----
@@ -51,7 +52,7 @@ fun receiptMoney(paisa: Long, labels: ReceiptLabels): String = "${labels.taka} $
 
 /** "২.৫ কেজি" (the unit is left out only if it is unknown). Trailing zeros are dropped: 250 -> "০.২৫". */
 fun receiptQuantity(line: ReceiptLine, labels: ReceiptLabels): String =
-    formatQuantity(line.quantity) + (line.unit?.let { " " + labels.unit(it) } ?: "")
+    formatQuantity(line.quantity) + (line.unit?.let { " " + (if (kotlin.math.abs(line.quantity) == com.example.dukanhisabnext.util.QUANTITY_SCALE) (labels.unitOne ?: labels.unit)(it) else labels.unit(it)) } ?: "")
 
 /** "১০/১১/২০২৬ রাত ১১:৪৫": the Asia/Dhaka date and 12-hour time, in Bengali digits. */
 fun receiptDateTime(createdAt: Long, labels: ReceiptLabels): String =

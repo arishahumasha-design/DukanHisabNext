@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.data.entity.StockMovementType
+import com.example.dukanhisabnext.util.QUANTITY_SCALE
 
 /** The Bengali word for each unit (from strings.xml). */
 fun ProductUnit.labelRes(): Int = when (this) {
@@ -16,6 +17,19 @@ fun ProductUnit.labelRes(): Int = when (this) {
     ProductUnit.PACKET -> R.string.unit_packet
     ProductUnit.DOZEN -> R.string.unit_dozen
 }
+
+/** The unit after the number 1 ("1 pc"). Bengali has one word for both. */
+fun ProductUnit.labelOneRes(): Int = when (this) {
+    ProductUnit.PIECE -> R.string.unit_piece_one
+    ProductUnit.KG -> R.string.unit_kg_one
+    ProductUnit.LITRE -> R.string.unit_litre_one
+    ProductUnit.PACKET -> R.string.unit_packet_one
+    ProductUnit.DOZEN -> R.string.unit_dozen_one
+}
+
+/** The unit word to write after a quantity (thousandths): the singular for exactly 1 (or -1), else [labelRes]. */
+fun ProductUnit.labelResFor(thousandths: Long): Int =
+    if (kotlin.math.abs(thousandths) == QUANTITY_SCALE) labelOneRes() else labelRes()
 
 /** The Bengali name for each kind of stock movement. */
 fun StockMovementType.labelRes(): Int = when (this) {

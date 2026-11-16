@@ -46,6 +46,7 @@ import com.example.dukanhisabnext.data.entity.Product
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.products.color
 import com.example.dukanhisabnext.ui.products.labelRes
+import com.example.dukanhisabnext.ui.products.labelResFor
 import com.example.dukanhisabnext.ui.products.stockStatus
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
@@ -171,7 +172,7 @@ private fun ProductPicker(
 private fun ProductPickRow(item: ProductWithStock, inCartText: String?, onClick: () -> Unit) {
     val product = item.product
     val status = stockStatus(item.stock, product.lowStockLevel)
-    val unitText = stringResource(product.unit.labelRes())
+    val unitText = stringResource(product.unit.labelResFor(item.stock))
 
     Row(
         modifier = Modifier

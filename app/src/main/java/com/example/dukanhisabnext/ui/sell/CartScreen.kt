@@ -73,6 +73,7 @@ import com.example.dukanhisabnext.ui.products.StockStatus
 import com.example.dukanhisabnext.ui.products.color
 import com.example.dukanhisabnext.ui.products.labelOneRes
 import com.example.dukanhisabnext.ui.products.labelRes
+import com.example.dukanhisabnext.ui.products.labelResFor
 import com.example.dukanhisabnext.util.formatQuantity
 import com.example.dukanhisabnext.util.formatTaka
 
@@ -568,7 +569,7 @@ private fun CartLineCard(
                     )
                     Spacer(Modifier.width(6.dp))
                     Text(
-                        text = stringResource(R.string.stock_warning_line, formatQuantity(stock), unitText),
+                        text = stringResource(R.string.stock_warning_line, formatQuantity(stock), stringResource(input.unit.labelResFor(stock))),
                         style = MaterialTheme.typography.bodySmall,
                         color = StockStatus.LOW.color()
                     )

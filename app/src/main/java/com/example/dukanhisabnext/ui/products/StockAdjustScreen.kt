@@ -57,7 +57,8 @@ fun StockAdjustScreen(
     val movements by viewModel.movements.collectAsStateWithLifecycle()
     val form by viewModel.form.collectAsStateWithLifecycle()
 
-    val unitText = product?.let { stringResource(it.unit.labelRes()) }.orEmpty()
+    val unit = product?.unit
+    @Composable fun unitFor(quantity: Long): String = unit?.let { stringResource(it.labelResFor(quantity)) }.orEmpty()
 
     // A big change asks "ঠিক আছে?" first (ConfirmRules.kt).
     var confirmOpen by rememberSaveable { mutableStateOf(false) }
@@ -86,7 +87,7 @@ fun StockAdjustScreen(
                     if (current != null) {
                         val status = stockStatus(current, product?.lowStockLevel)
                         Text(
-                            text = stringResource(R.string.stock_current, formatQuantity(current), unitText),
+                            text = stringResource(R.string.stock_current, formatQuantity(current), unitFor(current)),
                             style = MaterialTheme.typography.titleMedium,
                             color = status.color()
                         )
@@ -171,7 +172,7 @@ fun StockAdjustScreen(
                 item { Text(stringResource(R.string.history_empty), style = MaterialTheme.typography.bodyMedium) }
             } else {
                 items(movements, key = { it.id }) { movement ->
-                    MovementRow(movement, unitText)
+                    MovementRow(movement, unitFor(movement.quantity))
                 }
             }
         }
@@ -183,7 +184,7 @@ fun StockAdjustScreen(
 
     if (confirmOpen) {
         ConfirmAmountDialog(
-            amountText = formatSignedQuantity(change ?: 0L) + " " + unitText,
+            amountText = formatSignedQuantity(change ?: 0L) + " " + unitFor(change ?: 0L),
             onFix = { confirmOpen = false },
             onConfirm = {
                 confirmOpen = false

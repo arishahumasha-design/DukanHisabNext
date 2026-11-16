@@ -6,6 +6,7 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.entity.WarrantyUnit
 import com.example.dukanhisabnext.ui.products.labelOneRes
 import com.example.dukanhisabnext.ui.products.labelRes
+import com.example.dukanhisabnext.ui.products.labelOneRes
 import androidx.compose.ui.res.stringArrayResource
 import com.example.dukanhisabnext.cancel.CancelDialogLabels
 import com.example.dukanhisabnext.data.entity.PaymentMethod
@@ -13,6 +14,7 @@ import com.example.dukanhisabnext.data.entity.ProductUnit
 import com.example.dukanhisabnext.receipt.ReceiptLabels
 import com.example.dukanhisabnext.ui.products.labelOneRes
 import com.example.dukanhisabnext.ui.products.labelRes
+import com.example.dukanhisabnext.ui.products.labelOneRes
 import com.example.dukanhisabnext.util.DayPeriod
 
 /** The words of the cancel confirm dialog, from strings.xml. */
@@ -53,6 +55,7 @@ fun receiptLabels(): ReceiptLabels {
     )
 
     val warrantyUnits: Map<WarrantyUnit, String> = WarrantyUnit.entries.associateWith { stringResource(it.labelRes()) }
+    val unitsOne: Map<ProductUnit, String> = ProductUnit.entries.associateWith { stringResource(it.labelOneRes()) }
     val warrantyUnitsOne: Map<WarrantyUnit, String> = WarrantyUnit.entries.associateWith { stringResource(it.labelOneRes()) }
     val months = stringArrayResource(R.array.months_bn).toList()
     val untilTemplate = stringResource(R.string.warranty_until, "{day}")
@@ -77,6 +80,7 @@ fun receiptLabels(): ReceiptLabels {
         cancelReason = stringResource(R.string.cancel_reason_prefix),
         taka = stringResource(R.string.unit_taka),
         unit = { units.getValue(it) },
+        unitOne = { unitsOne.getValue(it) },
         method = { methods.getValue(it) },
         period = { periods.getValue(it) },
         warrantyUnit = { warrantyUnits.getValue(it) },

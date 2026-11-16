@@ -206,7 +206,7 @@ fun ProductEditScreen(
     if (confirmStockOpen) {
         val quantity = parseQuantity(state.openingStock) ?: 0L
         ConfirmAmountDialog(
-            amountText = formatQuantity(quantity) + " " + stringResource(state.unit.labelRes()),
+            amountText = formatQuantity(quantity) + " " + stringResource(state.unit.labelResFor(quantity)),
             onFix = { confirmStockOpen = false },
             onConfirm = {
                 confirmStockOpen = false

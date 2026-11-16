@@ -31,6 +31,12 @@
     <string name="unit_litre">লিটার</string>
     <string name="unit_packet">প্যাকেট</string>
     <string name="unit_dozen">ডজন</string>
+    <!-- the same units after the number 1: Bengali uses the same word -->
+    <string name="unit_piece_one">পিস</string>
+    <string name="unit_kg_one">কেজি</string>
+    <string name="unit_litre_one">লিটার</string>
+    <string name="unit_packet_one">প্যাকেট</string>
+    <string name="unit_dozen_one">ডজন</string>
 
     <!-- Form errors (shown under a box) -->
     <string name="error_required">এই ঘরটি পূরণ করুন</string>
@@ -315,7 +321,7 @@
     <string name="khata_sort_oldest">পুরনো লেনদেন আগে</string>
     <string name="khata_sort_low">টাকা কম থেকে বেশি</string>
     <string name="khata_sort_high">টাকা বেশি থেকে কম</string>
-    <string name="khata_until">%1$s পর্যন্ত</string>
+    <string name="khata_last_entry">সর্বশেষ লেনদেন: %1$s</string>
     <string name="khata_new_due">নতুন বাকি</string>
     <string name="khata_empty_customers">এখনও কোনো কাস্টমার নেই। "নতুন বাকি" বাটন থেকে কাস্টমার যুক্ত করুন।</string>
     <string name="khata_empty_entries">এই সময়ে কোনো লেনদেন নেই।</string>

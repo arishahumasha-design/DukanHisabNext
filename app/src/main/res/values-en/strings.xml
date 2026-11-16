@@ -30,9 +30,15 @@
     <!-- Units -->
     <string name="unit_piece">pcs</string>
     <string name="unit_kg">kg</string>
-    <string name="unit_litre">litre</string>
-    <string name="unit_packet">packet</string>
+    <string name="unit_litre">litres</string>
+    <string name="unit_packet">packets</string>
     <string name="unit_dozen">dozen</string>
+    <!-- the same units after the number 1 (1 pc, 1 litre ...) -->
+    <string name="unit_piece_one">pc</string>
+    <string name="unit_kg_one">kg</string>
+    <string name="unit_litre_one">litre</string>
+    <string name="unit_packet_one">packet</string>
+    <string name="unit_dozen_one">dozen</string>
 
     <!-- Form errors (shown under a box) -->
     <string name="error_required">Please fill in this box</string>
@@ -319,7 +325,7 @@
     <string name="khata_sort_oldest">Oldest entry first</string>
     <string name="khata_sort_low">Amount low to high</string>
     <string name="khata_sort_high">Amount high to low</string>
-    <string name="khata_until">Until %1$s</string>
+    <string name="khata_last_entry">Last entry: %1$s</string>
     <string name="khata_new_due">New Due</string>
     <string name="khata_empty_customers">No customers yet. Use the “New Due” button to add a customer.</string>
     <string name="khata_empty_entries">No entries in this period.</string>

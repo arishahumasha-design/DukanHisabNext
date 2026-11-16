@@ -135,9 +135,8 @@ fun khataAllSummary(allRows: List<KhataCustomerRow>): KhataAllSummary = KhataAll
     advance = allRows.filter { it.balance < 0 }.sumOf { -it.balance }
 )
 
-/**
- * "১১ নভেম্বর ২০২৬ পর্যন্ত": the Dhaka date of the newest ledger entry. null when the customer
- * has none. [monthNames] are the 12 Bengali month names; [template] adds the word "পর্যন্ত".
+/** "সর্বশেষ লেনদেন: ১১ নভেম্বর ২০২৬": the Dhaka date of the newest ledger entry. null when the customer
+ * has none. [monthNames] are the 12 Bengali month names; [template] adds the words "সর্বশেষ লেনদেন".
  */
 fun lastEntryText(lastEntryDate: Long?, monthNames: List<String>, template: (String) -> String): String? =
     lastEntryDate?.let { template(dayHeaderText(DhakaTime.localDate(it), monthNames)) }

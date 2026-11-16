@@ -41,6 +41,7 @@ import com.example.dukanhisabnext.R
 import com.example.dukanhisabnext.data.dao.ProductWithStock
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FabListBottomPadding
 import com.example.dukanhisabnext.ui.components.EmptyState
 import com.example.dukanhisabnext.ui.components.PillVariant
 import com.example.dukanhisabnext.ui.components.ProductTile
@@ -169,7 +170,7 @@ fun ProductListScreen(
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     // Extra space at the bottom so the round + button never hides the last row.
-                    contentPadding = PaddingValues(bottom = 88.dp)
+                    contentPadding = PaddingValues(bottom = FabListBottomPadding)
                 ) {
                     items(list, key = { it.product.id }) { item ->
                         ProductRow(
@@ -197,7 +198,7 @@ private fun ProductRow(
     val product = item.product
     // Stock is never stored: item.stock came from adding up the stock movements.
     val status = stockStatus(item.stock, product.lowStockLevel)
-    val unitText = stringResource(product.unit.labelRes())
+    val unitText = stringResource(product.unit.labelResFor(item.stock))
 
     Row(
         modifier = Modifier

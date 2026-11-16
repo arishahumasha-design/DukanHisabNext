@@ -125,7 +125,7 @@ fun KhataScreen(
 
     // The words from strings.xml, handed to the plain functions.
     val monthNames = stringArrayResource(R.array.months_bn).toList()
-    val untilTemplate = stringResource(R.string.khata_until, "{date}")
+    val lastEntryTemplate = stringResource(R.string.khata_last_entry, "{date}")
     val labels = historyLabels()
     val methods = methodLabels()
     val periods = mapOf(
@@ -230,7 +230,7 @@ fun KhataScreen(
                                     items(body.rows, key = { it.customer.id }) { row ->
                                         CustomerDueRow(
                                             row = row,
-                                            lastText = lastEntryText(row.lastEntryDate, monthNames) { untilTemplate.replace("{date}", it) },
+                                            lastText = lastEntryText(row.lastEntryDate, monthNames) { lastEntryTemplate.replace("{date}", it) },
                                             onClick = { onOpenCustomer(row.customer.id) }
                                         )
                                     }

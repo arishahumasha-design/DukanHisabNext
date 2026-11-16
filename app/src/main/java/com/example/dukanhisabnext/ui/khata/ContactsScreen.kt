@@ -38,6 +38,7 @@ import com.example.dukanhisabnext.data.LedgerRepository
 import com.example.dukanhisabnext.data.dao.KhataCustomerRow
 import com.example.dukanhisabnext.ui.appViewModel
 import com.example.dukanhisabnext.ui.components.SubScreenScaffold
+import com.example.dukanhisabnext.ui.components.FabListBottomPadding
 import com.example.dukanhisabnext.ui.customers.BalanceText
 import com.example.dukanhisabnext.util.localDigits
 import kotlinx.coroutines.flow.SharingStarted
@@ -119,7 +120,7 @@ fun ContactsScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         // Room at the bottom so the round button never hides the last row.
-                        contentPadding = PaddingValues(bottom = 88.dp)
+                        contentPadding = PaddingValues(bottom = FabListBottomPadding)
                     ) {
                         items(current.rows, key = { it.customer.id }) { row ->
                             ContactRow(row, onClick = { onOpenCustomer(row.customer.id) })
