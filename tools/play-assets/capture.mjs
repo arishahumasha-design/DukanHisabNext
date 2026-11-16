@@ -108,6 +108,9 @@ await tapXY(540, 698, 4000); // "Cash": the sale is paid and saved
 screenshot(`${out}/03-receipt.png`);
 
 await more('products');
+// Scroll to the end of the list: the last row is fully visible above the add button (not hidden behind it).
+for (let i = 0; i < 5; i++) { adb('shell', 'input', 'swipe', '540', '1800', '540', '700', '300'); await sleep(300); }
+await sleep(500);
 screenshot(`${out}/04-products.png`);
 
 await tab('khata');

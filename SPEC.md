@@ -1222,6 +1222,12 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
 - **Fix found by the smoke test:** restoring a backup into a new shop whose work folder did not exist yet was
   refused as "not enough space" (free space was asked of a folder that is not made yet). `BackupEngine.freeSpace`
   now asks the nearest existing parent folder. Phone test: `ShopIsolationPhoneTest`.
+- **Polish after D2:** the lists that have a floating button (products, যোগাযোগ) end with `FabListBottomPadding`
+  (96 dp) so the last row scrolls fully clear of it. English quantities say "1 pc" / "1 litre" / "1 packet" and
+  "2 pcs" / "2 litres" / "2 packets" (`unit_*_one` strings, used for exactly 1; Bengali has one word for both) on the
+  Sell and product lists, stock screens, the cart's stock warning and the receipt text. The Due Book line under a
+  customer is "Last entry: 11 Nov 2026" / "সর্বশেষ লেনদেন: ১১ নভেম্বর ২০২৬" (it is the date of the newest ledger entry;
+  it used to say "Until ..."). The Play pictures 03, 04 and 05 were retaken.
 - **Older Android** (API 27 and 30 emulators, pictures in `docs/play/older-android/`): see `docs/LANGUAGE.md`,
   "Older Android".
 
