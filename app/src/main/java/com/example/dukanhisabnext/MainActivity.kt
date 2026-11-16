@@ -1,6 +1,13 @@
 package com.example.dukanhisabnext
 
 import android.app.ActivityOptions
+import android.app.KeyguardManager
+import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.snapshotFlow
+import com.example.dukanhisabnext.security.AppLock
+import com.example.dukanhisabnext.ui.lock.LockScreen
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -40,6 +47,88 @@ class MainActivity : ComponentActivity() {
     /** True once this screen has handed its state to the fresh one (see restartInPlace): it must not clear the ViewModels it gave away. */
     private var handedOver = false
 
+    /** The optional app lock (Settings): see security/AppLock.kt. */
+    private val lock: AppLock get() = (application as DokanHisabApp).appLock
+
+    /** True while the phone's lock is asked to TURN ON the app lock (not to open a locked app). */
+    private var enablingLock = false
+
+    /** True while this screen opens its own lock prompt (that trip is not a "system screen the app opened"). */
+    private var launchingOwn = false
+
+    /** The phone's own screen lock (PIN, pattern or password). OK = unlocked (or: the lock may be turned on). */
+    private val phoneLockPrompt = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            if (enablingLock) lock.turnOn() else lock.unlock()
+        }
+        // Cancelled: a locked app stays locked (the lock screen's "Unlock" asks again).
+        enablingLock = false
+    }
+
+    /**
+     * Asks for the phone's screen lock. [enabling] = to turn the app lock on (it is turned on only after a correct
+     * answer, so it is known to work on this phone). A phone without a screen lock never locks the user out: the app
+     * lock is turned off instead.
+     */
+    @Suppress("DEPRECATION") // createConfirmDeviceCredentialIntent: the phone's own lock, without any extra library
+    fun askPhoneLock(enabling: Boolean) {
+        val keyguard = getSystemService(KeyguardManager::class.java)
+        val intent = keyguard?.createConfirmDeviceCredentialIntent(getString(R.string.lock_prompt_title), getString(R.string.lock_prompt_text))
+        if (intent == null) {
+            lock.turnOff()
+            return
+        }
+        enablingLock = enabling
+        launchingOwn = true
+        try {
+            phoneLockPrompt.launch(intent)
+        } finally {
+            launchingOwn = false
+        }
+    }
+
+    /** Asks by itself once each time the app locks (not again after a cancel: then the "Unlock" button asks). */
+    private fun promptIfLocked() {
+        val l = lock
+        if (l.locked && l.promptedFor != l.lockCount) {
+            l.promptedFor = l.lockCount
+            askPhoneLock(enabling = false)
+        }
+    }
+
+    // A system screen opened by the app (file picker, share sheet, PDF viewer, contact picker): coming back from it soon
+    // does not lock the app (AppLockRules.lockOnReturn). The app's own screens (a language switch) do not count.
+    override fun startActivity(intent: Intent, options: Bundle?) {
+        noteLaunch(intent)
+        super.startActivity(intent, options)
+    }
+
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    override fun startActivityForResult(intent: Intent, requestCode: Int, options: Bundle?) {
+        noteLaunch(intent)
+        super.startActivityForResult(intent, requestCode, options)
+    }
+
+    private fun noteLaunch(intent: Intent) {
+        if (!launchingOwn && intent.component?.packageName != packageName) lock.noteExternalLaunch()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        lock.onScreenStart()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        promptIfLocked()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        lock.onScreenStop(isChangingConfigurations)
+    }
+
     /** After a switch the fresh screen takes over the old screen's ViewModels (SwitchTransition.adoptViewModelStore). */
     override val viewModelStore: ViewModelStore
         get() = SwitchTransition.adoptViewModelStore(this) ?: super.viewModelStore
@@ -75,12 +164,27 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // A screen created by a language/currency switch starts under the cover and fades in (null: a normal start).
         val arrivalFadeInAt = SwitchTransition.takeArrival(SystemClock.uptimeMillis())
+        // While the app lock is on: no recents picture, no screenshots, no screen recording (FLAG_SECURE).
+        // When it is off nothing changes.
+        applySecureFlag(lock.enabled)
+        lifecycleScope.launch { snapshotFlow { lock.enabled }.collect(::applySecureFlag) }
         setContent {
             DukanHisabNextTheme {
-                AppNavigation()
+                // While locked the app's screens are not drawn at all (no data on the screen, no dialog above it).
+                // Their saved state (where the user was, half-filled forms) is kept and comes back after unlocking.
+                val saved = rememberSaveableStateHolder()
+                if (lock.locked) {
+                    LockScreen(onUnlock = { askPhoneLock(enabling = false) }, onLeave = ::finish)
+                } else {
+                    saved.SaveableStateProvider("app") { AppNavigation() }
+                }
                 SwitchOverlay(covering = covering, arrivalFadeInAt = arrivalFadeInAt)
             }
         }
+    }
+
+    private fun applySecureFlag(on: Boolean) {
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     /**

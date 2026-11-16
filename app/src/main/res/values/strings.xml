@@ -765,4 +765,19 @@
     <string name="btn_other_shops">অন্য দোকান</string>
     <string name="home_shop_open">খোলা দোকান: %1$s</string>
     <string name="settings_open_shop">এখন খোলা দোকান</string>
+
+    <!-- App lock (Settings): the phone's own screen lock; the app stores no PIN -->
+    <string name="lock_switch">অ্যাপ লক করুন</string>
+    <string name="lock_switch_hint">অ্যাপ খুলতে ফোনের নিজের স্ক্রিন লক (পিন, প্যাটার্ন বা পাসওয়ার্ড) লাগবে।</string>
+    <string name="lock_screenshot_note">লক চালু থাকলে স্ক্রিনশট ও স্ক্রিন রেকর্ডিং বন্ধ থাকে।</string>
+    <string name="lock_no_device_lock">এই ফোনে কোনো স্ক্রিন লক নেই। আগে ফোনের সেটিংসে পিন, প্যাটার্ন বা পাসওয়ার্ড দিন।</string>
+    <string name="lock_delay_title">অ্যাপ থেকে বের হলে আবার লক হবে</string>
+    <string name="lock_delay_immediately">এখনই</string>
+    <string name="lock_delay_1min">১ মিনিট পর</string>
+    <string name="lock_delay_5min">৫ মিনিট পর</string>
+    <string name="lock_screen_title">দোকান হিসাব লক করা আছে</string>
+    <string name="lock_screen_hint">খুলতে ফোনের স্ক্রিন লক ব্যবহার করুন।</string>
+    <string name="lock_unlock_button">খুলুন</string>
+    <string name="lock_prompt_title">দোকান হিসাব খুলুন</string>
+    <string name="lock_prompt_text">ফোনের পিন, প্যাটার্ন বা পাসওয়ার্ড দিন</string>
 </resources>

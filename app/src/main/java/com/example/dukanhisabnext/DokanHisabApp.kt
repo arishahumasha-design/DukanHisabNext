@@ -264,11 +264,15 @@ class DokanHisabApp : Application() {
 
     /** After a restore the repositories still hold the closed database: start the app again from scratch. */
     private fun restartProcess() {
+        appLock.beforeRestart() // an unlocked app is not asked again after its own restart (shop switch, restore)
         val intent = packageManager.getLaunchIntentForPackage(packageName)
             ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         if (intent != null) startActivity(intent)
         Runtime.getRuntime().exit(0)
     }
+
+    /** The optional app lock (Settings). Its file is not in any backup. */
+    val appLock: com.example.dukanhisabnext.security.AppLock by lazy { com.example.dukanhisabnext.security.AppLock(this) }
 
     val productRepository: ProductRepository by lazy { ProductRepository(database) }
     val customerRepository: CustomerRepository by lazy { CustomerRepository(database) }

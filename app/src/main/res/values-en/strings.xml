@@ -769,4 +769,19 @@
     <string name="btn_other_shops">Other shops</string>
     <string name="home_shop_open">Open shop: %1$s</string>
     <string name="settings_open_shop">Shop open now</string>
+
+    <!-- App lock (Settings): the phone's own screen lock; the app stores no PIN -->
+    <string name="lock_switch">Lock the app</string>
+    <string name="lock_switch_hint">Opening the app needs the phone\'s own screen lock (PIN, pattern or password).</string>
+    <string name="lock_screenshot_note">While the lock is on, screenshots and screen recording are blocked.</string>
+    <string name="lock_no_device_lock">This phone has no screen lock. Set a PIN, pattern or password in the phone\'s settings first.</string>
+    <string name="lock_delay_title">Lock again after leaving the app</string>
+    <string name="lock_delay_immediately">Immediately</string>
+    <string name="lock_delay_1min">After 1 minute</string>
+    <string name="lock_delay_5min">After 5 minutes</string>
+    <string name="lock_screen_title">Dokan Hisab is locked</string>
+    <string name="lock_screen_hint">Use your phone\'s screen lock to open it.</string>
+    <string name="lock_unlock_button">Unlock</string>
+    <string name="lock_prompt_title">Open Dokan Hisab</string>
+    <string name="lock_prompt_text">Enter your phone\'s PIN, pattern or password</string>
 </resources>

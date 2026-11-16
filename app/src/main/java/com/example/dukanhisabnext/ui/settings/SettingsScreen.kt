@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.collectAsState
 import com.example.dukanhisabnext.ui.components.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,6 +101,7 @@ fun SettingsScreen(
                 ShopNameCard(shopName = current.shopName)
                 LanguageCard()
                 CurrencyCard()
+                LockCard()
                 BackupRow(onClick = onOpenBackup)
                 ShopButton(shopName = current.shopName, onAdd = onOpenShop, onChange = onOpenShops)
             }
@@ -277,6 +279,56 @@ private fun LanguageCard() {
                 selectedIndex = languages.indexOf(CurrentLanguage.value),
                 onSelect = { index -> context.findMainActivity()?.switchLanguage(languages[index]) }
             )
+        }
+    }
+}
+
+/**
+ * "Lock the app" (off by default): the phone's own screen lock is asked at start and after the app was away longer
+ * than the chosen time. Without a phone screen lock the switch cannot be turned on. Turning it on asks the phone's
+ * lock once first. While it is on, screenshots and screen recording are blocked (FLAG_SECURE).
+ */
+@Composable
+private fun LockCard() {
+    val context = LocalContext.current
+    val lock = (context.applicationContext as DokanHisabApp).appLock
+    // Checked again each time Settings comes back to the front (the user may have set or removed the phone's lock).
+    val lifecycle by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    val deviceSecure = androidx.compose.runtime.remember(lifecycle) { lock.deviceSecure() }
+    val delays = com.example.dukanhisabnext.security.LockDelay.entries
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    stringResource(R.string.lock_switch),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                androidx.compose.material3.Switch(
+                    checked = lock.enabled && deviceSecure,
+                    enabled = deviceSecure,
+                    onCheckedChange = { on -> if (on) context.findMainActivity()?.askPhoneLock(enabling = true) else lock.turnOff() }
+                )
+            }
+            if (!deviceSecure) {
+                Text(stringResource(R.string.lock_no_device_lock), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            } else {
+                Text(stringResource(R.string.lock_switch_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.lock_screenshot_note), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (lock.enabled && deviceSecure) {
+                Text(stringResource(R.string.lock_delay_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+                SegmentedControl(
+                    labels = listOf(
+                        stringResource(R.string.lock_delay_immediately),
+                        stringResource(R.string.lock_delay_1min),
+                        stringResource(R.string.lock_delay_5min)
+                    ),
+                    selectedIndex = delays.indexOf(lock.delay),
+                    onSelect = { index -> lock.chooseDelay(delays[index]) }
+                )
+            }
         }
     }
 }

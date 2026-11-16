@@ -1228,6 +1228,20 @@ message is shown instead of an empty PDF. The PDF is built on a background threa
   Sell and product lists, stock screens, the cart's stock warning and the receipt text. The Due Book line under a
   customer is "Last entry: 11 Nov 2026" / "সর্বশেষ লেনদেন: ১১ নভেম্বর ২০২৬" (it is the date of the newest ledger entry;
   it used to say "Until ..."). The Play pictures 03, 04 and 05 were retaken.
+- **App lock (optional, off by default):** Settings, "Lock the app" / "অ্যাপ লক করুন". It uses the phone's own screen
+  lock (KeyguardManager.createConfirmDeviceCredentialIntent: PIN, pattern or password); the app stores no PIN or secret
+  and adds no library. Turning it on asks the phone's lock once first. Without a phone screen lock the switch is
+  disabled with a short explanation; if the phone's lock is removed later, the app lock turns itself off (never a
+  lock-out). When on, it asks at every new start of the app and after the app was in the background longer than the
+  chosen time (immediately, 1 minute (default), 5 minutes). It does not ask again for a language or currency switch,
+  a configuration change, the app's own restart after a shop switch or restore (a 20-second note in app_lock.xml), or a
+  trip to the file picker, share sheet, PDF viewer or contact picker that the app opened itself, when back within
+  5 minutes. While locked, the app's screens are not drawn at all (their saved state comes back after unlocking); Back
+  leaves the app; cancelling the phone's lock keeps it locked ("Unlock" asks again). While the switch is on, the window
+  has FLAG_SECURE (no recents picture, screenshots or screen recording; a note under the switch says so). The setting
+  lives in app_lock.xml, which no backup rule includes: it is not in Android's backup, not in a backup file and not
+  restored. Rules: security/AppLockRules.kt (AppLockRulesTest). The Backup screen already warns that the file holds
+  customers' names, mobile numbers and money records, so no second note was added.
 - **Older Android** (API 27 and 30 emulators, pictures in `docs/play/older-android/`): see `docs/LANGUAGE.md`,
   "Older Android".
 
