@@ -30,6 +30,13 @@ const val NUDGE_AFTER_SALES: Long = 5
 const val MAX_NUDGE_SHOWS: Int = 2
 
 /**
+ * The one-time dialog may open only while Home itself is the screen in front, and not while a restore is
+ * running or its "Data restored" note is waiting. It never opens over a sale, payment, form, backup or shop screen.
+ */
+fun nudgeAllowedNow(homeIsShown: Boolean, restoreRunning: Boolean, restoreNotePending: Boolean): Boolean =
+    homeIsShown && !restoreRunning && !restoreNotePending
+
+/**
  * A one-time dialog on Home after the first 5 sales when no backup was EVER made: "ব্যাকআপ নিন" or
  * "পরে". Never again once "ব্যাকআপ নিন" was used ([nudgeUsed]), after it was shown twice
  * ([timesShown]), or when a backup exists. (The small Home line for a backup older than 7 days

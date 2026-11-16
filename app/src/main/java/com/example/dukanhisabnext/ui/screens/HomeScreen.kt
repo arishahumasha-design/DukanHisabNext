@@ -66,7 +66,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.ui.window.DialogProperties
 import com.example.dukanhisabnext.backup.BackupPrefs
 import com.example.dukanhisabnext.backup.hasShopData
+import com.example.dukanhisabnext.backup.blocksApp
+import com.example.dukanhisabnext.backup.nudgeAllowedNow
 import com.example.dukanhisabnext.backup.shouldShowBackupNudge
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.launch
 import com.example.dukanhisabnext.backup.shouldRemindBackup
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,15 +105,22 @@ class HomeViewModel(
     /** The one-time "ব্যাকআপ নিন" dialog (after 5 sales and no backup ever). Decided once when Home opens. */
     val showBackupNudge: StateFlow<Boolean> = _showBackupNudge
 
-    init {
+    private var nudgeDecided = false
+
+    /**
+     * Decides (once per Home) whether the nudge dialog opens. The screen calls it only while Home is in front
+     * and no restore note is showing ([nudgeAllowedNow]), so the dialog is never decided or counted behind
+     * another screen.
+     */
+    fun checkNudge() {
         val p = prefs
-        if (p != null) {
-            viewModelScope.launch {
-                val sales = rowCounts()["sales"] ?: 0
-                if (shouldShowBackupNudge(sales, lastBackupAt.value, p.nudgeUsed, p.nudgeShownCount)) {
-                    p.nudgeShownCount += 1 // counted when shown, so a rotation never counts twice (the ViewModel stays)
-                    _showBackupNudge.value = true
-                }
+        if (p == null || nudgeDecided) return
+        nudgeDecided = true
+        viewModelScope.launch {
+            val sales = rowCounts()["sales"] ?: 0
+            if (shouldShowBackupNudge(sales, lastBackupAt.value, p.nudgeUsed, p.nudgeShownCount)) {
+                p.nudgeShownCount += 1 // counted when shown, so a rotation never counts twice (the ViewModel stays)
+                _showBackupNudge.value = true
             }
         }
     }
@@ -181,7 +195,18 @@ fun HomeScreen(
     val showBackupReminder by viewModel.showBackupReminder.collectAsStateWithLifecycle()
     val showBackupNudge by viewModel.showBackupNudge.collectAsStateWithLifecycle()
 
-    if (showBackupNudge) {
+    val manager = (LocalContext.current.applicationContext as com.example.dukanhisabnext.DokanHisabApp).backupManager
+    val restoreState by manager.state.collectAsStateWithLifecycle()
+    val restoreNote by manager.startupNote.collectAsStateWithLifecycle()
+    val homeResumed by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    val nudgeOk = nudgeAllowedNow(
+        homeIsShown = homeResumed == Lifecycle.State.RESUMED,
+        restoreRunning = blocksApp(restoreState),
+        restoreNotePending = restoreNote != null
+    )
+    LaunchedEffect(nudgeOk) { if (nudgeOk) viewModel.checkNudge() }
+
+    if (showBackupNudge && nudgeOk) {
         AppAlertDialog(
             properties = DialogProperties(dismissOnClickOutside = false),
             onDismissRequest = viewModel::onNudgeLater,
